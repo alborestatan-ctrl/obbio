@@ -50,19 +50,19 @@ exports.handler = async (event) => {
 
   const { question, financialContext, history = [] } = body;
 
-  if (!question || typeof question !== 'string' || question.length > 600) {
+  if (!question || typeof question !== 'string' || question.length > 2000) {
     return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: 'Pregunta inválida' }) };
   }
   if (!financialContext) {
     return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: 'Falta contexto financiero' }) };
   }
   if (!process.env.GROQ_API_KEY) {
-    return { statusCode: 500, headers: CORS, body: JSON.stringify({ error: 'GROQ_API_KEY no configurada en Netlify' }) };
+    return { statusCode: 500, headers: CORS, body: JSON.stringify({ error: 'GROQ_API_KEY no configurada' }) };
   }
 
   const messages = [
     { role: 'system', content: financialContext },
-    ...history.slice(-6).filter(m => m.role === 'user' || m.role === 'assistant'),
+    ...history.slice(-12).filter(m => m.role === 'user' || m.role === 'assistant'),
     { role: 'user', content: question },
   ];
 
@@ -70,8 +70,9 @@ exports.handler = async (event) => {
     const result = await groqRequest({
       model: 'llama-3.3-70b-versatile',
       messages,
-      max_tokens: 450,
-      temperature: 0.35,
+      max_tokens: 2048,
+      temperature: 0.5,
+      top_p: 0.9,
     });
 
     if (result.status !== 200) {
@@ -89,3 +90,4 @@ exports.handler = async (event) => {
     return { statusCode: 502, headers: CORS, body: JSON.stringify({ error: 'Servicio de IA no disponible temporalmente' }) };
   }
 };
+    
