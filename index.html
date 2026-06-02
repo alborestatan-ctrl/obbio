@@ -4057,8 +4057,8 @@ const fmt = (n, dec=1) => {
   if(abs>=1e3) return s+'$'+(abs/1e3).toFixed(dec)+'K';
   return s+'$'+abs.toFixed(0);
 };
-const fmtPct = n => isNaN(n)?'—':n.toFixed(1)+'%';
-const fmtX   = n => (n===null||isNaN(n))?'—':n.toFixed(2)+'x';
+const fmtPct = n => (n==null||isNaN(n))?'—':n.toFixed(1)+'%';
+const fmtX   = n => (n==null||!isFinite(n))?'—':n.toFixed(2)+'x';
 
 /* ── Tabs de ingreso ── */
 function switchITab(n){
@@ -4462,11 +4462,11 @@ function calcFinanciero(){
   const utilNeta   = uai-isr;
 
   // Márgenes
-  const V=er.ventas||1;
-  const margenBruto  = utilBruta/V*100;
-  const margenEbitda = ebitda/V*100;
-  const margenNeto   = utilNeta/V*100;
-  const margenOp     = ebit/V*100;
+  const V=er.ventas>0?er.ventas:null;
+  const margenBruto  = V!=null?utilBruta/V*100:null;
+  const margenEbitda = V!=null?ebitda/V*100:null;
+  const margenNeto   = V!=null?utilNeta/V*100:null;
+  const margenOp     = V!=null?ebit/V*100:null;
 
   // Balance
   const activoCirc   = caja+cxc+inventario;
@@ -4477,7 +4477,7 @@ function calcFinanciero(){
 
   // Flujo
   const flujoOp  = utilNeta+dep;
-  const flujoInv = -(activoFijo*0.05);
+  const flujoInv = 0;
   const flujoFin = -(er.gfin);
   const flujoNeto= flujoOp+flujoInv+flujoFin;
 
@@ -4487,7 +4487,8 @@ function calcFinanciero(){
 
   // Ratios deuda
   const deudaTotal   = totalPasivos;
-  const debtEbitda   = ebitda?deudaTotal/ebitda:null;
+  const debtEbitda         = ebitda>0?deudaTotal/ebitda:null;
+  const debtEbitdaCritical = ebitda<=0&&deudaTotal>0;
   const cobIntereses = er.gfin?ebitda/er.gfin:null;
   const apalancamiento = totalActivos?totalPasivos/totalActivos*100:0;
   const debtEquity   = capital?deudaTotal/capital:null;
@@ -4502,23 +4503,34 @@ function calcFinanciero(){
   const roa = totalActivos?utilNeta/totalActivos*100:0;
   const roe = capital?utilNeta/capital*100:0;
 
-  // YoY / concentración
-  const yoy          = parseFloat(($('ii_yoy')||{}).value)||null;
-  const concentracion= parseInt(($('ii_concentracion')||{}).value)||3;
+  // YoY — auto desde histórico, fallback a campo manual (BUG-11)
+  let yoy=null;
+  const _hist=window._teralyxHistorico;
+  if(_hist&&_hist.length>0&&er.ventas>0){
+    const _hs=_hist.filter(h=>h.ventas>0).sort((a,b)=>a.anio-b.anio);
+    if(_hs.length>0) yoy=+((er.ventas/_hs[_hs.length-1].ventas-1)*100).toFixed(1);
+  }
+  if(yoy===null) yoy=parseFloat(($('ii_yoy')||{}).value)||null;
+  // Concentración — null si no hay dato real (BUG-04)
+  const _concRaw=($('ii_concentracion')||{}).value;
+  const concentracion=(_concRaw&&parseInt(_concRaw)>0)?parseInt(_concRaw):null;
 
-  // Score financiero (0-100)
-  let score=50;
-  if(margenEbitda>25) score+=15; else if(margenEbitda>15) score+=9; else if(margenEbitda>5) score+=4; else if(margenEbitda<0) score-=15;
-  if(margenNeto>10)   score+=10; else if(margenNeto>5) score+=5;   else if(margenNeto<0) score-=10;
-  if(razCorriente!=null){ if(razCorriente>=2) score+=10; else if(razCorriente>=1.5) score+=6; else if(razCorriente>=1) score+=2; else score-=8; }
-  if(debtEbitda!=null){   if(debtEbitda<2)   score+=8;  else if(debtEbitda<3.5)   score+=4; else score-=6; }
-  if(cobIntereses!=null){ if(cobIntereses>5)  score+=7;  else if(cobIntereses>2)   score+=3; else score-=8; }
-  if(yoy!=null){ if(yoy>15) score+=5; else if(yoy>5) score+=3; else if(yoy<0) score-=5; }
-  if(concentracion<=2) score-=8; else if(concentracion<=3) score-=4;
-  score=Math.max(0,Math.min(100,Math.round(score)));
+  // Score financiero (0-100) — null si no hay ventas (BUG-02)
+  let score=er.ventas>0?50:null;
+  if(score!==null){
+    if(margenEbitda!=null){ if(margenEbitda>25) score+=15; else if(margenEbitda>15) score+=9; else if(margenEbitda>5) score+=4; else if(margenEbitda<0) score-=15; }
+    if(margenNeto!=null){ if(margenNeto>10) score+=10; else if(margenNeto>5) score+=5; else if(margenNeto<0) score-=10; }
+    if(razCorriente!=null){ if(razCorriente>=2) score+=10; else if(razCorriente>=1.5) score+=6; else if(razCorriente>=1) score+=2; else score-=8; }
+    if(debtEbitdaCritical) score-=15;
+    else if(debtEbitda!=null){ if(debtEbitda<2) score+=8; else if(debtEbitda<3.5) score+=4; else score-=6; }
+    if(cobIntereses!=null){ if(cobIntereses>5) score+=7; else if(cobIntereses>2) score+=3; else score-=8; }
+    if(yoy!=null){ if(yoy>15) score+=5; else if(yoy>5) score+=3; else if(yoy<0) score-=5; }
+    if(concentracion!=null){ if(concentracion<=2) score-=8; else if(concentracion<=3) score-=4; }
+    score=Math.max(0,Math.min(100,Math.round(score)));
+  }
 
   // Briefings automáticos
-  const briefings=generarBriefings({margenEbitda,margenNeto,razCorriente,debtEbitda,cobIntereses,ccc,yoy,score,concentracion,utilNeta,flujoNeto,ebitda});
+  const briefings=generarBriefings({margenEbitda,margenNeto,razCorriente,debtEbitda,debtEbitdaCritical,cobIntereses,ccc,yoy,score,concentracion,utilNeta,flujoNeto,ebitda,deudaTotal});
 
   // Series mensuales
   const dist=[.07,.07,.08,.08,.08,.09,.09,.09,.09,.09,.08,.07];
@@ -4526,8 +4538,8 @@ function calcFinanciero(){
   if(er.mensual){
     ingMensual    = er.mensual.ventas.map(v=>+(v/1e6).toFixed(2));
     ebitdaMensual = er.mensual.ventas.map((v,i)=>{
-      const ub=v-er.mensual.cogs[i]; const eb=ub-((er.gadmin+er.gventas)/12)+dep/12;
-      return +Math.max(0,eb/1e6).toFixed(2);
+      const ub=v-(er.mensual.cogs[i]||0); const eb=ub-((er.gadmin+er.gventas)/12)+dep/12;
+      return +(eb/1e6).toFixed(2);
     });
     cfMensual = ingMensual.map(v=>+(v*0.16).toFixed(2));
   } else {
@@ -4543,7 +4555,7 @@ function calcFinanciero(){
     caja,cxc,inventario,activoFijo,activoCirc,totalActivos,
     pasivoCp,pasivoLp,cxp,totalPasivos,capital,capTrabNeto,
     flujoOp,flujoInv,flujoFin,flujoNeto,
-    razCorriente,pruebaAcida,debtEbitda,cobIntereses,deudaTotal,
+    razCorriente,pruebaAcida,debtEbitda,debtEbitdaCritical,cobIntereses,deudaTotal,
     apalancamiento,debtEquity,roa,roe,
     diasCobro,diasPago,diasInv,ccc,
     yoy,concentracion,score,
@@ -4580,7 +4592,8 @@ function calcFinanciero(){
 /* ── Briefings automáticos por umbrales ── */
 function generarBriefings(r){
   const B=[];
-  if(r.margenEbitda>20)       B.push({tipo:'pos',titulo:'EBITDA sobresaliente',texto:`Margen EBITDA de ${r.margenEbitda.toFixed(1)}% supera el benchmark del sector. Eficiencia operativa en punto óptimo.`});
+  if(r.margenEbitda==null)    { /* sin ventas — no mostrar briefing de EBITDA */ }
+  else if(r.margenEbitda>20)  B.push({tipo:'pos',titulo:'EBITDA sobresaliente',texto:`Margen EBITDA de ${r.margenEbitda.toFixed(1)}% supera el benchmark del sector. Eficiencia operativa en punto óptimo.`});
   else if(r.margenEbitda>10)  B.push({tipo:'pos',titulo:'EBITDA saludable',texto:`Margen EBITDA de ${r.margenEbitda.toFixed(1)}%. La operación genera valor de forma consistente.`});
   else if(r.margenEbitda>0)   B.push({tipo:'warn',titulo:'Margen EBITDA bajo',texto:`El margen EBITDA de ${r.margenEbitda.toFixed(1)}% está por debajo del benchmark. Revisar estructura de costos.`});
   else                        B.push({tipo:'danger',titulo:'EBITDA negativo',texto:'La operación está generando pérdidas a nivel EBITDA. Acción correctiva urgente.'});
@@ -4591,7 +4604,8 @@ function generarBriefings(r){
     else                      B.push({tipo:'danger',titulo:'Alerta de liquidez',texto:`Razón corriente de ${r.razCorriente.toFixed(2)}x. Pasivos corrientes superan activos corrientes. Riesgo de iliquidez.`});
   }
 
-  if(r.debtEbitda!=null){
+  if(r.debtEbitdaCritical)    B.push({tipo:'danger',titulo:'Deuda crítica — EBITDA negativo',texto:`Operación en pérdidas con deuda activa (${r.deudaTotal>0?'$'+Math.round(r.deudaTotal).toLocaleString('es-MX'):'—'}). Sin capacidad de pago: riesgo máximo.`});
+  else if(r.debtEbitda!=null){
     if(r.debtEbitda<2)        B.push({tipo:'pos',titulo:'Deuda controlada',texto:`Ratio Deuda/EBITDA de ${r.debtEbitda.toFixed(1)}x. Apalancamiento saludable y manejable.`});
     else if(r.debtEbitda<4)   B.push({tipo:'warn',titulo:'Deuda moderada',texto:`Ratio Deuda/EBITDA de ${r.debtEbitda.toFixed(1)}x. Vigilar crecimiento de deuda respecto al EBITDA.`});
     else                      B.push({tipo:'danger',titulo:'Apalancamiento elevado',texto:`Ratio Deuda/EBITDA de ${r.debtEbitda.toFixed(1)}x supera el umbral de 4x. Priorizar desapalancamiento.`});
@@ -4603,7 +4617,7 @@ function generarBriefings(r){
     else                      B.push({tipo:'warn',titulo:'Contracción de ingresos',texto:`Los ingresos cayeron ${Math.abs(r.yoy).toFixed(1)}% vs año anterior. Revisar estrategia comercial.`});
   }
 
-  if(r.concentracion<=3)      B.push({tipo:'warn',titulo:'Riesgo de concentración',texto:`${r.concentracion} clientes generan el 80% de los ingresos. Alta dependencia: diversificar cartera.`});
+  if(r.concentracion!=null&&r.concentracion<=3) B.push({tipo:'warn',titulo:'Riesgo de concentración',texto:`${r.concentracion} clientes generan el 80% de los ingresos. Alta dependencia: diversificar cartera.`});
 
   return B.slice(0,4);
 }
@@ -4623,7 +4637,7 @@ function previewCalc(){
     setP('prev_ebitda',    fmt(r.ebitda),    null, r.ebitda>=0?'var(--primary)':'var(--danger)');
     setP('prev_utilNeta',  fmt(r.utilNeta),  null, col(r.utilNeta));
     setP('prev_flujo',     fmt(r.flujoNeto), null, col(r.flujoNeto));
-    setP('prev_score',     r.score+'/100',   null, r.score>=80?'var(--success)':r.score>=60?'var(--warning)':'var(--danger)');
+    setP('prev_score',     r.score!=null?r.score+'/100':'—', null, r.score!=null?(r.score>=80?'var(--success)':r.score>=60?'var(--warning)':'var(--danger)'):'var(--muted)');
     const pu=$('prev_utilBruta_pct');
     if(pu) pu.textContent=fmtPct(r.margenBruto)+' margen';
     const pe=$('prev_ebitda_pct');
@@ -4646,7 +4660,7 @@ function calcularYAplicar(){
   const dashData={
     ingresos:fmt(r.ventas), ebitda:fmt(r.ebitda), flujo:fmt(r.flujoNeto),
     margen:fmtPct(r.margenEbitda), clientes:r.clientes?r.clientes.toLocaleString():'',
-    score:String(r.score),
+    score:r.score!=null?String(r.score):'—',
     yoy_ing:  r.yoy!=null?(sign(r.yoy)+Math.abs(r.yoy).toFixed(1)+'% vs año ant.'):'',
     yoy_ebitda:r.yoy!=null?(sign(r.yoy)+Math.abs(r.yoy).toFixed(1)+'% est.'):'',
     empresa:r.empresa, periodo:r.anio,
@@ -4723,18 +4737,18 @@ function mostrarResultados(r){
     if(t==='danger') return '<span style="display:inline-block;padding:2px 8px;border-radius:5px;font-size:11px;font-weight:700;background:rgba(244,92,92,.15);color:var(--danger);">🚨 Alerta</span>';
     return '';
   };
-  const scoreColor=r.score>=80?'var(--success)':r.score>=60?'var(--warning)':'var(--danger)';
-  const scoreLabel=r.score>=80?'Condición Óptima':r.score>=60?'Condición Aceptable':'Requiere Atención';
+  const scoreColor=r.score==null?'var(--muted)':r.score>=80?'var(--success)':r.score>=60?'var(--warning)':'var(--danger)';
+  const scoreLabel=r.score==null?'Sin datos suficientes':r.score>=80?'Condición Óptima':r.score>=60?'Condición Aceptable':'Requiere Atención';
 
   cont.innerHTML=`
   <!-- SCORE -->
   <div class="card">
     <div class="card-header">
-      <div class="card-title">🏆 Score Financiero · ${r.score}/100</div>
+      <div class="card-title">🏆 Score Financiero · ${r.score!=null?r.score+'/100':'—'}</div>
       <span class="card-badge ${r.score>=80?'success':r.score>=60?'warning':''}">${scoreLabel}</span>
     </div>
     <div style="height:8px;background:var(--border2);border-radius:4px;overflow:hidden;margin-bottom:16px;">
-      <div style="width:${r.score}%;height:100%;background:${scoreColor};border-radius:4px;transition:.8s;"></div>
+      <div style="width:${r.score??0}%;height:100%;background:${scoreColor};border-radius:4px;transition:.8s;"></div>
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;">
       ${r.briefings.map(b=>`
@@ -4921,6 +4935,14 @@ function parseExcelWorkbook(wb){
     const m2=s.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/); if(m2) return parseInt(m2[2])-1;
     return -1;
   };
+  const yearOf=v=>{
+    if(!v) return -1;
+    if(typeof v==='number'&&v>40000){ const d=new Date(Date.UTC(1899,11,30)+v*86400000); return d.getUTCFullYear(); }
+    const s=String(v);
+    const m1=s.match(/(\d{4})[\/\-](\d{1,2})/); if(m1) return parseInt(m1[1]);
+    const m2=s.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/); if(m2) return parseInt(m2[3]);
+    return -1;
+  };
 
   if(isStructured){
     // ── STRUCTURED FORMAT: Estado de Resultados + Balance General ──
@@ -5014,11 +5036,12 @@ function parseExcelWorkbook(wb){
       const v=col(r,'ventas','venta','ingreso','importe','monto');
       const cliente=colStr(r,'cliente','client');
       const region=colStr(r,'region','zona','sucursal','sector','segmento','division','canal','plaza','tienda','unidad','branch','area','territorio');
-      const m=monthOf(colStr(r,'fecha','date'));
+      const fecStr=colStr(r,'fecha','date');
+      const m=monthOf(fecStr); const rowYr=yearOf(fecStr);
       sumV+=v;
       if(cliente){ clSet.add(cliente.toLowerCase()); if(v>0) clienteMapV[cliente]=(clienteMapV[cliente]||0)+v; }
       if(region&&v>0) regionMapV[region]=(regionMapV[region]||0)+v;
-      if(m>=0&&m<12) mV[m]+=v;
+      if(m>=0&&m<12&&(rowYr<0||!mostRecent||rowYr===mostRecent)) mV[m]+=v;
     });
     if(clSet.size>0) data.clientes=String(clSet.size);
     if(Object.keys(clienteMapV).length>0) data.clienteMap=clienteMapV;
@@ -5089,6 +5112,8 @@ function parseExcelWorkbook(wb){
     const rV=parseRows(getSheet('ventas'),['ventas','fecha','cliente']);
     let sumV=0,sumC=0; const mV=new Array(12).fill(0),mC=new Array(12).fill(0); const clSet=new Set();
     const clienteMapT={}, regionMapT={};
+    const _trxYrs=new Set(); rV.forEach(r=>{const yr=yearOf(colStr(r,'fecha','date'));if(yr>0)_trxYrs.add(yr);});
+    const _trxMR=_trxYrs.size>0?Math.max(..._trxYrs):null;
     rV.forEach(r=>{
       const v=col(r,'ventas','venta','ingreso','importe','monto');
       const c=col(r,'costo','costos','cogs');
@@ -5097,8 +5122,9 @@ function parseExcelWorkbook(wb){
       const region=colStr(r,'region','zona','sucursal','sector','segmento','division','canal','plaza','tienda','unidad','branch','area','territorio');
       if(cliente){ clSet.add(cliente.toLowerCase()); if(v>0) clienteMapT[cliente]=(clienteMapT[cliente]||0)+v; }
       if(region&&v>0) regionMapT[region]=(regionMapT[region]||0)+v;
-      const m=monthOf(colStr(r,'fecha','date'));
-      if(m>=0&&m<12){ mV[m]+=v; mC[m]+=c; }
+      const fecStr=colStr(r,'fecha','date');
+      const m=monthOf(fecStr); const rowYr=yearOf(fecStr);
+      if(m>=0&&m<12&&(rowYr<0||!_trxMR||rowYr===_trxMR)){ mV[m]+=v; mC[m]+=c; }
     });
     if(sumV>0){ data.ventas=String(Math.round(sumV)); if(mV.some(x=>x>0)) data.m_ventas=mV.map(Math.round).join(','); }
     if(sumC>0){ data.cogs=String(Math.round(sumC));   if(mC.some(x=>x>0)) data.m_cogs=mC.map(Math.round).join(','); }
@@ -5622,10 +5648,26 @@ function downloadTemplate(){
   window.getCalc = getCalc;
 
   // Referentes sectoriales (PyME México · configurables a futuro)
-  const BM = { margenEbitda:15, margenNeto:8, razCorriente:1.5, debtEbitda:3, cobIntereses:3, ccc:60, dso:45, roe:15 };
+  function getBM(giro){
+    const g=(giro||'').toLowerCase();
+    if(g.includes('restaur')||g.includes('aliment')||g.includes('gastro')||g.includes('food')||g.includes('beber'))
+      return {margenEbitda:10,margenNeto:5,razCorriente:1.2,debtEbitda:3.5,cobIntereses:2.5,ccc:25,dso:15,roe:12};
+    if(g.includes('tecnol')||g.includes('software')||g.includes('tech')||g.includes('digital')||g.includes('sistemas'))
+      return {margenEbitda:25,margenNeto:15,razCorriente:2,debtEbitda:2,cobIntereses:5,ccc:40,dso:30,roe:20};
+    if(g.includes('manufactur')||g.includes('industri')||g.includes('producc')||g.includes('fabri'))
+      return {margenEbitda:12,margenNeto:7,razCorriente:1.5,debtEbitda:3.5,cobIntereses:3,ccc:75,dso:45,roe:14};
+    if(g.includes('salud')||g.includes('medic')||g.includes('clinic')||g.includes('hospital')||g.includes('farmac'))
+      return {margenEbitda:18,margenNeto:10,razCorriente:1.5,debtEbitda:2.5,cobIntereses:4,ccc:40,dso:30,roe:16};
+    if(g.includes('construcc')||g.includes('inmobil')||g.includes('bienes raice')||g.includes('develop'))
+      return {margenEbitda:12,margenNeto:8,razCorriente:1.3,debtEbitda:4,cobIntereses:2.5,ccc:90,dso:60,roe:12};
+    if(g.includes('transport')||g.includes('logistic')||g.includes('fletam'))
+      return {margenEbitda:11,margenNeto:6,razCorriente:1.3,debtEbitda:3.5,cobIntereses:2.5,ccc:50,dso:30,roe:13};
+    return {margenEbitda:15,margenNeto:8,razCorriente:1.5,debtEbitda:3,cobIntereses:3,ccc:60,dso:45,roe:15};
+  }
 
   /* ---------- DIAGNÓSTICO ---------- */
   function generarDiagnostico(r){
+    const BM=getBM(r.giro);
     const F=[],RI=[],RE=[],IM=[];
     const it=(t,x)=>({titulo:t,texto:x});
 
@@ -5644,7 +5686,10 @@ function downloadTemplate(){
       else RI.push(it('Riesgo de liquidez', 'Tu razón corriente es '+_x(r.razCorriente)+' (menor a 1.0x): tus pasivos de corto plazo superan tus activos de corto plazo. Riesgo real de impago inmediato.'));
     }
 
-    if(r.debtEbitda!=null){
+    if(r.debtEbitdaCritical){
+      RI.push(it('Deuda + EBITDA negativo — Crítico','Tu operación pierde a nivel operativo ('+_m(r.ebitda)+') y tienes '+_m(r.deudaTotal||0)+' en deuda. Sin capacidad de pago: riesgo financiero máximo.'));
+      RE.push(it('Reestructurar deuda urgente','Con EBITDA negativo y deuda activa, la prioridad es renegociar plazos o conseguir capital externo. Cada mes que pase agrava la situación.'));
+    } else if(r.debtEbitda!=null){
       if(r.debtEbitda<=2) F.push(it('Deuda bajo control', 'Tu Deuda/EBITDA es '+_x(r.debtEbitda)+'. Indica cuántos años de EBITDA necesitarías para pagar toda tu deuda; abajo de 2x es muy manejable.'));
       else if(r.debtEbitda<=BM.debtEbitda+0.5) RI.push(it('Apalancamiento moderado', 'Tu Deuda/EBITDA es '+_x(r.debtEbitda)+'. Vigila que no suba de '+_x(BM.debtEbitda)+', donde la deuda empieza a pesar sobre el flujo.'));
       else RI.push(it('Endeudamiento elevado', 'Tu Deuda/EBITDA es '+_x(r.debtEbitda)+', sobre el referente ('+_x(BM.debtEbitda)+'). Eleva el riesgo de liquidez y el costo financiero.'));
@@ -5665,8 +5710,8 @@ function downloadTemplate(){
     // Margen bruto / estructura de costos (calculable sin balance)
     if(r.margenBruto>=40) F.push(it('Margen bruto saludable','Tu margen bruto es '+_pp(r.margenBruto)+'. De cada $100 vendidos quedan '+_pp(r.margenBruto)+' tras cubrir el costo directo — por encima del referente de 40%.'));
     else if(r.margenBruto<25&&r.margenBruto>0) RI.push(it('Margen bruto bajo','Margen bruto '+_pp(r.margenBruto)+': el costo de ventas consume '+_pp(100-r.margenBruto)+' de cada venta. Revisar precios o eficiencia en producción/compras.'));
-    if(r.gadmin>0&&r.gadmin/r.ventas*100>18) RI.push(it('Gastos administrativos elevados','G&A es '+_pp(r.gadmin/r.ventas*100)+' de las ventas ('+_m(r.gadmin)+'). Referente PyME ~12%. Reducir 5% añadiría '+_m(r.gadmin*0.05)+' al EBITDA.'));
-    else if(r.gadmin>0&&r.gadmin/r.ventas*100<10) F.push(it('Estructura administrativa eficiente','G&A es sólo '+_pp(r.gadmin/r.ventas*100)+' de ventas. Eficiencia que libera margen para crecimiento.'));
+    if(r.gadmin>0&&r.ventas>0&&r.gadmin/r.ventas*100>18) RI.push(it('Gastos administrativos elevados','G&A es '+_pp(r.gadmin/r.ventas*100)+' de las ventas ('+_m(r.gadmin)+'). Referente PyME ~12%. Reducir 5% añadiría '+_m(r.gadmin*0.05)+' al EBITDA.'));
+    else if(r.gadmin>0&&r.ventas>0&&r.gadmin/r.ventas*100<10) F.push(it('Estructura administrativa eficiente','G&A es sólo '+_pp(r.gadmin/r.ventas*100)+' de ventas. Eficiencia que libera margen para crecimiento.'));
     if(r.flujoOp!=null){
       if(r.flujoOp>0) F.push(it('Generación de efectivo operativo','La operación genera '+_m(r.flujoOp)+' de flujo propio — negocio autosustentable.'));
       else RI.push(it('Flujo operativo negativo','La operación consume '+_m(Math.abs(r.flujoOp))+' de caja. Revisar ciclo de cobros y niveles de inventario.'));
@@ -5690,6 +5735,7 @@ function downloadTemplate(){
 
   /* ---------- CFO INSIGHTS ---------- */
   function generarCFOInsights(r){
+    const BM=getBM(r.giro);
     const ins=[];
     const add=(categoria,prioridad,titulo,descripcion,impacto,urgencia,beneficio)=>ins.push({categoria,prioridad,titulo,descripcion,impacto,urgencia,beneficio});
 
@@ -6346,7 +6392,7 @@ function renderDashboardView(r){
   if(cards[2]) cards[2].innerHTML=_m(r.flujoNeto);
   if(cards[3]) cards[3].innerHTML=_pp(r.margenEbitda);
   if(cards[4]) cards[4].innerHTML=r.clientes?(+r.clientes).toLocaleString():'—';
-  if(cards[5]) cards[5].innerHTML=r.score+'<span style="font-size:14px;font-weight:500;color:var(--muted);margin-left:2px;">/100</span>';
+  if(cards[5]) cards[5].innerHTML=r.score!=null?r.score+'<span style="font-size:14px;font-weight:500;color:var(--muted);margin-left:2px;">/100</span>':'—';
   // YoY badge
   const changes=document.querySelectorAll('#dashboardView .kpi-change');
   if(changes[0] && r.yoy!=null){
@@ -6380,11 +6426,11 @@ function renderDashboardView(r){
   const fills=document.querySelectorAll('#dashboardView .kpi-progress-fill');
   const clamp=(v,min=0,max=100)=>Math.max(min,Math.min(max,v));
   if(fills[0]){ const p=r.yoy!=null?clamp(50+r.yoy*2):75; fills[0].style.width=p+'%'; }
-  if(fills[1]){ fills[1].style.width=clamp(r.margenEbitda/20*100)+'%'; }
-  if(fills[2]){ fills[2].style.width=(r.flujoOp>0?clamp(r.flujoOp/r.ventas*100/0.15*100):5)+'%'; }
-  if(fills[3]){ fills[3].style.width=clamp(r.margenEbitda/25*100)+'%'; }
-  if(fills[4]){ fills[4].style.width=clamp(r.concentracion>10?90:r.concentracion>5?70:r.concentracion>3?50:35)+'%'; }
-  if(fills[5]){ fills[5].style.width=r.score+'%'; }
+  if(fills[1]){ fills[1].style.width=(r.margenEbitda!=null?clamp(r.margenEbitda/20*100):0)+'%'; }
+  if(fills[2]){ fills[2].style.width=(r.flujoOp>0&&r.ventas>0?clamp(r.flujoOp/r.ventas*100/0.15*100):5)+'%'; }
+  if(fills[3]){ fills[3].style.width=(r.margenEbitda!=null?clamp(r.margenEbitda/25*100):0)+'%'; }
+  if(fills[4]){ fills[4].style.width=(r.concentracion!=null?clamp(r.concentracion>10?90:r.concentracion>5?70:r.concentracion>3?50:35):50)+'%'; }
+  if(fills[5]){ fills[5].style.width=(r.score??0)+'%'; }
   // kpi-change dinámicos para cards 2-5 (changes ya declarado arriba)
   if(changes[1]){
     const s=r.margenEbitda>=15?'positive':r.margenEbitda>=8?'neutral':'negative';
@@ -7474,7 +7520,7 @@ function _applyForecast(r){
   if(cardTitle) cardTitle.textContent=`Forecast Mensual · ${months[0]}–${months[11]} ${yrNext}`;
   const cardBadge=el.querySelector('.card .card-badge');
   if(cardBadge) cardBadge.textContent=`Base: ${Math.round(gBase*100)}% | Opt: +${Math.round(dOpt*100)}% | Cons: -${Math.round(dCons*100)}%`;
-  const lastM=((r.ingMensual&&r.ingMensual[11])||r.ventas/12)/1e6;
+  const lastM=r.ingMensual&&r.ingMensual.some(v=>v>0)?r.ingMensual.reduce((a,b)=>a+b,0)/12:r.ventas/12/1e6;
   const proj=g=>months.map((_,i)=>+(lastM*(1+g)**((i+1)/12)).toFixed(3));
   mkChart('forecastChart',{type:'line',data:{labels:months,datasets:[
     {label:'Optimista', data:proj(gOpt), borderColor:'#10B981',borderWidth:1.5,tension:.4,pointRadius:3,fill:{target:2,above:'rgba(16,185,129,.12)'},backgroundColor:'rgba(16,185,129,.12)'},
