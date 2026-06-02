@@ -587,6 +587,24 @@ th[data-tip]:hover::before{opacity:1;}
   .uw-step-line{width:24px;}
   .uw-h1{font-size:26px;}
 }
+/* ── VENTAS POR PRODUCTO ──────────────────────────────────── */
+.prod-drop-zone{border:2px dashed var(--border);border-radius:16px;padding:40px 24px;text-align:center;cursor:pointer;background:rgba(91,142,240,.03);transition:border-color .2s,background .2s;margin-bottom:20px;}
+.prod-drop-zone:hover,.prod-drop-zone.prod-drag-active{border-color:var(--primary);background:rgba(91,142,240,.08);}
+.prod-drop-icon{font-size:40px;margin-bottom:10px;line-height:1;}
+.prod-drop-title{font-size:16px;font-weight:700;color:var(--text);margin-bottom:6px;}
+.prod-drop-sub{font-size:13px;color:var(--muted);margin-bottom:4px;}
+.prod-drop-hint{font-size:11px;color:var(--muted2);margin-top:6px;}
+.prod-file-card{display:flex;flex-direction:column;gap:4px;padding:10px 14px;background:var(--card2);border:1px solid var(--border);border-radius:10px;min-width:180px;max-width:240px;flex:1;}
+.prod-file-card-name{font-size:12px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.prod-file-card-rows{font-size:11px;color:var(--success);}
+.prod-file-card-cols{font-size:10px;color:var(--muted);line-height:1.5;}
+.prod-file-card-warn{font-size:10px;color:var(--warning);}
+.prod-abc-a{display:inline-block;padding:2px 7px;border-radius:5px;font-size:10px;font-weight:800;background:rgba(16,185,129,.18);color:#10B981;}
+.prod-abc-b{display:inline-block;padding:2px 7px;border-radius:5px;font-size:10px;font-weight:800;background:rgba(245,158,11,.18);color:#F59E0B;}
+.prod-abc-c{display:inline-block;padding:2px 7px;border-radius:5px;font-size:10px;font-weight:800;background:rgba(156,163,175,.15);color:#9CA3AF;}
+.prod-pct-bar{height:5px;border-radius:3px;background:rgba(91,142,240,.15);margin-top:4px;overflow:hidden;}
+.prod-pct-fill{height:100%;border-radius:3px;background:var(--primary);transition:width .4s;}
+@media(max-width:860px){#prod-analysis>div{grid-template-columns:1fr !important;}#prod-analysis>div>.card:first-child,#prod-analysis>div>.card:last-child{grid-column:1/2 !important;}}
 </style>
 </head>
 <body>
@@ -710,6 +728,7 @@ th[data-tip]:hover::before{opacity:1;}
     <button onclick="showView('financeView',this)"><span class="nav-icon">💰</span>Financial Intelligence</button>
     <button id="navAnalyticsBtn" onclick="showView('analyticsView',this)" style="display:none;"><span class="nav-icon">📈</span>Performance Analytics</button>
     <button onclick="showView('comparativosView',this)"><span class="nav-icon">🔁</span>Comparativos</button>
+    <button onclick="showView('productosView',this)"><span class="nav-icon">📦</span>Ventas por Producto</button>
 
     <div class="nav-section-label">Finanzas</div>
     <button onclick="showView('cashflowView',this)"><span class="nav-icon">💧</span>Cash Flow Center</button>
@@ -3021,6 +3040,95 @@ background:#10B981;
 </div>
 
 
+<!-- ==================== VENTAS POR PRODUCTO ==================== -->
+<div id="productosView" class="view" style="display:none;">
+  <header class="topbar">
+    <div>
+      <h2 class="page-title">📦 Ventas por Producto</h2>
+      <p class="page-subtitle" id="prod-subtitle">Carga archivos CSV o Excel para analizar tu mix de productos</p>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;">
+      <select id="prod-filter-period" onchange="prodApplyFilter()" style="padding:8px 12px;background:var(--card2);border:1px solid var(--border);border-radius:9px;color:var(--text);font-size:12px;outline:none;display:none;">
+        <option value="">Todos los períodos</option>
+      </select>
+      <button onclick="prodReset()" id="prod-reset-btn" style="display:none;padding:9px 16px;border-radius:10px;border:1px solid rgba(244,92,92,.35);background:rgba(244,92,92,.08);color:var(--danger);font-size:12px;font-weight:700;cursor:pointer;">✕ Limpiar</button>
+    </div>
+  </header>
+
+  <div id="prod-upload-zone" class="prod-drop-zone"
+    ondragover="event.preventDefault();this.classList.add('prod-drag-active')"
+    ondragleave="this.classList.remove('prod-drag-active')"
+    ondrop="this.classList.remove('prod-drag-active');prodHandleDrop(event)"
+    onclick="document.getElementById('prod-file-input').click()">
+    <div class="prod-drop-icon">📂</div>
+    <div class="prod-drop-title">Arrastra tus archivos aquí</div>
+    <div class="prod-drop-sub">CSV y Excel (.xlsx) · Múltiples archivos a la vez</div>
+    <div class="prod-drop-hint">Detecta automáticamente: fecha, producto, cantidad, precio</div>
+    <input type="file" id="prod-file-input" accept=".csv,.xlsx,.xls" multiple style="display:none;"
+      onchange="prodHandleFiles(this.files)">
+  </div>
+
+  <div id="prod-files-summary" style="display:none;">
+    <div id="prod-files-list" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:20px;"></div>
+  </div>
+
+  <section class="kpi-grid" id="prod-kpi-grid" style="display:none;">
+    <div class="kpi-card accent-green">
+      <div class="kpi-top"><div class="kpi-label">Ingreso Total</div><div class="kpi-icon green">💰</div></div>
+      <div class="kpi-value" id="prod-kpi-ingreso">—</div>
+      <div class="kpi-bottom"><div class="kpi-change positive" id="prod-kpi-transacciones">— transacciones</div></div>
+    </div>
+    <div class="kpi-card accent-blue">
+      <div class="kpi-top"><div class="kpi-label">Producto Top (ingresos)</div><div class="kpi-icon blue">🏆</div></div>
+      <div class="kpi-value" style="font-size:16px;line-height:1.2;" id="prod-kpi-top-ing">—</div>
+      <div class="kpi-bottom"><div class="kpi-change positive" id="prod-kpi-top-ing-val">—</div></div>
+    </div>
+    <div class="kpi-card accent-yellow">
+      <div class="kpi-top"><div class="kpi-label">Producto Top (volumen)</div><div class="kpi-icon yellow">📊</div></div>
+      <div class="kpi-value" style="font-size:16px;line-height:1.2;" id="prod-kpi-top-vol">—</div>
+      <div class="kpi-bottom"><div class="kpi-change positive" id="prod-kpi-top-vol-val">—</div></div>
+    </div>
+    <div class="kpi-card accent-purple">
+      <div class="kpi-top"><div class="kpi-label">Ticket Promedio</div><div class="kpi-icon purple">🎫</div></div>
+      <div class="kpi-value" id="prod-kpi-ticket">—</div>
+      <div class="kpi-bottom"><div class="kpi-change positive">por transacción</div></div>
+    </div>
+  </section>
+
+  <div id="prod-analysis" style="display:none;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+      <div class="card" style="grid-column:1/2;">
+        <div class="card-header">
+          <div class="card-title">Top 10 Productos</div>
+          <span class="card-badge" id="prod-total-badge">0 productos</span>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="enterprise-table" id="prod-top10-table">
+            <thead><tr>
+              <th data-tip="Clasificación ABC: A=top 80% ingresos acumulados · B=siguiente 15% · C=resto">ABC</th>
+              <th data-tip="Nombre del producto o SKU detectado en tus archivos">Producto</th>
+              <th data-tip="Total de unidades vendidas en el período seleccionado">Unidades</th>
+              <th data-tip="Ingreso total generado por este producto">Ingreso</th>
+              <th data-tip="Participación sobre el ingreso total del dataset">% Total</th>
+            </tr></thead>
+            <tbody id="prod-top10-body"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card" style="grid-column:2/3;">
+        <div class="card-header">
+          <div class="card-title">Ingresos por Producto</div>
+          <span class="card-badge success">Top 10</span>
+        </div>
+        <div style="height:320px;position:relative;">
+          <canvas id="prod-bar-chart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /productosView -->
+
 <!-- ==================== COMPARATIVOS ==================== -->
 <div id="comparativosView" class="view" style="display:none;">
 <header class="topbar">
@@ -3566,6 +3674,7 @@ function showView(viewId, button){
   if(viewId==='aiView'          && typeof renderAIView==='function')         renderAIView(r);
   if(viewId==='copilotView'     && typeof renderCopilotView==='function')    renderCopilotView(r);
   if(viewId==='comparativosView'&& typeof renderComparativosView==='function') setTimeout(()=>renderComparativosView(r),80);
+  if(viewId==='productosView'   && typeof prodRenderView==='function')        setTimeout(()=>prodRenderView(),80);
 }
 
 function showViewFromBanner(viewId){
@@ -7602,7 +7711,13 @@ Ratios: Score ${Math.round(r.score||0)}/100| Liquidez ${x(r.razCorriente)}| D/EB
 Sucursales/Regiones: ${sucStr}
 Clientes top: ${cliStr}
 Ingresos mensuales: ${ingStr}
-Alertas activas: ${alertas}`;
+Alertas activas: ${alertas}${(()=>{
+  const pd=window._prodData;
+  if(!pd||!pd.lista||!pd.lista.length) return '';
+  const top5=pd.lista.slice(0,5).map(p=>`${p.nombre}:${f(p.ingreso)}(${(p.pctTotal*100).toFixed(0)}%,${p.abc})`).join(', ');
+  const topVol=pd.topVol?`${pd.topVol.nombre}:${pd.topVol.unidades.toLocaleString()}uds`:'—';
+  return `\nMix Productos (${pd.lista.length} SKUs, ${pd.totalTx.toLocaleString()} tx): Top5 por ingreso: ${top5}\nProducto mayor volumen: ${topVol} | Ticket promedio: ${f(pd.ticketProm)} | Ingreso total dataset: ${f(pd.totalIngreso)}\nClasificación ABC: A=top 80% ingresos, B=siguiente 15%, C=resto.`;
+})()}`;
 }
 
 function copilotAppendLoading(id){
@@ -8973,6 +9088,195 @@ document.addEventListener('DOMContentLoaded',()=>{
 });
 window.toggleSidebar=toggleSidebar;
 window.closeSidebar=closeSidebar;
+
+/* ══════════════════════════════════════════════════════════════
+   VENTAS POR PRODUCTO  ·  ingesta · análisis · render
+══════════════════════════════════════════════════════════════ */
+(function(){
+  let _rows=[],_files=[],_fRows=[],_prodChart=null;
+  const COL_FECHA    =/^(fecha|date|dt|periodo|period|mes|month|dia|day)$/i;
+  const COL_PRODUCTO =/^(producto|product|prod|descripci[oó]n|desc|item|art[ií]culo|article|sku|nombre|name|concepto)$/i;
+  const COL_CANTIDAD =/^(cantidad|qty|quantity|units|unidades|piezas|pieces|vol|volumen|cant)$/i;
+  const COL_PRECIO   =/^(precio|price|importe|monto|venta|total|valor|amount|ingreso|revenue|subtotal)$/i;
+
+  function detectCols(headers){
+    const map={fecha:-1,producto:-1,cantidad:-1,precio:-1};
+    headers.forEach((h,i)=>{
+      const s=(h||'').toString().trim();
+      if(map.fecha   ===-1&&COL_FECHA.test(s))    map.fecha=i;
+      if(map.producto===-1&&COL_PRODUCTO.test(s)) map.producto=i;
+      if(map.cantidad===-1&&COL_CANTIDAD.test(s)) map.cantidad=i;
+      if(map.precio  ===-1&&COL_PRECIO.test(s))   map.precio=i;
+    });
+    return map;
+  }
+  function parseCSV(text){
+    const lines=text.split(/\r?\n/).filter(l=>l.trim());
+    if(!lines.length) return [];
+    const sep=lines[0].includes(';')?';':',';
+    return lines.map(l=>l.split(sep).map(c=>c.replace(/^"|"$/g,'').trim()));
+  }
+  function toNum(v){
+    if(v===null||v===undefined||v==='') return 0;
+    const n=parseFloat(v.toString().replace(/[$,\s]/g,'').replace(',','.'));
+    return isNaN(n)?0:n;
+  }
+  function normalizeRows(raw,filename){
+    if(!raw.length) return {rows:[],warnings:[]};
+    const headers=raw[0].map(h=>(h||'').toString().trim());
+    const map=detectCols(headers);
+    const warnings=[];
+    if(map.producto===-1) warnings.push('No se detectó columna de producto');
+    if(map.precio  ===-1) warnings.push('No se detectó columna de precio/importe');
+    const rows=[];
+    for(let i=1;i<raw.length;i++){
+      const r=raw[i];
+      if(!r||r.every(c=>!c)) continue;
+      const prod=map.producto>=0?(r[map.producto]||'').toString().trim():'(sin nombre)';
+      if(!prod) continue;
+      rows.push({
+        fecha: map.fecha>=0?(r[map.fecha]||'').toString().trim():'',
+        producto: prod,
+        cantidad: map.cantidad>=0?toNum(r[map.cantidad]):1,
+        precio:   map.precio>=0?toNum(r[map.precio]):0,
+        fuente: filename
+      });
+    }
+    return {rows,warnings,headers,rawCount:raw.length-1};
+  }
+  function processXLSX(buffer,filename,cb){
+    if(!window.XLSX){cb([],[],'XLSX no disponible');return;}
+    try{
+      const wb=XLSX.read(buffer,{type:'array'});
+      const raw=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:''});
+      const {rows,warnings,headers,rawCount}=normalizeRows(raw,filename);
+      cb(rows,warnings,null,headers,rawCount);
+    }catch(e){cb([],[],e.message);}
+  }
+  function processCSV(text,filename,cb){
+    try{
+      const raw=parseCSV(text);
+      const {rows,warnings,headers,rawCount}=normalizeRows(raw,filename);
+      cb(rows,warnings,null,headers,rawCount);
+    }catch(e){cb([],[],e.message);}
+  }
+  window.prodHandleDrop=function(e){e.preventDefault();prodHandleFiles(e.dataTransfer.files);};
+  window.prodHandleFiles=function(fileList){
+    if(!fileList||!fileList.length) return;
+    let pending=fileList.length;
+    Array.from(fileList).forEach(file=>{
+      const ext=file.name.split('.').pop().toLowerCase();
+      const reader=new FileReader();
+      reader.onload=function(ev){
+        const onDone=(rows,warnings,err,headers,rawCount)=>{
+          if(!err){_rows=[..._rows,...rows];_files.push({name:file.name,rawCount,rowCount:rows.length,headers,warnings});}
+          else _files.push({name:file.name,rawCount:0,rowCount:0,warnings:[err]});
+          if(--pending===0) prodAfterLoad();
+        };
+        ext==='csv'?processCSV(ev.target.result,file.name,onDone):processXLSX(ev.target.result,file.name,onDone);
+      };
+      ext==='csv'?reader.readAsText(file):reader.readAsArrayBuffer(file);
+    });
+  };
+  function prodAfterLoad(){
+    _fRows=[..._rows];
+    prodBuildPeriodFilter();
+    prodRenderFileSummary();
+    prodRenderView();
+    document.getElementById('prod-upload-zone').style.display='none';
+    document.getElementById('prod-reset-btn').style.display='';
+    document.getElementById('prod-filter-period').style.display='';
+    if(typeof showNotif==='function') showNotif('✅ '+_rows.length+' registros cargados','success');
+  }
+  function prodBuildPeriodFilter(){
+    const sel=document.getElementById('prod-filter-period');
+    const periods=new Set();
+    _rows.forEach(r=>{
+      if(!r.fecha) return;
+      const d=new Date(r.fecha);
+      if(!isNaN(d)) periods.add(d.getFullYear()+'-'+(d.getMonth()+1).toString().padStart(2,'0'));
+      else{const m=r.fecha.match(/(\d{4})/);if(m) periods.add(m[1]);}
+    });
+    sel.innerHTML='<option value="">Todos los períodos</option>'+[...periods].sort().reverse().map(p=>`<option value="${p}">${p}</option>`).join('');
+  }
+  window.prodApplyFilter=function(){
+    const val=document.getElementById('prod-filter-period').value;
+    _fRows=val?_rows.filter(r=>{
+      if(!r.fecha) return false;
+      const d=new Date(r.fecha);
+      const key=!isNaN(d)?d.getFullYear()+'-'+(d.getMonth()+1).toString().padStart(2,'0'):null;
+      return key===val||r.fecha.includes(val);
+    }):[..._rows];
+    prodRenderView();
+  };
+  function prodRenderFileSummary(){
+    const wrap=document.getElementById('prod-files-summary');
+    document.getElementById('prod-files-list').innerHTML=_files.map(f=>`
+      <div class="prod-file-card">
+        <div class="prod-file-card-name" title="${f.name}">📄 ${f.name}</div>
+        <div class="prod-file-card-rows">✅ ${f.rowCount.toLocaleString()} registros</div>
+        <div class="prod-file-card-cols">${(f.headers||[]).slice(0,4).join(' · ')}</div>
+        ${f.warnings.length?`<div class="prod-file-card-warn">⚠️ ${f.warnings[0]}</div>`:''}
+      </div>`).join('');
+    wrap.style.display='';
+  }
+  function calcProductos(rows){
+    const map={};let totalIngreso=0;
+    rows.forEach(r=>{
+      const k=r.producto||'(sin nombre)';
+      if(!map[k]) map[k]={nombre:k,unidades:0,ingreso:0};
+      map[k].unidades+=r.cantidad;map[k].ingreso+=r.precio;totalIngreso+=r.precio;
+    });
+    const lista=Object.values(map).sort((a,b)=>b.ingreso-a.ingreso);
+    let acum=0;
+    lista.forEach(p=>{acum+=p.ingreso;const pct=totalIngreso?acum/totalIngreso:0;p.abc=pct<=0.8?'A':pct<=0.95?'B':'C';p.pctTotal=totalIngreso?p.ingreso/totalIngreso:0;});
+    const topVol=[...lista].sort((a,b)=>b.unidades-a.unidades)[0];
+    return {lista,totalIngreso,totalTx:rows.length,topIng:lista[0],topVol,ticketProm:rows.length?totalIngreso/rows.length:0};
+  }
+  const _fm=v=>{if(v>=1e9)return'$'+(v/1e9).toFixed(2)+'B';if(v>=1e6)return'$'+(v/1e6).toFixed(2)+'M';if(v>=1e3)return'$'+(v/1e3).toFixed(1)+'K';return'$'+v.toFixed(0);};
+  window.prodRenderView=function(){
+    if(!_fRows.length) return;
+    const {lista,totalIngreso,totalTx,topIng,topVol,ticketProm}=calcProductos(_fRows);
+    document.getElementById('prod-kpi-grid').style.display='';
+    document.getElementById('prod-analysis').style.display='';
+    document.getElementById('prod-kpi-ingreso').textContent=_fm(totalIngreso);
+    document.getElementById('prod-kpi-transacciones').textContent=totalTx.toLocaleString()+' transacciones';
+    document.getElementById('prod-kpi-top-ing').textContent=topIng?topIng.nombre:'—';
+    document.getElementById('prod-kpi-top-ing-val').textContent=topIng?_fm(topIng.ingreso):'—';
+    document.getElementById('prod-kpi-top-vol').textContent=topVol?topVol.nombre:'—';
+    document.getElementById('prod-kpi-top-vol-val').textContent=topVol?topVol.unidades.toLocaleString()+' uds':'—';
+    document.getElementById('prod-kpi-ticket').textContent=_fm(ticketProm);
+    document.getElementById('prod-subtitle').textContent=totalTx.toLocaleString()+' transacciones · '+lista.length+' productos · '+_files.length+' archivo(s)';
+    const badge=document.getElementById('prod-total-badge');if(badge) badge.textContent=lista.length+' productos';
+    const top10=lista.slice(0,10);
+    document.getElementById('prod-top10-body').innerHTML=top10.map(p=>{
+      const pct=(p.pctTotal*100).toFixed(1);
+      return`<tr><td><span class="prod-abc-${p.abc.toLowerCase()}">${p.abc}</span></td>
+        <td style="max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${p.nombre}">${p.nombre}</td>
+        <td style="text-align:right;">${p.unidades.toLocaleString()}</td>
+        <td style="text-align:right;font-weight:700;">${_fm(p.ingreso)}</td>
+        <td style="text-align:right;min-width:80px;">${pct}%<div class="prod-pct-bar"><div class="prod-pct-fill" style="width:${pct}%"></div></div></td></tr>`;
+    }).join('');
+    if(_prodChart){_prodChart.destroy();_prodChart=null;}
+    const ctx=document.getElementById('prod-bar-chart');
+    if(ctx&&window.Chart){
+      _prodChart=new Chart(ctx,{type:'bar',data:{labels:top10.map(p=>p.nombre.length>18?p.nombre.slice(0,16)+'…':p.nombre),datasets:[{label:'Ingreso',data:top10.map(p=>p.ingreso),backgroundColor:top10.map(p=>p.abc==='A'?'rgba(16,185,129,.8)':p.abc==='B'?'rgba(245,158,11,.8)':'rgba(156,163,175,.6)'),borderRadius:6,borderSkipped:false}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1E1E22',callbacks:{label:c=>' '+_fm(c.parsed.x)}}},scales:{x:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#6B7280',callback:v=>_fm(v)}},y:{grid:{display:false},ticks:{color:'#9CA3AF',font:{size:11}}}}}});
+    }
+    window._prodData={lista,totalIngreso,totalTx,topIng,topVol,ticketProm};
+  };
+  window.prodReset=function(){
+    _rows=[];_files=[];_fRows=[];window._prodData=null;
+    if(_prodChart){_prodChart.destroy();_prodChart=null;}
+    ['prod-kpi-grid','prod-analysis','prod-files-summary'].forEach(id=>document.getElementById(id).style.display='none');
+    document.getElementById('prod-upload-zone').style.display='';
+    document.getElementById('prod-reset-btn').style.display='none';
+    document.getElementById('prod-filter-period').style.display='none';
+    document.getElementById('prod-subtitle').textContent='Carga archivos CSV o Excel para analizar tu mix de productos';
+    document.getElementById('prod-files-list').innerHTML='';
+    document.getElementById('prod-top10-body').innerHTML='';
+    const fi=document.getElementById('prod-file-input');if(fi) fi.value='';
+  };
+})();
 
 /* ══════════════════════════════════════════════════════════════
    DYNAMIC TABLE ENGINE  ·  tooltips · sort · col-toggle · hover
