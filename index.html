@@ -9265,6 +9265,9 @@ window.closeSidebar=closeSidebar;
   const _fm=v=>{if(v>=1e9)return'$'+(v/1e9).toFixed(2)+'B';if(v>=1e6)return'$'+(v/1e6).toFixed(2)+'M';if(v>=1e3)return'$'+(v/1e3).toFixed(1)+'K';return'$'+v.toFixed(0);};
   window.prodRenderView=function(){
     if(!_fRows.length) return;
+    const zone=document.getElementById('prod-upload-zone'); if(zone) zone.style.display='none';
+    const resetBtn=document.getElementById('prod-reset-btn'); if(resetBtn) resetBtn.style.display='';
+    const filterSel=document.getElementById('prod-filter-period'); if(filterSel) filterSel.style.display='';
     const {lista,totalIngreso,totalTx,topIng,topVol,ticketProm}=calcProductos(_fRows);
     document.getElementById('prod-kpi-grid').style.display='';
     document.getElementById('prod-analysis').style.display='';
