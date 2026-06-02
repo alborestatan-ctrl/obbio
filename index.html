@@ -3185,7 +3185,7 @@ background:#10B981;
         <span class="uw-chip">✅ Sin formato requerido</span>
       </div>
     </div>
-    <input type="file" id="excelMainInput" accept=".xlsx,.xls" style="display:none;" onchange="handleExcelFile(this.files[0])">
+    <input type="file" id="excelMainInput" accept=".xlsx,.xls" multiple style="display:none;" onchange="handleExcelFiles(this.files)">
     <div class="uw-or"><div class="uw-or-line"></div><span>o captura manualmente</span><div class="uw-or-line"></div></div>
     <button class="uw-btn-outline" onclick="uwShow('uwM1')">Ingresar datos a mano &nbsp;→</button>
     <div class="uw-template-hint">¿Primera vez? <button class="uw-link-btn" onclick="downloadTemplate()">Descarga la plantilla con ejemplos →</button></div>
@@ -4838,24 +4838,36 @@ function populateForm(data){
 /* ── EXCEL: leer y parsear ── */
 function handleExcelDrop(e){
   e.preventDefault();
-  const file=e.dataTransfer.files[0]; if(file) handleExcelFile(file);
+  const files=e.dataTransfer.files; if(files.length) handleExcelFiles(files);
 }
-function handleExcelFile(file){
-  if(!file) return;
+function handleExcelFiles(fileList){
+  if(!fileList||!fileList.length) return;
   if(!window.XLSX){ showNotif('❌ Librería Excel no cargada','error'); return; }
-  const reader=new FileReader();
-  reader.onload=function(e){
-    try{
-      const wb=XLSX.read(e.target.result,{type:'array'});
-      const data=parseExcelWorkbook(wb);
-      _pendingExcelData=data;
-      showExcelPreview(data,file.name);
-      if(typeof uwShow==='function') uwShow('uwXL');
-    }catch(err){
-      showNotif('❌ Error al leer el archivo: '+err.message,'error');
-    }
-  };
-  reader.readAsArrayBuffer(file);
+  const files=Array.from(fileList).filter(f=>/\.(xlsx|xls)$/i.test(f.name));
+  if(!files.length){ showNotif('❌ Solo se aceptan archivos .xlsx o .xls','error'); return; }
+  let pending=files.length, lastData=null, lastName='', allVentasRows=[];
+  files.forEach(function(file){
+    const reader=new FileReader();
+    reader.onload=function(ev){
+      try{
+        const wb=XLSX.read(ev.target.result,{type:'array'});
+        const data=parseExcelWorkbook(wb);
+        const vRows=data._ventasRows||[]; delete data._ventasRows;
+        allVentasRows.push(...vRows);
+        lastData=data; lastName=file.name;
+      }catch(err){
+        showNotif('❌ Error al leer '+file.name+': '+err.message,'error');
+      }
+      if(--pending===0){
+        if(lastData){ _pendingExcelData=lastData; showExcelPreview(lastData,lastName); if(typeof uwShow==='function') uwShow('uwXL'); }
+        if(allVentasRows.length && typeof window.prodInjectRows==='function'){
+          window.prodInjectRows(allVentasRows,'Ventas (Opcional)');
+          showNotif('📦 '+allVentasRows.length+' ventas cargadas en Ventas por Producto','info',4000);
+        }
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  });
 }
 function parseExcelWorkbook(wb){
   const data={};
@@ -5017,6 +5029,7 @@ function parseExcelWorkbook(wb){
     const mByYear={};
     rV.forEach(r=>{ const v=col(r,'ventas','venta','ingreso','importe','monto'); const fStr=colStr(r,'fecha','date'); const ym=fStr.match(/(\d{4})/); const yr=ym?parseInt(ym[1]):null; const m=monthOf(fStr); if(yr&&m>=0&&m<12&&v>0){ if(!mByYear[yr]) mByYear[yr]=new Array(12).fill(0); mByYear[yr][m]+=v; } });
     if(Object.keys(mByYear).length>0) data.monthlyByYear=mByYear;
+    if(rV.length) data._ventasRows=rV.map(r=>({fecha:colStr(r,'fecha','date'),producto:colStr(r,'producto','product','item','articulo','descripcion','nombre','concepto')||'(sin nombre)',cantidad:1,precio:col(r,'ventas','venta','ingreso','importe','monto'),fuente:'Ventas (Opcional)'})).filter(r=>r.producto!=='(sin nombre)'||r.precio>0);
 
     // Optional Deuda sheet
     const rD=parseRows(getSheet('deuda'),['saldo','credito','fecha']);
@@ -5092,6 +5105,7 @@ function parseExcelWorkbook(wb){
     if(clSet.size>0) data.clientes=String(clSet.size);
     if(Object.keys(clienteMapT).length>0) data.clienteMap=clienteMapT;
     if(Object.keys(regionMapT).length>0) data.regionMap=regionMapT;
+    if(rV.length) data._ventasRows=rV.map(r=>({fecha:colStr(r,'fecha','date'),producto:colStr(r,'producto','product','item','articulo','descripcion','nombre','concepto')||'(sin nombre)',cantidad:col(r,'cantidad','qty','units')||1,precio:col(r,'ventas','venta','ingreso','importe','monto'),fuente:'Ventas'})).filter(r=>r.producto!=='(sin nombre)'||r.precio>0);
 
     const rG=parseRows(getSheet('gastos'),['categ','fecha','monto']);
     let gAdmin=0,gVta=0,gFin=0,gDep=0;
@@ -9160,6 +9174,21 @@ window.closeSidebar=closeSidebar;
       cb(rows,warnings,null,headers,rawCount);
     }catch(e){cb([],[],e.message);}
   }
+  window.prodInjectRows=function(rows,sourceName){
+    if(!rows||!rows.length) return;
+    const valid=rows.filter(r=>r.producto&&r.precio>0);
+    if(!valid.length) return;
+    _rows=[..._rows,...valid];
+    _fRows=[..._rows];
+    _files.push({name:sourceName||'Ventas (Opcional)',rawCount:rows.length,rowCount:valid.length,headers:['fecha','producto','cantidad','precio'],warnings:[]});
+    const zone=document.getElementById('prod-upload-zone');
+    if(zone){
+      zone.style.display='none';
+      const resetBtn=document.getElementById('prod-reset-btn'); if(resetBtn) resetBtn.style.display='';
+      const filterSel=document.getElementById('prod-filter-period'); if(filterSel) filterSel.style.display='';
+      prodBuildPeriodFilter(); prodRenderFileSummary(); prodRenderView();
+    }
+  };
   window.prodHandleDrop=function(e){e.preventDefault();prodHandleFiles(e.dataTransfer.files);};
   window.prodHandleFiles=function(fileList){
     if(!fileList||!fileList.length) return;
