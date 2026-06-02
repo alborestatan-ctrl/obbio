@@ -3045,7 +3045,7 @@ background:#10B981;
   <header class="topbar">
     <div>
       <h2 class="page-title">📦 Ventas por Producto</h2>
-      <p class="page-subtitle" id="prod-subtitle">Carga archivos CSV o Excel para analizar tu mix de productos</p>
+      <p class="page-subtitle" id="prod-subtitle">Datos de ventas desde tu Excel de Ingresar / Actualizar Datos</p>
     </div>
     <div style="display:flex;gap:10px;align-items:center;">
       <select id="prod-filter-period" onchange="prodApplyFilter()" style="padding:8px 12px;background:var(--card2);border:1px solid var(--border);border-radius:9px;color:var(--text);font-size:12px;outline:none;display:none;">
@@ -3055,17 +3055,10 @@ background:#10B981;
     </div>
   </header>
 
-  <div id="prod-upload-zone" class="prod-drop-zone"
-    ondragover="event.preventDefault();this.classList.add('prod-drag-active')"
-    ondragleave="this.classList.remove('prod-drag-active')"
-    ondrop="this.classList.remove('prod-drag-active');prodHandleDrop(event)"
-    onclick="document.getElementById('prod-file-input').click()">
-    <div class="prod-drop-icon">📂</div>
-    <div class="prod-drop-title">Arrastra tus archivos aquí</div>
-    <div class="prod-drop-sub">CSV y Excel (.xlsx) · Múltiples archivos a la vez</div>
-    <div class="prod-drop-hint">Detecta automáticamente: fecha, producto, cantidad, precio</div>
-    <input type="file" id="prod-file-input" accept=".csv,.xlsx,.xls" multiple style="display:none;"
-      onchange="prodHandleFiles(this.files)">
+  <div id="prod-upload-zone" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:64px 24px;text-align:center;border:1.5px dashed var(--border2);border-radius:16px;margin-bottom:20px;">
+    <div style="font-size:44px;margin-bottom:16px;opacity:.35;">📦</div>
+    <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px;">Sin datos de ventas por producto</div>
+    <div style="font-size:13px;color:var(--muted);max-width:380px;line-height:1.65;">Carga tu Excel en <strong style="color:var(--primary);cursor:pointer;" onclick="document.querySelector('.nav button')&&showView('ingresarView',document.querySelector('.nav button'))">⚡ Ingresar / Actualizar Datos</strong> con una hoja <strong>Ventas</strong> que incluya columnas de producto y precio. Los datos aparecerán aquí automáticamente.</div>
   </div>
 
   <div id="prod-files-summary" style="display:none;">
@@ -9316,35 +9309,6 @@ window.closeSidebar=closeSidebar;
       prodBuildPeriodFilter(); prodRenderFileSummary(); prodRenderView();
     }
   };
-  window.prodHandleDrop=function(e){e.preventDefault();prodHandleFiles(e.dataTransfer.files);};
-  window.prodHandleFiles=function(fileList){
-    if(!fileList||!fileList.length) return;
-    let pending=fileList.length;
-    Array.from(fileList).forEach(file=>{
-      const ext=file.name.split('.').pop().toLowerCase();
-      const reader=new FileReader();
-      reader.onload=function(ev){
-        const onDone=(rows,warnings,err,headers,rawCount)=>{
-          if(!err){_rows=[..._rows,...rows];_files.push({name:file.name,rawCount,rowCount:rows.length,headers,warnings});}
-          else _files.push({name:file.name,rawCount:0,rowCount:0,warnings:[err]});
-          if(--pending===0) prodAfterLoad();
-        };
-        ext==='csv'?processCSV(ev.target.result,file.name,onDone):processXLSX(ev.target.result,file.name,onDone);
-      };
-      ext==='csv'?reader.readAsText(file):reader.readAsArrayBuffer(file);
-    });
-  };
-  function prodAfterLoad(){
-    _fRows=[..._rows];
-    prodBuildPeriodFilter();
-    prodRenderFileSummary();
-    prodRenderView();
-    document.getElementById('prod-upload-zone').style.display='none';
-    document.getElementById('prod-reset-btn').style.display='';
-    document.getElementById('prod-filter-period').style.display='';
-    _prodPersist();
-    if(typeof showNotif==='function') showNotif('✅ '+_rows.length+' registros cargados','success');
-  }
   function prodBuildPeriodFilter(){
     const sel=document.getElementById('prod-filter-period');
     const periods=new Set();
@@ -9432,10 +9396,9 @@ window.closeSidebar=closeSidebar;
     document.getElementById('prod-upload-zone').style.display='';
     document.getElementById('prod-reset-btn').style.display='none';
     document.getElementById('prod-filter-period').style.display='none';
-    document.getElementById('prod-subtitle').textContent='Carga archivos CSV o Excel para analizar tu mix de productos';
+    document.getElementById('prod-subtitle').textContent='Datos de ventas desde tu Excel de Ingresar / Actualizar Datos';
     document.getElementById('prod-files-list').innerHTML='';
     document.getElementById('prod-top10-body').innerHTML='';
-    const fi=document.getElementById('prod-file-input');if(fi) fi.value='';
   };
 })();
 
