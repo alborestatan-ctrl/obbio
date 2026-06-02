@@ -3505,7 +3505,7 @@ background:#10B981;
         <div class="uw-field">
           <label class="uw-label">Año fiscal</label>
           <select class="uw-input" id="ii_anio">
-            <option>2025</option><option selected>2024</option><option>2023</option><option>2022</option>
+            <option>2027</option><option selected>2026</option><option>2025</option><option>2024</option><option>2023</option><option>2022</option>
           </select>
         </div>
         <div class="uw-field">
@@ -4372,7 +4372,7 @@ function addDebtRow(){
     <div><label class="ilabel">Nombre del crédito</label><input class="iinput" id="dr_nombre_${i}" placeholder="Ej: Crédito Bancario A" oninput="updateDebtPreview()"></div>
     <div><label class="ilabel">Saldo ($)</label><div style="position:relative;"><span style="position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted2);font-size:12px;">$</span><input class="iinput" id="dr_saldo_${i}" type="number" min="0" placeholder="1,500,000" style="padding-left:22px;" oninput="updateDebtPreview()"></div></div>
     <div><label class="ilabel">Tasa anual</label><div style="position:relative;"><input class="iinput" id="dr_tasa_${i}" type="number" min="0" max="100" placeholder="12" style="padding-right:30px;" oninput="updateDebtPreview()"><span style="position:absolute;right:11px;top:50%;transform:translateY(-50%);color:var(--muted2);font-size:12px;">%</span></div></div>
-    <div><label class="ilabel">Vence (año)</label><input class="iinput" id="dr_vence_${i}" type="number" min="2024" max="2040" placeholder="2027" oninput="updateDebtPreview()"></div>
+    <div><label class="ilabel">Vence (año)</label><input class="iinput" id="dr_vence_${i}" type="number" min="2020" max="2040" placeholder="2027" oninput="updateDebtPreview()"></div>
     <div style="padding-bottom:2px;"><button onclick="removeDebtRow(${i})" style="padding:10px 12px;border-radius:9px;border:1px solid rgba(244,92,92,.3);background:rgba(244,92,92,.1);color:var(--danger);cursor:pointer;font-size:14px;transition:.15s;" onmouseover="this.style.background='rgba(244,92,92,.2)'" onmouseout="this.style.background='rgba(244,92,92,.1)'">✕</button></div>
   `;
   cont.appendChild(row);
@@ -4526,7 +4526,7 @@ function calcFinanciero(){
   const briefings=generarBriefings({margenEbitda,margenNeto,razCorriente,debtEbitda,debtEbitdaCritical,cobIntereses,ccc,yoy,score,concentracion,utilNeta,flujoNeto,ebitda,deudaTotal});
 
   // Series mensuales
-  const dist=[.07,.07,.08,.08,.08,.09,.09,.09,.09,.09,.08,.07];
+  const dist=[.07,.07,.08,.08,.08,.09,.09,.09,.09,.10,.09,.07];
   let ingMensual,ebitdaMensual,cfMensual;
   if(er.mensual){
     ingMensual    = er.mensual.ventas.map(v=>+(v/1e6).toFixed(2));
@@ -4534,7 +4534,10 @@ function calcFinanciero(){
       const ub=v-(er.mensual.cogs[i]||0); const eb=ub-((er.gadmin+er.gventas)/12)+dep/12;
       return +(eb/1e6).toFixed(2);
     });
-    cfMensual = ingMensual.map(v=>+(v*0.16).toFixed(2));
+    const _eSumM=ebitdaMensual.reduce((a,b)=>a+b,0);
+    cfMensual = _eSumM!==0
+      ? ebitdaMensual.map(v=>+((v/_eSumM)*(flujoNeto/1e6)).toFixed(2))
+      : ingMensual.map(()=>+(flujoNeto/12/1e6).toFixed(2));
   } else {
     ingMensual    = dist.map(d=>+((er.ventas*d)/1e6).toFixed(2));
     ebitdaMensual = dist.map(d=>+((ebitda*d)/1e6).toFixed(2));
@@ -6065,18 +6068,18 @@ function downloadTemplate(){
     const scX=W-MR-178;
     sf(18,18,28);doc.roundedRect(scX,338,170,138,8,8,'F');
     sf(...scoreC);doc.circle(scX+44,404,31,'F');
-    doc.setFont('helvetica','bold');doc.setFontSize(20);sc(...C.white);doc.text(String(Math.round(r.score)),scX+44,411,{align:'center'});
+    doc.setFont('helvetica','bold');doc.setFontSize(20);sc(...C.white);doc.text(r.score!=null?String(Math.round(r.score)):'—',scX+44,411,{align:'center'});
     doc.setFontSize(7.5);sc(...C.white);doc.text('/100',scX+44,424,{align:'center'});
     doc.setFont('helvetica','bold');doc.setFontSize(12);sc(...scoreC);doc.text(cls,scX+90,381);
     doc.setFont('helvetica','normal');doc.setFontSize(9);sc(155,175,218);doc.text('Health Score',scX+90,397);doc.text('Financiero',scX+90,412);
     // Barra de progreso del score
     sf(28,28,42);doc.roundedRect(scX+8,440,154,8,3,3,'F');
-    const pBarW=Math.max(Math.min(r.score/100*154,154),2);
+    const pBarW=r.score!=null?Math.max(Math.min(r.score/100*154,154),2):2;
     sf(...scoreC);doc.roundedRect(scX+8,440,pBarW,8,3,3,'F');
     // Franja de métricas inferior
     sf(18,18,28);doc.rect(0,H-110,W,110,'F');
     sf(...C.blue);doc.rect(0,H-112,W,2,'F');
-    [['Ingresos',_m(r.ventas)],['Ganancia Op.',_m(r.ebitda)],['Ganancia Final',_m(r.utilNeta)],['Efectivo Op.',_m(r.flujoOp)],['Score Teralyx',Math.round(r.score)+'/100']]
+    [['Ingresos',_m(r.ventas)],['Ganancia Op.',_m(r.ebitda)],['Ganancia Final',_m(r.utilNeta)],['Efectivo Op.',_m(r.flujoOp)],['Score Teralyx',r.score!=null?Math.round(r.score)+'/100':'—']]
     .forEach(([lbl,val],i,arr)=>{
       const kx=i*(W/arr.length);
       if(i>0){ss(30,30,45);doc.setLineWidth(.4);doc.line(kx,H-100,kx,H-22);}
@@ -6249,7 +6252,7 @@ function downloadTemplate(){
     // ── FORECAST ──
     PB(260);
     SEC('Forecast y Proyecciones','Planificación basada en 3 escenarios para el próximo ejercicio');
-    const gBase=r.yoy!=null?r.yoy/100:0.08;
+    const gBase=r.yoy!=null?r.yoy/100:0.05;
     const gOpt=gBase+0.12,gCons=Math.max(gBase-0.13,-0.15);
     const pLastM=(r.ingMensual&&r.ingMensual.reduce((a,b)=>a+b,0)>0)?r.ingMensual[r.ingMensual.length-1]:r.ventas/12;
     const MESES=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
