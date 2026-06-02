@@ -5829,14 +5829,14 @@ function downloadTemplate(){
     const ML=40,MR=40,MT=48,CW=W-ML-MR;
     // Paleta
     const C={
-      dark:[7,8,16],ink:[22,28,45],white:[255,255,255],
-      blue:[91,142,240],blueDk:[55,95,180],bluePl:[220,232,255],
+      dark:[10,10,15],ink:[10,10,15],white:[255,255,255],
+      blue:[26,63,216],blueDk:[20,50,180],bluePl:[230,237,255],
       green:[16,185,129],greenPl:[220,245,235],
       amber:[245,158,11],amberPl:[254,245,215],
       red:[239,68,68],redPl:[254,228,228],
-      muted:[130,140,162],border:[218,224,236],
-      card:[247,248,253],slate:[40,52,82],
-      cvBg:[9,12,26],cvCard:[16,22,42],
+      muted:[120,130,150],border:[229,229,229],
+      card:[248,249,252],slate:[40,52,82],
+      cvBg:[10,10,15],cvCard:[18,18,28],
     };
     let y=MT;
     const sf=(...c)=>{const a=c.length===1?c[0]:c;doc.setFillColor(...a);};
@@ -5849,11 +5849,17 @@ function downloadTemplate(){
       const tot=doc.getNumberOfPages();
       for(let i=2;i<=tot;i++){
         doc.setPage(i);
+        // ── Header strip ──
+        sf(18,18,28);doc.rect(0,0,W,22,'F');
+        sf(...C.blue);doc.rect(0,22,W,1.5,'F');
+        doc.setFont('helvetica','bold');doc.setFontSize(7.5);sc(...C.blue);doc.text('Teralyx',ML,14);
+        doc.setFont('helvetica','normal');sc(...C.muted);doc.text(' | Reporte Financiero Confidencial',ML+28,14);
+        doc.setFontSize(7.5);sc(...C.muted);doc.text((r.empresa||'')+(r.anio?' · '+r.anio:''),W/2,14,{align:'center'});
+        // ── Footer ──
         sf(...C.blue);doc.rect(0,H-3,W,3,'F');
         ss(...C.border);doc.setLineWidth(.4);doc.line(ML,H-38,W-MR,H-38);
-        doc.setFont('helvetica','bold');doc.setFontSize(8);sc(...C.blue);doc.text('Teralyx',ML,H-24);
-        doc.setFont('helvetica','normal');sc(...C.muted);doc.text(' · Teralyx Finance',ML+18,H-24);
-        doc.setFontSize(8);sc(...C.muted);doc.text((r.empresa||'')+(r.anio?' · '+r.anio:''),W/2,H-24,{align:'center'});
+        doc.setFont('helvetica','normal');doc.setFontSize(7.5);sc(...C.muted);
+        doc.text('Generado por Teralyx · teralyxfianance.vercel.app · Confidencial',ML,H-24);
         doc.setFont('helvetica','bold');doc.setFontSize(8);sc(...C.slate);doc.text(i+' / '+tot,W-MR,H-24,{align:'right'});
       }
     };
@@ -5862,7 +5868,7 @@ function downloadTemplate(){
     const SEC=(title,sub)=>{
       ensure(sub?52:40);
       sf(...C.blue);doc.rect(ML,y,3,sub?36:26,'F');
-      doc.setFont('helvetica','bold');doc.setFontSize(13);sc(...C.ink);doc.text(title,ML+12,y+18);
+      doc.setFont('helvetica','bold');doc.setFontSize(13);sc(...C.blue);doc.text(title,ML+12,y+18);
       if(sub){doc.setFont('helvetica','normal');doc.setFontSize(9.5);sc(...C.muted);doc.text(sub,ML+12,y+33);}
       y+=(sub?50:34);
     };
@@ -5952,45 +5958,58 @@ function downloadTemplate(){
     // ══════════════════════════════════════════════
     // PORTADA (pág 1, todo posicionado absolutamente)
     // ══════════════════════════════════════════════
+    // ── PORTADA ──
     sf(...C.cvBg);doc.rect(0,0,W,H,'F');
-    ss(18,26,52);doc.setLineWidth(.22);
-    for(let gy=0;gy<H;gy+=28)doc.line(0,gy,W,gy);
-    for(let gx=0;gx<W;gx+=28)doc.line(gx,0,gx,H);
-    sf(...C.blue);doc.rect(0,0,4,H,'F');
-    sf(...C.cvCard);doc.rect(0,0,W,66,'F');
+    // Barra de acento izquierda
+    sf(...C.blue);doc.rect(0,0,5,H,'F');
+    // Franja superior
+    sf(18,18,28);doc.rect(0,0,W,64,'F');
     sf(...C.blue);doc.rect(0,64,W,2,'F');
-    doc.setFont('helvetica','bold');doc.setFontSize(10);sc(...C.blue);doc.text('Teralyx',ML+8,40);
-    doc.setFont('helvetica','normal');sc(155,175,218);doc.text(' · Teralyx Finance',ML+24,40);
-    doc.setFontSize(9);sc(...C.muted);doc.text(new Date().toLocaleDateString('es-MX',{year:'numeric',month:'long',day:'numeric'}),W-MR,40,{align:'right'});
-    doc.setFont('helvetica','bold');doc.setFontSize(40);sc(...C.white);doc.text('Reporte Ejecutivo',ML+8,144);
-    doc.setFontSize(40);sc(...C.blue);doc.text('Financiero',ML+8,190);
-    sf(...C.blue);doc.rect(ML+8,201,168,3,'F');
-    sf(...C.cvCard);doc.roundedRect(ML+4,224,210,96,8,8,'F');
-    sf(...C.blue);doc.roundedRect(ML+4,224,3,96,1,1,'F');
-    doc.setFont('helvetica','bold');doc.setFontSize(14);sc(...C.white);doc.text(r.empresa||'Empresa',ML+18,250);
-    doc.setFont('helvetica','normal');doc.setFontSize(10);sc(155,175,218);
-    doc.text('Período fiscal '+(r.anio||'—'),ML+18,267);
-    doc.text((r.pais==='ES'?'España':'México')+' · '+(r.giro||'Empresa'),ML+18,283);
-    doc.setFontSize(9);sc(...C.muted);doc.text('Moneda: '+(r.moneda||'MXN'),ML+18,299);
-    const scX=W-MR-170;
-    sf(...C.cvCard);doc.roundedRect(scX,224,162,96,8,8,'F');
-    sf(...scoreC);doc.circle(scX+46,272,30,'F');
-    doc.setFont('helvetica','bold');doc.setFontSize(18);sc(...C.white);doc.text(String(Math.round(r.score)),scX+46,278,{align:'center'});
-    doc.setFontSize(7.5);doc.text('/100',scX+46,291,{align:'center'});
-    doc.setFont('helvetica','bold');doc.setFontSize(12);sc(...scoreC);doc.text(cls,scX+88,262);
-    doc.setFont('helvetica','normal');doc.setFontSize(9);sc(155,175,218);doc.text('Health Score',scX+88,276);doc.text('Financiero',scX+88,290);
-    sf(...C.cvCard);doc.rect(0,H-106,W,106,'F');
-    sf(...C.blue);doc.rect(0,H-108,W,2,'F');
+    doc.setFont('helvetica','bold');doc.setFontSize(13);sc(...C.white);doc.text('TERALYX',ML+10,40);
+    doc.setFont('helvetica','normal');doc.setFontSize(8);sc(...C.blue);doc.text('Enterprise Performance Intelligence',ML+80,40);
+    doc.setFontSize(8);sc(...C.muted);doc.text(new Date().toLocaleDateString('es-MX',{year:'numeric',month:'long',day:'numeric'}),W-MR,40,{align:'right'});
+    // Título principal
+    doc.setFont('helvetica','bold');doc.setFontSize(50);sc(...C.white);doc.text('Reporte',ML+10,158);
+    doc.setFontSize(50);sc(...C.white);doc.text('Ejecutivo',ML+10,215);
+    doc.setFontSize(50);sc(...C.blue);doc.text('Financiero',ML+10,272);
+    // Línea decorativa azul
+    sf(...C.blue);doc.rect(ML+10,284,220,3,'F');
+    // Subtítulo EPI
+    doc.setFont('helvetica','normal');doc.setFontSize(11);sc(155,175,218);doc.text('Enterprise Performance Intelligence',ML+10,308);
+    // Tarjeta empresa
+    sf(18,18,28);doc.roundedRect(ML+4,338,220,116,8,8,'F');
+    sf(...C.blue);doc.roundedRect(ML+4,338,3,116,1,1,'F');
+    doc.setFont('helvetica','bold');doc.setFontSize(16);sc(...C.white);doc.text(r.empresa||'Empresa',ML+16,364);
+    doc.setFont('helvetica','normal');doc.setFontSize(9.5);sc(155,175,218);
+    doc.text('Período: '+(r.anio||'—'),ML+16,382);
+    doc.text((r.pais==='ES'?'España':'México')+' · '+(r.giro||'—'),ML+16,399);
+    doc.setFontSize(8.5);sc(...C.muted);doc.text('Moneda: '+(r.moneda||'MXN'),ML+16,415);
+    doc.text('Generado: '+new Date().toLocaleDateString('es-MX'),ML+16,432);
+    // Tarjeta score
+    const scX=W-MR-178;
+    sf(18,18,28);doc.roundedRect(scX,338,170,116,8,8,'F');
+    sf(...scoreC);doc.circle(scX+44,392,31,'F');
+    doc.setFont('helvetica','bold');doc.setFontSize(20);sc(...C.white);doc.text(String(Math.round(r.score)),scX+44,399,{align:'center'});
+    doc.setFontSize(7.5);sc(...C.white);doc.text('/100',scX+44,412,{align:'center'});
+    doc.setFont('helvetica','bold');doc.setFontSize(12);sc(...scoreC);doc.text(cls,scX+90,372);
+    doc.setFont('helvetica','normal');doc.setFontSize(9);sc(155,175,218);doc.text('Health Score',scX+90,388);doc.text('Financiero',scX+90,403);
+    // Barra de progreso del score
+    sf(28,28,42);doc.roundedRect(scX+8,422,154,8,3,3,'F');
+    const pBarW=Math.max(Math.min(r.score/100*154,154),2);
+    sf(...scoreC);doc.roundedRect(scX+8,422,pBarW,8,3,3,'F');
+    // Franja de métricas inferior
+    sf(18,18,28);doc.rect(0,H-110,W,110,'F');
+    sf(...C.blue);doc.rect(0,H-112,W,2,'F');
     [['Ingresos',_m(r.ventas)],['EBITDA',_m(r.ebitda)],['Utilidad Neta',_m(r.utilNeta)],['Flujo Operativo',_m(r.flujoOp)],['Score Teralyx',Math.round(r.score)+'/100']]
     .forEach(([lbl,val],i,arr)=>{
       const kx=i*(W/arr.length);
-      if(i>0){ss(28,38,68);doc.setLineWidth(.4);doc.line(kx,H-100,kx,H-18);}
-      doc.setFont('helvetica','normal');doc.setFontSize(8);sc(...C.muted);doc.text(lbl,kx+W/arr.length/2,H-78,{align:'center'});
-      doc.setFont('helvetica','bold');doc.setFontSize(13);sc(...C.white);doc.text(val,kx+W/arr.length/2,H-56,{align:'center'});
+      if(i>0){ss(30,30,45);doc.setLineWidth(.4);doc.line(kx,H-100,kx,H-22);}
+      doc.setFont('helvetica','normal');doc.setFontSize(8);sc(...C.muted);doc.text(lbl,kx+W/arr.length/2,H-82,{align:'center'});
+      doc.setFont('helvetica','bold');doc.setFontSize(14);sc(...C.white);doc.text(val,kx+W/arr.length/2,H-58,{align:'center'});
     });
-    sf(...C.blue);doc.rect(0,H-16,W,16,'F');
+    sf(...C.blue);doc.rect(0,H-20,W,20,'F');
     doc.setFont('helvetica','normal');doc.setFontSize(7.5);sc(...C.white);
-    doc.text('Confidencial · Uso exclusivo del cliente · Teralyx Finance',W/2,H-5,{align:'center'});
+    doc.text('Generado por Teralyx · teralyxfianance.vercel.app · Confidencial',W/2,H-7,{align:'center'});
 
     // ══════════════════════════════════════════════
     // CONTENIDO: flujo continuo desde pág 2
