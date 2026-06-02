@@ -9185,6 +9185,9 @@ window.closeSidebar=closeSidebar;
 ══════════════════════════════════════════════════════════════ */
 (function(){
   let _rows=[],_files=[],_fRows=[],_prodChart=null;
+  const _PROD_KEY='teralyx_prod_v1';
+  function _prodPersist(){try{sessionStorage.setItem(_PROD_KEY,JSON.stringify({rows:_rows,files:_files}));}catch(e){}}
+  (function _prodRestore(){try{const s=sessionStorage.getItem(_PROD_KEY);if(!s)return;const p=JSON.parse(s);if(p&&p.rows&&p.rows.length){_rows=p.rows;_fRows=[..._rows];_files=p.files||[];}}catch(e){}})();
   const COL_FECHA    =/^(fecha|date|dt|periodo|period|mes|month|dia|day)$/i;
   const COL_PRODUCTO =/^(producto|product|prod|descripci[oó]n|desc|item|art[ií]culo|article|sku|nombre|name|concepto)$/i;
   const COL_CANTIDAD =/^(cantidad|qty|quantity|units|unidades|piezas|pieces|vol|volumen|cant)$/i;
@@ -9258,6 +9261,7 @@ window.closeSidebar=closeSidebar;
     _rows=[..._rows,...valid];
     _fRows=[..._rows];
     _files.push({name:sourceName||'Ventas (Opcional)',rawCount:rows.length,rowCount:valid.length,headers:['fecha','producto','cantidad','precio'],warnings:[]});
+    _prodPersist();
     const zone=document.getElementById('prod-upload-zone');
     if(zone){
       zone.style.display='none';
@@ -9292,6 +9296,7 @@ window.closeSidebar=closeSidebar;
     document.getElementById('prod-upload-zone').style.display='none';
     document.getElementById('prod-reset-btn').style.display='';
     document.getElementById('prod-filter-period').style.display='';
+    _prodPersist();
     if(typeof showNotif==='function') showNotif('✅ '+_rows.length+' registros cargados','success');
   }
   function prodBuildPeriodFilter(){
@@ -9375,6 +9380,7 @@ window.closeSidebar=closeSidebar;
   };
   window.prodReset=function(){
     _rows=[];_files=[];_fRows=[];window._prodData=null;
+    try{sessionStorage.removeItem(_PROD_KEY);}catch(e){}
     if(_prodChart){_prodChart.destroy();_prodChart=null;}
     ['prod-kpi-grid','prod-analysis','prod-files-summary'].forEach(id=>document.getElementById(id).style.display='none');
     document.getElementById('prod-upload-zone').style.display='';
