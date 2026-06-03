@@ -54,7 +54,7 @@ body{background:var(--bg);color:var(--text);overflow-x:hidden;}
 
 /* CONTENT */
 .content{margin-left:272px;width:calc(100% - 272px);padding:32px 36px;}
-.view{animation:fadeIn .25s ease;}
+.view{display:none;animation:fadeIn .25s ease;}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
 
 /* TOPBAR */
@@ -9308,6 +9308,14 @@ function sbApplyEmpresaData(d){
   const calc=d._calc;
   if(calc){
     window._teralyxCalc=calc;
+    if(!document.querySelector('.view[style*="block"]')){
+      // On reload no view has an inline style yet — activate dashboard explicitly
+      const dashEl=document.getElementById('dashboardView');
+      if(dashEl) dashEl.style.display='block';
+      const dashBtn=document.querySelector('.nav button[onclick*="dashboardView"]');
+      document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
+      if(dashBtn) dashBtn.classList.add('active');
+    }
     if(typeof renderAllViews==='function') renderAllViews(calc);
     const dcb=document.getElementById('dash-clear-btn');
     if(dcb) dcb.style.display='';
