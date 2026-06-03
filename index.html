@@ -778,6 +778,13 @@ th[data-tip]:hover::before{opacity:1;}
   </div>
 </aside>
 
+<!-- Botón eliminar datos — fijo arriba a la derecha, siempre visible cuando hay datos -->
+<button id="global-clear-btn" onclick="limpiarSistema()"
+  style="display:none;position:fixed;top:14px;right:18px;z-index:950;padding:7px 15px;border-radius:10px;border:1px solid rgba(244,92,92,.4);background:rgba(244,92,92,.12);color:var(--danger);font-size:12px;font-weight:700;cursor:pointer;transition:.15s;backdrop-filter:blur(8px);"
+  onmouseover="this.style.background='rgba(244,92,92,.25)'" onmouseout="this.style.background='rgba(244,92,92,.12)'">
+  🗑 Eliminar datos
+</button>
+
 <main class="content">
 
 <!-- ==================== DASHBOARD ==================== -->
@@ -789,8 +796,6 @@ th[data-tip]:hover::before{opacity:1;}
     </div>
     <div class="topbar-actions">
       <button onclick="generarReportePDF&&generarReportePDF()" style="padding:8px 16px;border-radius:9px;border:1px solid rgba(91,142,240,.35);background:var(--primary-dim);color:var(--primary);font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">📄 PDF</button>
-      <button class="lang-btn active" onclick="changeLanguage('es',this)">🇲🇽 ES</button>
-      <button class="lang-btn" onclick="changeLanguage('en',this)">🇺🇸 EN</button>
     </div>
   </header>
 
@@ -3660,7 +3665,9 @@ function showView(viewId, button){
   if(el) el.style.display='block';
   document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
   if(button) button.classList.add('active');
-  // Botón eliminar datos en topbar — visible solo si hay datos cargados
+  // Botón eliminar datos global — visible en cualquier vista cuando hay datos
+  const gcb=document.getElementById('global-clear-btn');
+  if(gcb) gcb.style.display=window._teralyxCalc?'':'none';
   const tcb=document.getElementById('topbar-clear-btn');
   if(tcb) tcb.style.display=(viewId==='ingresodatosView'&&window._teralyxCalc)?'':'none';
   const r=getCalc&&getCalc();
@@ -8288,6 +8295,9 @@ function limpiarSistema(){
    'ii_pasivo_lp','ii_capital'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.value='';
   });
+  // Ocultar botón global
+  const gcb=document.getElementById('global-clear-btn');
+  if(gcb) gcb.style.display='none';
   // Volver a pantalla inicial
   if(typeof uwShow==='function') uwShow('uw0');
   showNotif('Sistema limpiado correctamente','success');
@@ -9054,6 +9064,18 @@ async function sbUpsertEmpresa(dashData){
 }
 window.sbUpsertEmpresa = sbUpsertEmpresa;
 
+/* Guarda filas de productos en el campo data de la empresa en Supabase */
+async function sbSaveProdRows(rows, files){
+  if(!_sb||!_sbUser||!_sbEmpresaId) return;
+  try{
+    const {data:cur,error}=await _sb.from('empresas').select('data').eq('id',_sbEmpresaId).maybeSingle();
+    if(error||!cur) return;
+    const updated={...(cur.data||{}), _prodRows:rows, _prodFiles:files};
+    await _sb.from('empresas').update({data:updated, updated_at:new Date().toISOString()}).eq('id',_sbEmpresaId);
+  }catch(e){ console.error('[Teralyx] sbSaveProdRows:',e); }
+}
+window.sbSaveProdRows=sbSaveProdRows;
+
 /* ── Admin: selector de empresas ─────────────────────────────── */
 async function sbRenderAdminSelector(){
   const sel=document.getElementById('sbAdminSelector');
@@ -9228,6 +9250,13 @@ function sbApplyEmpresaData(d){
   if(calc){
     window._teralyxCalc=calc;
     if(typeof renderAllViews==='function') renderAllViews(calc);
+    // Mostrar botón global de borrar datos
+    const gcb=document.getElementById('global-clear-btn');
+    if(gcb) gcb.style.display='';
+  }
+  // Restaurar productos si existen en Supabase
+  if(d._prodRows&&d._prodRows.length>0&&typeof window.prodSetRows==='function'){
+    window.prodSetRows(d._prodRows, d._prodFiles||[]);
   }
 }
 
@@ -9363,6 +9392,7 @@ window.closeSidebar=closeSidebar;
     _fRows=[..._rows];
     _files.push({name:sourceName||'Ventas (Opcional)',rawCount:rows.length,rowCount:valid.length,headers:['fecha','producto','cantidad','precio'],warnings:[]});
     _prodPersist();
+    if(typeof window.sbSaveProdRows==='function') window.sbSaveProdRows(_rows,_files);
     const zone=document.getElementById('prod-upload-zone');
     if(zone){
       zone.style.display='none';
@@ -9451,10 +9481,15 @@ window.closeSidebar=closeSidebar;
     }
     window._prodData={lista,totalIngreso,totalTx,topIng,topVol,ticketProm};
   };
+  window.prodSetRows=function(rows,files){
+    _rows=rows||[];_fRows=[..._rows];_files=files||[];
+    _prodPersist();
+  };
   window.prodReset=function(){
     _rows=[];_files=[];_fRows=[];window._prodData=null;
     try{localStorage.removeItem(_PROD_KEY);}catch(e){}
     try{sessionStorage.removeItem(_PROD_KEY);}catch(e){}
+    if(typeof window.sbSaveProdRows==='function') window.sbSaveProdRows([],[]);
     if(_prodChart){_prodChart.destroy();_prodChart=null;}
     ['prod-kpi-grid','prod-analysis','prod-files-summary'].forEach(id=>document.getElementById(id).style.display='none');
     document.getElementById('prod-upload-zone').style.display='';
