@@ -3158,6 +3158,11 @@ background:#10B981;
   </div>
 </header>
 
+<div style="margin:0 0 18px 0;padding:10px 16px;border-radius:10px;background:rgba(255,204,0,.08);border:1px solid rgba(255,204,0,.25);color:#b8860b;font-size:12px;display:flex;align-items:center;gap:8px;">
+  <span style="font-size:15px;">⚠️</span>
+  <span>Para asegurar que los cambios fueron realizados, le recomendamos <strong>cerrar sesión y volver a iniciar</strong> después de cada modificación.</span>
+</div>
+
 <!-- NEW UPLOAD WIZARD -->
 <div class="uw-shell">
 
@@ -9327,7 +9332,21 @@ async function sbSelectEmpresa(id){
   if(error||!data) return;
   _sbEmpresaId=data.id;
   _sbLastUpdated=data.updated_at||null;
-  sbApplyEmpresaData(data.data);
+  const tieneData=data.data&&Object.keys(data.data).length>0;
+  if(!tieneData){
+    // Empresa sin datos — limpiar UI sin tocar Supabase
+    window._teralyxCalc=null;
+    window._teralyxHistorico=null;
+    window._pendingExcelData=null;
+    if(typeof window.prodReset==='function') window.prodReset();
+    ['dash-clear-btn','topbar-clear-btn','topbar-save-btn'].forEach(id=>{
+      const b=document.getElementById(id); if(b) b.style.display='none';
+    });
+    if(typeof uwShow==='function') uwShow('uw0');
+    showNotif('Esta empresa aún no tiene datos ingresados','warning');
+  } else {
+    sbApplyEmpresaData(data.data);
+  }
   sbSubscribeRealtime(_sbEmpresaId);
 }
 window.sbSelectEmpresa = sbSelectEmpresa;
