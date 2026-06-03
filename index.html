@@ -3022,7 +3022,7 @@ background:#10B981;
     <p style="color:var(--muted);font-size:13px;line-height:1.8;margin-bottom:12px;">Los datos financieros ingresados en Teralyx Finance:</p>
     <div class="briefing-grid">
       <div class="briefing-item positive-border"><div class="briefing-title">Datos del usuario — no simulados</div><div class="briefing-text">Cuando el usuario ingresa datos, todos los módulos del dashboard muestran únicamente cifras derivadas de esos datos reales. No existe modo "demo" activo durante el uso operacional.</div></div>
-      <div class="briefing-item info-border"><div class="briefing-title">Sesión efímera</div><div class="briefing-text">Los datos persisten solo durante la sesión activa del navegador. Al cerrar la pestaña, los datos se eliminan. No se usa localStorage de larga duración.</div></div>
+      <div class="briefing-item info-border"><div class="briefing-title">Persistencia local</div><div class="briefing-text">Los datos financieros persisten durante la sesión activa. Los datos de Ventas por Producto se guardan en localStorage del navegador para mantenerse entre visitas. Ningún dato se envía a servidores externos.</div></div>
       <div class="briefing-item warning-border"><div class="briefing-title">Modelos de cálculo</div><div class="briefing-text">ISR, IVA, Impuesto de Sociedades e IRPF son estimaciones basadas en tasas configurables. Para declaraciones oficiales, consultar al SAT (MX) o AEAT (ES).</div></div>
     </div>
   </div>
@@ -3148,7 +3148,8 @@ background:#10B981;
     <h2 class="page-title">Cargar Datos</h2>
     <p class="page-subtitle">El sistema calcula EBITDA, márgenes, ratios y más · automáticamente</p>
   </div>
-  <div class="topbar-actions">
+  <div class="topbar-actions" style="gap:8px;">
+    <button id="topbar-clear-btn" onclick="limpiarSistema()" style="display:none;padding:8px 16px;border-radius:10px;border:1px solid rgba(244,92,92,.35);background:rgba(244,92,92,.08);color:var(--danger);font-size:12px;font-weight:600;cursor:pointer;transition:.15s;" onmouseover="this.style.background='rgba(244,92,92,.2)'" onmouseout="this.style.background='rgba(244,92,92,.08)'">🗑 Eliminar datos</button>
     <button onclick="downloadTemplate()" class="uw-btn-ghost" style="font-size:12px;padding:8px 14px;">⬇ Plantilla Excel</button>
   </div>
 </header>
@@ -3182,7 +3183,7 @@ background:#10B981;
     <div class="uw-or"><div class="uw-or-line"></div><span>o captura manualmente</span><div class="uw-or-line"></div></div>
     <button class="uw-btn-outline" onclick="uwShow('uwM1')">Ingresar datos a mano &nbsp;→</button>
     <div class="uw-template-hint">¿Primera vez? <button class="uw-link-btn" onclick="downloadTemplate()">Descarga la plantilla con ejemplos →</button></div>
-    <div id="uw0-clear-zone" style="display:none;margin-top:18px;padding:14px 18px;border-radius:13px;border:1px solid rgba(244,92,92,.25);background:rgba(244,92,92,.05);display:flex;align-items:center;justify-content:space-between;gap:12px;">
+    <div id="uw0-clear-zone" style="display:none;margin-top:18px;padding:14px 18px;border-radius:13px;border:1px solid rgba(244,92,92,.25);background:rgba(244,92,92,.05);align-items:center;justify-content:space-between;gap:12px;">
       <div style="font-size:13px;color:var(--muted);">Ya tienes datos cargados en el sistema.</div>
       <button onclick="limpiarSistema()" style="padding:8px 16px;border-radius:9px;border:1px solid rgba(244,92,92,.4);background:rgba(244,92,92,.1);color:var(--danger);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;transition:.15s;" onmouseover="this.style.background='rgba(244,92,92,.2)'" onmouseout="this.style.background='rgba(244,92,92,.1)'">🗑 Eliminar datos</button>
     </div>
@@ -3659,6 +3660,9 @@ function showView(viewId, button){
   if(el) el.style.display='block';
   document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
   if(button) button.classList.add('active');
+  // Botón eliminar datos en topbar — visible solo si hay datos cargados
+  const tcb=document.getElementById('topbar-clear-btn');
+  if(tcb) tcb.style.display=(viewId==='ingresodatosView'&&window._teralyxCalc)?'':'none';
   const r=getCalc&&getCalc();
   if(viewId==='dashboardView'   && typeof renderDashboardView==='function')  renderDashboardView(r);
   if(viewId==='financeView'     && typeof renderFinanceView==='function')    renderFinanceView(r);
@@ -3674,7 +3678,11 @@ function showView(viewId, button){
   if(viewId==='aiView'          && typeof renderAIView==='function')         renderAIView(r);
   if(viewId==='copilotView'     && typeof renderCopilotView==='function')    renderCopilotView(r);
   if(viewId==='comparativosView'&& typeof renderComparativosView==='function') setTimeout(()=>renderComparativosView(r),80);
-  if(viewId==='productosView'   && typeof prodRenderView==='function')        setTimeout(()=>prodRenderView(),80);
+  if(viewId==='productosView'   && typeof prodRenderView==='function')        setTimeout(()=>{
+    if(typeof prodBuildPeriodFilter==='function') prodBuildPeriodFilter();
+    if(typeof prodRenderFileSummary==='function') prodRenderFileSummary();
+    prodRenderView();
+  },80);
 }
 
 function showViewFromBanner(viewId){
@@ -4075,6 +4083,8 @@ function uwShow(id){
   if(id==='uw0'){
     const cz=document.getElementById('uw0-clear-zone');
     if(cz) cz.style.display=window._teralyxCalc?'flex':'none';
+    const tcb=document.getElementById('topbar-clear-btn');
+    if(tcb) tcb.style.display=window._teralyxCalc?'':'none';
   }
 }
 
@@ -8263,8 +8273,10 @@ function limpiarSistema(){
   window._teralyxClienteMap = null;
   window._teralyxRegionMap  = null;
   window._prodData          = null;
-  // sessionStorage
+  // sessionStorage / localStorage
   try{ sessionStorage.removeItem('teralyx_calc_v1'); }catch(e){}
+  try{ localStorage.removeItem('teralyx_prod_v1'); }catch(e){}
+  try{ sessionStorage.removeItem('teralyx_prod_v1'); }catch(e){}
   // Reset productos
   if(typeof window.prodReset==='function') window.prodReset();
   // Reset file input
@@ -9268,8 +9280,15 @@ window.closeSidebar=closeSidebar;
 (function(){
   let _rows=[],_files=[],_fRows=[],_prodChart=null;
   const _PROD_KEY='teralyx_prod_v1';
-  function _prodPersist(){try{sessionStorage.setItem(_PROD_KEY,JSON.stringify({rows:_rows,files:_files}));}catch(e){}}
-  (function _prodRestore(){try{const s=sessionStorage.getItem(_PROD_KEY);if(!s)return;const p=JSON.parse(s);if(p&&p.rows&&p.rows.length){_rows=p.rows;_fRows=[..._rows];_files=p.files||[];}}catch(e){}})();
+  function _prodPersist(){try{localStorage.setItem(_PROD_KEY,JSON.stringify({rows:_rows,files:_files}));}catch(e){try{sessionStorage.setItem(_PROD_KEY,JSON.stringify({rows:_rows,files:_files}));}catch(e2){}}}
+  (function _prodRestore(){
+    try{
+      const raw=localStorage.getItem(_PROD_KEY)||sessionStorage.getItem(_PROD_KEY);
+      if(!raw)return;
+      const p=JSON.parse(raw);
+      if(p&&p.rows&&p.rows.length){_rows=p.rows;_fRows=[..._rows];_files=p.files||[];}
+    }catch(e){}
+  })();
   const COL_FECHA    =/^(fecha|date|dt|periodo|period|mes|month|dia|day)$/i;
   const COL_PRODUCTO =/^(producto|product|prod|descripci[oó]n|desc|item|art[ií]culo|article|sku|nombre|name|concepto)$/i;
   const COL_CANTIDAD =/^(cantidad|qty|quantity|units|unidades|piezas|pieces|vol|volumen|cant)$/i;
@@ -9352,7 +9371,7 @@ window.closeSidebar=closeSidebar;
       prodBuildPeriodFilter(); prodRenderFileSummary(); prodRenderView();
     }
   };
-  function prodBuildPeriodFilter(){
+  window.prodBuildPeriodFilter=function prodBuildPeriodFilter(){
     const sel=document.getElementById('prod-filter-period');
     const periods=new Set();
     _rows.forEach(r=>{
@@ -9362,7 +9381,7 @@ window.closeSidebar=closeSidebar;
       else{const m=r.fecha.match(/(\d{4})/);if(m) periods.add(m[1]);}
     });
     sel.innerHTML='<option value="">Todos los períodos</option>'+[...periods].sort().reverse().map(p=>`<option value="${p}">${p}</option>`).join('');
-  }
+  };
   window.prodApplyFilter=function(){
     const val=document.getElementById('prod-filter-period').value;
     _fRows=val?_rows.filter(r=>{
@@ -9373,7 +9392,8 @@ window.closeSidebar=closeSidebar;
     }):[..._rows];
     prodRenderView();
   };
-  function prodRenderFileSummary(){
+  window.prodRenderFileSummary=function prodRenderFileSummary(){
+    if(!_files.length) return;
     const wrap=document.getElementById('prod-files-summary');
     document.getElementById('prod-files-list').innerHTML=_files.map(f=>`
       <div class="prod-file-card">
@@ -9383,7 +9403,7 @@ window.closeSidebar=closeSidebar;
         ${f.warnings.length?`<div class="prod-file-card-warn">⚠️ ${f.warnings[0]}</div>`:''}
       </div>`).join('');
     wrap.style.display='';
-  }
+  };
   function calcProductos(rows){
     const map={};let totalIngreso=0;
     rows.forEach(r=>{
@@ -9433,6 +9453,7 @@ window.closeSidebar=closeSidebar;
   };
   window.prodReset=function(){
     _rows=[];_files=[];_fRows=[];window._prodData=null;
+    try{localStorage.removeItem(_PROD_KEY);}catch(e){}
     try{sessionStorage.removeItem(_PROD_KEY);}catch(e){}
     if(_prodChart){_prodChart.destroy();_prodChart=null;}
     ['prod-kpi-grid','prod-analysis','prod-files-summary'].forEach(id=>document.getElementById(id).style.display='none');
