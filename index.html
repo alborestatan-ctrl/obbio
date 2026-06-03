@@ -8890,7 +8890,9 @@ function sbInit(){
     sbHideOverlay(); // modo local / no configurado
     return;
   }
-  _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    realtime: { params: { eventsPerSecond: 10 } }
+  });
 
   _sb.auth.onAuthStateChange(async (event, session)=>{
     if(session){
@@ -8947,6 +8949,7 @@ async function sbDoLogin(opts={}){
 }
 
 async function sbLogout(){
+  sbStopSync();
   try{ if(_sb) await _sb.auth.signOut(); }catch(e){}
   localStorage.clear();
   sessionStorage.clear();
@@ -8993,7 +8996,7 @@ async function sbAfterLogin(){
 async function sbLoadUserEmpresa(){
   const {data,error}=await _sb
     .from('empresas')
-    .select('id,nombre,data')
+    .select('id,nombre,updated_at,data')
     .eq('user_id',_sbUser.id)
     .order('updated_at',{ascending:false})
     .limit(1)
@@ -9005,7 +9008,7 @@ async function sbLoadUserEmpresa(){
     return;
   }
   _sbEmpresaId=data.id;
-  // Usar la columna `nombre` (fuente de verdad), no data.empresa
+  _sbLastUpdated=data.updated_at||null;
   const nombre=(data.nombre||'').trim();
   if(!nombre||nombre==='Sin nombre'){
     sbMostrarNombreModal();
@@ -9229,36 +9232,72 @@ async function sbEditarNombreEmpresa(){
 
 async function sbSelectEmpresa(id){
   if(!id) return;
-  const {data,error}=await _sb.from('empresas').select('id,data').eq('id',id).maybeSingle();
+  const {data,error}=await _sb.from('empresas').select('id,updated_at,data').eq('id',id).maybeSingle();
   if(error||!data) return;
   _sbEmpresaId=data.id;
+  _sbLastUpdated=data.updated_at||null;
   sbApplyEmpresaData(data.data);
   sbSubscribeRealtime(_sbEmpresaId);
 }
 window.sbSelectEmpresa = sbSelectEmpresa;
 
-/* ── Realtime: sincronización en vivo ─────────────────────────── */
+/* ── Realtime: sincronización en vivo + polling de respaldo ────── */
+let _sbLastUpdated=null, _sbPollTimer=null;
+
 function sbSubscribeRealtime(empresaId){
   if(!_sb||!empresaId) return;
+  // Limpiar suscripción anterior
   if(window._sbRealtimeCh){
     try{ _sb.removeChannel(window._sbRealtimeCh); }catch(e){}
   }
+  // Suscripción Realtime (requiere Realtime habilitado en Supabase para tabla empresas)
   window._sbRealtimeCh = _sb
     .channel('empresa_live_'+empresaId)
     .on('postgres_changes',{
-      event:'UPDATE', schema:'public', table:'empresas',
-      filter:`id=eq.${empresaId}`
+      event:'UPDATE', schema:'public', table:'empresas'
+      // Sin filtro server-side — filtrar client-side es más confiable con RLS
     }, (payload)=>{
+      if(payload.new?.id !== empresaId) return; // Ignorar cambios de otras empresas
+      _sbLastUpdated=payload.new?.updated_at||null;
       const d=payload.new?.data;
       if(d) sbApplyEmpresaData(d);
-      // Actualizar nombre en selector admin si está visible
       const nombre=payload.new?.nombre;
       if(nombre){
         const opt=document.querySelector(`#sbEmpresaSelect option[value="${empresaId}"]`);
         if(opt) opt.textContent=nombre;
       }
     })
-    .subscribe();
+    .subscribe((status,err)=>{
+      if(status==='SUBSCRIBED') console.log('[Teralyx] Realtime conectado ✓');
+      else if(status==='CHANNEL_ERROR') console.warn('[Teralyx] Realtime error:',err);
+    });
+  // Polling de respaldo cada 30 s — funciona aunque Realtime falle
+  if(_sbPollTimer) clearInterval(_sbPollTimer);
+  _sbPollTimer=setInterval(()=>sbPollEmpresa(empresaId), 30000);
+}
+
+async function sbPollEmpresa(empresaId){
+  if(!_sb||!_sbUser||!empresaId) return;
+  try{
+    const {data,error}=await _sb
+      .from('empresas')
+      .select('updated_at,data')
+      .eq('id',empresaId)
+      .maybeSingle();
+    if(error||!data) return;
+    // Solo aplicar si hay cambio real
+    if(data.updated_at&&data.updated_at===_sbLastUpdated) return;
+    _sbLastUpdated=data.updated_at;
+    if(data.data) sbApplyEmpresaData(data.data);
+  }catch(e){}
+}
+
+function sbStopSync(){
+  if(_sbPollTimer){ clearInterval(_sbPollTimer); _sbPollTimer=null; }
+  if(window._sbRealtimeCh){
+    try{ _sb.removeChannel(window._sbRealtimeCh); }catch(e){}
+    window._sbRealtimeCh=null;
+  }
 }
 
 /* ── Helpers ──────────────────────────────────────────────────── */
