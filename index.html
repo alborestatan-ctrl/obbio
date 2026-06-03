@@ -679,12 +679,16 @@ th[data-tip]:hover::before{opacity:1;}
         onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'"
         onkeydown="if(event.key==='Enter')document.getElementById('sbPassword').focus()">
     </div>
-    <div style="margin-bottom:24px;">
+    <div style="margin-bottom:16px;">
       <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px;">Contraseña</label>
       <input id="sbPassword" type="password" autocomplete="current-password" placeholder="••••••••"
         style="width:100%;padding:11px 14px;background:var(--card2);border:1px solid var(--border);border-radius:9px;color:var(--text);font-size:13px;outline:none;transition:border .2s;"
         onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'"
         onkeydown="if(event.key==='Enter')sbDoLogin()">
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;">
+      <input id="sbRemember" type="checkbox" style="width:15px;height:15px;accent-color:var(--primary);cursor:pointer;">
+      <label for="sbRemember" style="font-size:12px;color:var(--muted);cursor:pointer;">Recordarme en este dispositivo</label>
     </div>
     <button id="sbLoginBtn" onclick="sbDoLogin()"
       style="width:100%;padding:13px;background:var(--primary);border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:.3px;transition:opacity .15s;"
@@ -778,13 +782,6 @@ th[data-tip]:hover::before{opacity:1;}
   </div>
 </aside>
 
-<!-- Botón eliminar datos — fijo arriba a la derecha, siempre visible cuando hay datos -->
-<button id="global-clear-btn" onclick="limpiarSistema()"
-  style="display:none;position:fixed;top:14px;right:18px;z-index:950;padding:7px 15px;border-radius:10px;border:1px solid rgba(244,92,92,.4);background:rgba(244,92,92,.12);color:var(--danger);font-size:12px;font-weight:700;cursor:pointer;transition:.15s;backdrop-filter:blur(8px);"
-  onmouseover="this.style.background='rgba(244,92,92,.25)'" onmouseout="this.style.background='rgba(244,92,92,.12)'">
-  🗑 Eliminar datos
-</button>
-
 <main class="content">
 
 <!-- ==================== DASHBOARD ==================== -->
@@ -796,6 +793,7 @@ th[data-tip]:hover::before{opacity:1;}
     </div>
     <div class="topbar-actions">
       <button onclick="generarReportePDF&&generarReportePDF()" style="padding:8px 16px;border-radius:9px;border:1px solid rgba(91,142,240,.35);background:var(--primary-dim);color:var(--primary);font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">📄 PDF</button>
+      <button id="dash-clear-btn" onclick="limpiarSistema()" style="display:none;padding:8px 16px;border-radius:9px;border:1px solid rgba(244,92,92,.35);background:rgba(244,92,92,.08);color:var(--danger);font-size:12px;font-weight:700;cursor:pointer;transition:.15s;" onmouseover="this.style.background='rgba(244,92,92,.2)'" onmouseout="this.style.background='rgba(244,92,92,.08)'">🗑 Eliminar datos</button>
     </div>
   </header>
 
@@ -3665,11 +3663,11 @@ function showView(viewId, button){
   if(el) el.style.display='block';
   document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
   if(button) button.classList.add('active');
-  // Botón eliminar datos global — visible en cualquier vista cuando hay datos
-  const gcb=document.getElementById('global-clear-btn');
-  if(gcb) gcb.style.display=window._teralyxCalc?'':'none';
+  const _hasCalc=!!window._teralyxCalc;
+  const dcb=document.getElementById('dash-clear-btn');
+  if(dcb) dcb.style.display=(viewId==='dashboardView'&&_hasCalc)?'':'none';
   const tcb=document.getElementById('topbar-clear-btn');
-  if(tcb) tcb.style.display=(viewId==='ingresodatosView'&&window._teralyxCalc)?'':'none';
+  if(tcb) tcb.style.display=(viewId==='ingresodatosView'&&_hasCalc)?'':'none';
   const r=getCalc&&getCalc();
   if(viewId==='dashboardView'   && typeof renderDashboardView==='function')  renderDashboardView(r);
   if(viewId==='financeView'     && typeof renderFinanceView==='function')    renderFinanceView(r);
@@ -4090,8 +4088,6 @@ function uwShow(id){
   if(id==='uw0'){
     const cz=document.getElementById('uw0-clear-zone');
     if(cz) cz.style.display=window._teralyxCalc?'flex':'none';
-    const tcb=document.getElementById('topbar-clear-btn');
-    if(tcb) tcb.style.display=window._teralyxCalc?'':'none';
   }
 }
 
@@ -8295,9 +8291,8 @@ function limpiarSistema(){
    'ii_pasivo_lp','ii_capital'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.value='';
   });
-  // Ocultar botón global
-  const gcb=document.getElementById('global-clear-btn');
-  if(gcb) gcb.style.display='none';
+  // Ocultar botones de eliminar datos
+  ['dash-clear-btn','topbar-clear-btn'].forEach(id=>{const b=document.getElementById(id);if(b)b.style.display='none';});
   // Volver a pantalla inicial
   if(typeof uwShow==='function') uwShow('uw0');
   showNotif('Sistema limpiado correctamente','success');
@@ -8903,20 +8898,36 @@ function sbInit(){
       window._sbUser = _sbUser;
       _sbIsAdmin = (session.user.user_metadata?.role==='admin');
       await sbAfterLogin();
-    } else {
+    } else if(event==='SIGNED_OUT'||event==='USER_DELETED'||event==='INITIAL_SESSION'){
       _sbUser = null; window._sbUser = null;
       _sbIsAdmin = false; _sbEmpresaId = null;
-      sbShowOverlay();
+      const saved=_sbGetSaved();
+      if(saved&&event==='INITIAL_SESSION'){
+        // Credenciales guardadas — auto-login sin mostrar pantalla de login
+        sbShowOverlay();
+        setTimeout(()=>_sbAutoFillAndLogin(saved), 500);
+      } else {
+        sbShowOverlay();
+      }
     }
-  });
-
-  _sb.auth.getSession().then(({data:{session}})=>{
-    if(!session) sbShowOverlay();
+    // TOKEN_REFRESHED y otros eventos intermedios: no hacer nada
   });
 }
 
 /* ── Login / Logout ───────────────────────────────────────────── */
-async function sbDoLogin(){
+const _SB_REM='teralyx_remember';
+function _sbGetSaved(){try{return JSON.parse(localStorage.getItem(_SB_REM));}catch(e){return null;}}
+function _sbSaveCreds(e,p){try{localStorage.setItem(_SB_REM,JSON.stringify({email:e,pass:p}));}catch(ex){}}
+function _sbClearSaved(){try{localStorage.removeItem(_SB_REM);}catch(e){}}
+function _sbAutoFillAndLogin(saved){
+  const ef=document.getElementById('sbEmail'),pf=document.getElementById('sbPassword');
+  if(ef) ef.value=saved.email; if(pf) pf.value=saved.pass;
+  const btn=document.getElementById('sbLoginBtn');
+  if(btn){btn.textContent='Iniciando sesión...';btn.disabled=true;}
+  sbDoLogin({auto:true});
+}
+
+async function sbDoLogin(opts={}){
   const email=(document.getElementById('sbEmail')?.value||'').trim();
   const pass =document.getElementById('sbPassword')?.value||'';
   const btn  =document.getElementById('sbLoginBtn');
@@ -8927,6 +8938,11 @@ async function sbDoLogin(){
     sbShowErr(error.message.includes('Invalid login credentials')
       ?'Correo o contraseña incorrectos.' : error.message);
     if(btn){btn.disabled=false; btn.textContent='Ingresar';}
+    if(opts.auto) _sbClearSaved(); // Credenciales guardadas ya no funcionan
+  } else if(!opts.auto){
+    // Login manual: guardar o limpiar según checkbox
+    const rem=document.getElementById('sbRemember');
+    if(rem?.checked) _sbSaveCreds(email,pass); else _sbClearSaved();
   }
 }
 
@@ -9042,10 +9058,14 @@ async function sbUpsertEmpresa(dashData){
   const nombre=(dashData.empresa||'').trim();
   const ventas=dashData._calc?.ventas||0;
   if(!nombre && !ventas) return;
+  // Siempre incluir filas de productos para no sobrescribirlas
+  const pr=typeof window._getProdRows==='function'?window._getProdRows():[];
+  const pf=typeof window._getProdFiles==='function'?window._getProdFiles():[];
+  const fullData=pr.length>0?{...dashData,_prodRows:pr,_prodFiles:pf}:dashData;
   if(_sbEmpresaId){
     // UPDATE: nunca tocar user_id (evita corrupción cuando admin edita datos de un cliente)
     // Solo actualizar nombre si dashData trae uno real (evita sobreescribir con 'Sin nombre')
-    const updatePayload={data:dashData, updated_at:new Date().toISOString()};
+    const updatePayload={data:fullData, updated_at:new Date().toISOString()};
     if(nombre) updatePayload.nombre=nombre;
     const {error}=await _sb.from('empresas').update(updatePayload).eq('id',_sbEmpresaId);
     if(error) console.error('[Teralyx] update:',error);
@@ -9056,7 +9076,7 @@ async function sbUpsertEmpresa(dashData){
   } else {
     // INSERT: solo aplica para usuario propio, nunca admin creando para otro
     const {data,error}=await _sb.from('empresas')
-      .insert({user_id:_sbUser.id, nombre:nombre||'Sin nombre', data:dashData, updated_at:new Date().toISOString()})
+      .insert({user_id:_sbUser.id, nombre:nombre||'Sin nombre', data:fullData, updated_at:new Date().toISOString()})
       .select('id').maybeSingle();
     if(error) console.error('[Teralyx] insert:',error);
     else if(data) _sbEmpresaId=data.id;
@@ -9250,9 +9270,8 @@ function sbApplyEmpresaData(d){
   if(calc){
     window._teralyxCalc=calc;
     if(typeof renderAllViews==='function') renderAllViews(calc);
-    // Mostrar botón global de borrar datos
-    const gcb=document.getElementById('global-clear-btn');
-    if(gcb) gcb.style.display='';
+    const dcb=document.getElementById('dash-clear-btn');
+    if(dcb) dcb.style.display='';
   }
   // Restaurar productos si existen en Supabase
   if(d._prodRows&&d._prodRows.length>0&&typeof window.prodSetRows==='function'){
@@ -9485,6 +9504,8 @@ window.closeSidebar=closeSidebar;
     _rows=rows||[];_fRows=[..._rows];_files=files||[];
     _prodPersist();
   };
+  window._getProdRows =function(){ return _rows; };
+  window._getProdFiles=function(){ return _files; };
   window.prodReset=function(){
     _rows=[];_files=[];_fRows=[];window._prodData=null;
     try{localStorage.removeItem(_PROD_KEY);}catch(e){}
