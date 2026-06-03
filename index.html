@@ -8325,8 +8325,16 @@ function buildDataPreview(r){
 window.buildDataPreview=buildDataPreview;
 
 /* ─────────────────── Limpiar sistema ─────────────────── */
-function limpiarSistema(){
+async function limpiarSistema(){
   if(!confirm('¿Eliminar todos los datos cargados y empezar de nuevo?')) return;
+  // Borrar datos en Supabase (vaciar campo data, mantener el registro)
+  if(window._sb && window._sbUser && window._sbEmpresaId){
+    try{
+      await window._sb.from('empresas')
+        .update({ data:{}, updated_at: new Date().toISOString() })
+        .eq('id', window._sbEmpresaId);
+    }catch(e){ console.error('[Teralyx] limpiar Supabase:', e); }
+  }
   // Estado global
   window._teralyxCalc       = null;
   window._teralyxHistorico  = null;
