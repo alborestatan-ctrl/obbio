@@ -8328,13 +8328,7 @@ window.buildDataPreview=buildDataPreview;
 async function limpiarSistema(){
   if(!confirm('¿Eliminar todos los datos cargados y empezar de nuevo?')) return;
   // Borrar datos en Supabase (vaciar campo data, mantener el registro)
-  if(window._sb && window._sbUser && window._sbEmpresaId){
-    try{
-      await window._sb.from('empresas')
-        .update({ data:{}, updated_at: new Date().toISOString() })
-        .eq('id', window._sbEmpresaId);
-    }catch(e){ console.error('[Teralyx] limpiar Supabase:', e); }
-  }
+  if(typeof window.sbLimpiarDatos==='function') await window.sbLimpiarDatos();
   // Estado global
   window._teralyxCalc       = null;
   window._teralyxHistorico  = null;
@@ -8959,6 +8953,7 @@ function sbInit(){
   _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     realtime: { params: { eventsPerSecond: 10 } }
   });
+  window._sb = _sb;
 
   _sb.auth.onAuthStateChange(async (event, session)=>{
     if(session){
@@ -9411,6 +9406,15 @@ function sbShowErr(msg){
 
 window.sbDoLogin  = sbDoLogin;
 window.sbShowErr  = sbShowErr;
+
+window.sbLimpiarDatos = async function(){
+  if(!_sb || !_sbUser || !_sbEmpresaId) return;
+  try{
+    await _sb.from('empresas')
+      .update({ data:{}, updated_at: new Date().toISOString() })
+      .eq('id', _sbEmpresaId);
+  }catch(e){ console.error('[Teralyx] limpiar Supabase:', e); }
+};
 
 document.addEventListener('DOMContentLoaded', sbInit);
 
