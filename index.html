@@ -3182,6 +3182,10 @@ background:#10B981;
     <div class="uw-or"><div class="uw-or-line"></div><span>o captura manualmente</span><div class="uw-or-line"></div></div>
     <button class="uw-btn-outline" onclick="uwShow('uwM1')">Ingresar datos a mano &nbsp;→</button>
     <div class="uw-template-hint">¿Primera vez? <button class="uw-link-btn" onclick="downloadTemplate()">Descarga la plantilla con ejemplos →</button></div>
+    <div id="uw0-clear-zone" style="display:none;margin-top:18px;padding:14px 18px;border-radius:13px;border:1px solid rgba(244,92,92,.25);background:rgba(244,92,92,.05);display:flex;align-items:center;justify-content:space-between;gap:12px;">
+      <div style="font-size:13px;color:var(--muted);">Ya tienes datos cargados en el sistema.</div>
+      <button onclick="limpiarSistema()" style="padding:8px 16px;border-radius:9px;border:1px solid rgba(244,92,92,.4);background:rgba(244,92,92,.1);color:var(--danger);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;transition:.15s;" onmouseover="this.style.background='rgba(244,92,92,.2)'" onmouseout="this.style.background='rgba(244,92,92,.1)'">🗑 Eliminar datos</button>
+    </div>
   </div>
 
   <!-- ── STEP EXCEL PREVIEW ── -->
@@ -3527,7 +3531,10 @@ background:#10B981;
   <div id="uwP" style="display:none;">
     <div class="uw-wizard-header" style="margin-bottom:6px;">
       <div style="font-size:13px;font-weight:700;color:var(--primary);">📊 Resumen de tu información</div>
-      <div class="uw-back" onclick="uwShow('uwM1')">← Editar datos</div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <button onclick="limpiarSistema()" style="padding:6px 13px;border-radius:9px;border:1px solid rgba(244,92,92,.35);background:rgba(244,92,92,.08);color:var(--danger);font-size:12px;font-weight:600;cursor:pointer;transition:.15s;" onmouseover="this.style.background='rgba(244,92,92,.18)'" onmouseout="this.style.background='rgba(244,92,92,.08)'">🗑 Eliminar datos</button>
+        <div class="uw-back" onclick="uwShow('uwM1')">← Editar datos</div>
+      </div>
     </div>
     <div id="uwP_body"></div>
   </div>
@@ -4065,6 +4072,10 @@ function uwShow(id){
     const el=document.getElementById(s);
     if(el) el.style.display=s===id?'block':'none';
   });
+  if(id==='uw0'){
+    const cz=document.getElementById('uw0-clear-zone');
+    if(cz) cz.style.display=window._teralyxCalc?'flex':'none';
+  }
 }
 
 function uwSwitchTab(name){
@@ -8241,6 +8252,35 @@ function buildDataPreview(r){
     </div>`;
 }
 window.buildDataPreview=buildDataPreview;
+
+/* ─────────────────── Limpiar sistema ─────────────────── */
+function limpiarSistema(){
+  if(!confirm('¿Eliminar todos los datos cargados y empezar de nuevo?')) return;
+  // Estado global
+  window._teralyxCalc       = null;
+  window._teralyxHistorico  = null;
+  window._pendingExcelData  = null;
+  window._teralyxClienteMap = null;
+  window._teralyxRegionMap  = null;
+  window._prodData          = null;
+  // sessionStorage
+  try{ sessionStorage.removeItem('teralyx_calc_v1'); }catch(e){}
+  // Reset productos
+  if(typeof window.prodReset==='function') window.prodReset();
+  // Reset file input
+  const fi=document.getElementById('excelMainInput');
+  if(fi) fi.value='';
+  // Limpiar campos manuales principales
+  ['ii_ventas','ii_cogs','ii_gadmin','ii_gventas','ii_gfin','ii_dep',
+   'ii_caja','ii_cxc','ii_inventario','ii_activo_fijo','ii_pasivo_cp',
+   'ii_pasivo_lp','ii_capital'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  // Volver a pantalla inicial
+  if(typeof uwShow==='function') uwShow('uw0');
+  showNotif('Sistema limpiado correctamente','success');
+}
+window.limpiarSistema=limpiarSistema;
 
 /* ─────────────────── Analytics nav visibility ─────────────────── */
 function updateAnalyticsNav(r){
