@@ -4712,7 +4712,35 @@ function calcularYAplicar(){
     // Raw numérico (en M) para gráficas
     _pasivoCp_m:r.pasivoCp/1e6, _pasivoLp_m:r.pasivoLp/1e6,
   };
-  saveData({...dashData, _calc: r});
+  const rawInputs={
+    ventas:($('ii_ventas')||{}).value||'',
+    cogs:($('ii_cogs')||{}).value||'',
+    gadmin:($('ii_gadmin')||{}).value||'',
+    gventas:($('ii_gventas')||{}).value||'',
+    gfin:($('ii_gfin')||{}).value||'',
+    depreciacion:($('ii_depreciacion')||{}).value||'',
+    caja:($('ii_caja')||{}).value||'',
+    cxc:($('ii_cxc')||{}).value||'',
+    inventario:($('ii_inventario')||{}).value||'',
+    activo_fijo:($('ii_activo_fijo')||{}).value||'',
+    cxp:($('ii_cxp')||{}).value||'',
+    pasivo_cp:($('ii_pasivo_cp')||{}).value||'',
+    pasivo_lp:($('ii_pasivo_lp')||{}).value||'',
+    dias_cobro:($('ii_dias_cobro')||{}).value||'',
+    dias_inv:($('ii_dias_inv')||{}).value||'',
+    dias_pago:($('ii_dias_pago')||{}).value||'',
+    anio:($('ii_anio')||{}).value||'',
+    giro:($('ii_giro')||{}).value||'',
+    moneda:($('ii_moneda')||{}).value||'',
+    pais:($('ii_pais')||{}).value||'',
+    tasa_isr:($('ii_tasa_isr')||{}).value||'',
+    concentracion:($('ii_concentracion')||{}).value||'',
+    yoy:($('ii_yoy')||{}).value||'',
+    periodo_tipo:($('ii_periodo_tipo')||{}).value||'',
+    tiene_inventario:($('ii_tiene_inventario')||{}).checked?'1':'0',
+    modo_sucursales:($('ii_modo_sucursales')||{}).checked?'1':'0',
+  };
+  saveData({...dashData, _rawInputs:rawInputs, _calc:r});
   applyData(dashData);
   populateForm(dashData);
 
@@ -4864,9 +4892,39 @@ function showNotif(msg, type='success', ms=3000){
 /* ── POPULATE FORM con datos guardados ── */
 function populateForm(data){
   if(!data) return;
-  const set=(id,val)=>{const el=$(id);if(el&&val!==undefined&&val!=='')el.value=val;};
-  set('ii_empresa',data.empresa); set('ii_clientes',data.clientes);
-  set('ii_periodo',data.periodo);
+  const set=(id,val)=>{const el=$(id);if(el&&val!==undefined)el.value=val;};
+  const raw=data._rawInputs||{};
+  set('ii_empresa',    data.empresa);
+  set('ii_clientes',   data.clientes);
+  set('ii_periodo',    data.periodo);
+  set('ii_periodo_tipo',data.periodo_tipo);
+  set('ii_anio',       raw.anio!==undefined?raw.anio:data.anio);
+  set('ii_giro',       raw.giro!==undefined?raw.giro:data.giro);
+  set('ii_moneda',     raw.moneda!==undefined?raw.moneda:data.moneda);
+  set('ii_pais',       raw.pais!==undefined?raw.pais:data.pais);
+  set('ii_tasa_isr',   raw.tasa_isr!==undefined?raw.tasa_isr:(data.tasaIsr||data.tasa_isr));
+  set('ii_concentracion',raw.concentracion!==undefined?raw.concentracion:data.concentracion);
+  set('ii_yoy',        raw.yoy!==undefined?raw.yoy:data.yoy);
+  set('ii_ventas',     raw.ventas!==undefined?raw.ventas:data.ventas);
+  set('ii_cogs',       raw.cogs!==undefined?raw.cogs:data.cogs);
+  set('ii_gadmin',     raw.gadmin!==undefined?raw.gadmin:data.gadmin);
+  set('ii_gventas',    raw.gventas!==undefined?raw.gventas:data.gventas);
+  set('ii_gfin',       raw.gfin!==undefined?raw.gfin:data.gfin);
+  set('ii_depreciacion',raw.depreciacion!==undefined?raw.depreciacion:data.depreciacion);
+  set('ii_caja',       raw.caja!==undefined?raw.caja:data.caja);
+  set('ii_cxc',        raw.cxc!==undefined?raw.cxc:data.cxc);
+  set('ii_inventario', raw.inventario!==undefined?raw.inventario:data.inventario);
+  set('ii_activo_fijo',raw.activo_fijo!==undefined?raw.activo_fijo:(data.activoFijo||data.activo_fijo));
+  set('ii_cxp',        raw.cxp!==undefined?raw.cxp:data.cxp);
+  set('ii_pasivo_cp',  raw.pasivo_cp!==undefined?raw.pasivo_cp:(data.pasivoCP||data.pasivo_cp));
+  set('ii_pasivo_lp',  raw.pasivo_lp!==undefined?raw.pasivo_lp:(data.pasivoLP||data.pasivo_lp));
+  set('ii_dias_cobro', raw.dias_cobro!==undefined?raw.dias_cobro:(data.diasCobro||data.dias_cobro));
+  set('ii_dias_inv',   raw.dias_inv!==undefined?raw.dias_inv:(data.diasInv||data.dias_inv));
+  set('ii_dias_pago',  raw.dias_pago!==undefined?raw.dias_pago:(data.diasPago||data.dias_pago));
+  const inv=document.getElementById('ii_tiene_inventario');
+  if(inv) inv.checked=raw.tiene_inventario==='1'||!!data.tieneInventario;
+  const suc=document.getElementById('ii_modo_sucursales');
+  if(suc) suc.checked=raw.modo_sucursales==='1'||!!data.modoSucursales;
 }
 
 /* ── EXCEL: leer y parsear ── */
