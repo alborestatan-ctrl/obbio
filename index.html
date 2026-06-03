@@ -3152,6 +3152,7 @@ background:#10B981;
     <p class="page-subtitle">El sistema calcula EBITDA, márgenes, ratios y más · automáticamente</p>
   </div>
   <div class="topbar-actions" style="gap:8px;">
+    <button id="topbar-save-btn" onclick="guardarCambios()" style="display:none;padding:8px 16px;border-radius:10px;border:1px solid rgba(52,199,89,.35);background:rgba(52,199,89,.08);color:#34c759;font-size:12px;font-weight:600;cursor:pointer;transition:.15s;" onmouseover="this.style.background='rgba(52,199,89,.2)'" onmouseout="this.style.background='rgba(52,199,89,.08)'">💾 Guardar cambios</button>
     <button id="topbar-clear-btn" onclick="limpiarSistema()" style="display:none;padding:8px 16px;border-radius:10px;border:1px solid rgba(244,92,92,.35);background:rgba(244,92,92,.08);color:var(--danger);font-size:12px;font-weight:600;cursor:pointer;transition:.15s;" onmouseover="this.style.background='rgba(244,92,92,.2)'" onmouseout="this.style.background='rgba(244,92,92,.08)'">🗑 Eliminar datos</button>
     <button onclick="downloadTemplate()" class="uw-btn-ghost" style="font-size:12px;padding:8px 14px;">⬇ Plantilla Excel</button>
   </div>
@@ -3666,6 +3667,8 @@ function showView(viewId, button){
   const _hasCalc=!!window._teralyxCalc;
   const dcb=document.getElementById('dash-clear-btn');
   if(dcb) dcb.style.display=(viewId==='dashboardView'&&_hasCalc)?'':'none';
+  const tsb=document.getElementById('topbar-save-btn');
+  if(tsb) tsb.style.display=(viewId==='ingresodatosView'&&_hasCalc)?'':'none';
   const tcb=document.getElementById('topbar-clear-btn');
   if(tcb) tcb.style.display=(viewId==='ingresodatosView'&&_hasCalc)?'':'none';
   const r=getCalc&&getCalc();
@@ -8352,12 +8355,39 @@ async function limpiarSistema(){
     const el=document.getElementById(id); if(el) el.value='';
   });
   // Ocultar botones de eliminar datos
-  ['dash-clear-btn','topbar-clear-btn'].forEach(id=>{const b=document.getElementById(id);if(b)b.style.display='none';});
+  ['dash-clear-btn','topbar-clear-btn','topbar-save-btn'].forEach(id=>{const b=document.getElementById(id);if(b)b.style.display='none';});
   // Volver a pantalla inicial
   if(typeof uwShow==='function') uwShow('uw0');
   showNotif('Sistema limpiado correctamente','success');
 }
 window.limpiarSistema=limpiarSistema;
+
+async function guardarCambios(){
+  if(!window._sbUser){ showNotif('Inicia sesión primero','error'); return; }
+  if(!window._teralyxCalc){ showNotif('Primero ingresa y calcula los datos','warning'); return; }
+  const btn=document.getElementById('topbar-save-btn');
+  if(btn){ btn.disabled=true; btn.textContent='Guardando...'; }
+  try{
+    // Leer el último dashData completo de sessionStorage
+    const key='teralyx_data_'+(window._sbUser?.id||'local');
+    let data;
+    try{ data=JSON.parse(sessionStorage.getItem(key)); }catch(e){}
+    // Si no hay nada en sessionStorage, construir mínimo con _calc
+    if(!data) data={_calc:window._teralyxCalc};
+    if(typeof window.sbUpsertEmpresa==='function'){
+      await window.sbUpsertEmpresa(data);
+      showNotif('Datos guardados correctamente','success');
+    } else {
+      showNotif('Error: función de guardado no disponible','error');
+    }
+  } catch(e){
+    console.error('[Teralyx] guardarCambios:',e);
+    showNotif('Error al guardar. Intenta de nuevo.','error');
+  } finally {
+    if(btn){ btn.disabled=false; btn.textContent='💾 Guardar cambios'; }
+  }
+}
+window.guardarCambios=guardarCambios;
 
 /* ─────────────────── Analytics nav visibility ─────────────────── */
 function updateAnalyticsNav(r){
