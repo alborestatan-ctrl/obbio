@@ -5246,6 +5246,29 @@ function parseExcelWorkbook(wb){
     data.g_publicidad  = kvGet(erMap,'publicidad');
     data.g_comisiones  = kvGet(erMap,'comisiones');
     data.g_ventas_otros= kvGet(erMap,'otros ventas');
+    // Fallback: read breakdown from dedicated Costos/Gastos sheets if not found in ER sheet
+    const costosWs=getSheet('costos');
+    const gastosWs=getSheet('gastos');
+    if(costosWs){
+      const cm=parseKV(costosWs);
+      const cMap=Object.keys(cm.byYear).length>0?cm.byYear[Math.max(...Object.keys(cm.byYear).map(Number))]:cm.map;
+      if(!parseFloat(data.cogs_materia)) data.cogs_materia=kvGet(cMap,'materia prima','materia');
+      if(!parseFloat(data.cogs_mod))     data.cogs_mod    =kvGet(cMap,'mano de obra');
+      if(!parseFloat(data.cogs_maquila)) data.cogs_maquila=kvGet(cMap,'maquila','subcontrat');
+      if(!parseFloat(data.cogs_otros))   data.cogs_otros  =kvGet(cMap,'otros costos','otros costos directos');
+    }
+    if(gastosWs){
+      const gm=parseKV(gastosWs);
+      const gMap=Object.keys(gm.byYear).length>0?gm.byYear[Math.max(...Object.keys(gm.byYear).map(Number))]:gm.map;
+      if(!parseFloat(data.g_sueldos))      data.g_sueldos    =kvGet(gMap,'sueldos admin','sueldos');
+      if(!parseFloat(data.g_renta))        data.g_renta      =kvGet(gMap,'renta');
+      if(!parseFloat(data.g_servicios))    data.g_servicios  =kvGet(gMap,'servicios','servicios (luz');
+      if(!parseFloat(data.g_honorarios))   data.g_honorarios =kvGet(gMap,'honorarios');
+      if(!parseFloat(data.g_admin_otros))  data.g_admin_otros=kvGet(gMap,'otros admin','otros gastos admin');
+      if(!parseFloat(data.g_publicidad))   data.g_publicidad =kvGet(gMap,'publicidad');
+      if(!parseFloat(data.g_comisiones))   data.g_comisiones =kvGet(gMap,'comisiones');
+      if(!parseFloat(data.g_ventas_otros)) data.g_ventas_otros=kvGet(gMap,'otros ventas','otros gastos de ventas');
+    }
     // Reconciliación ±2%: avisa si el desglose no cuadra, pero no rompe la carga
     const _warnRec=[];
     const _sum=arr=>arr.map(v=>parseFloat(v)||0).reduce((a,b)=>a+b,0);
