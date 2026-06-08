@@ -738,6 +738,8 @@ th[data-tip]:hover::before{opacity:1;}
     <button onclick="showView('cashflowView',this)"><span class="nav-icon">💧</span>Cash Flow Center</button>
     <button onclick="showView('workingCapitalView',this)"><span class="nav-icon">🏦</span>Capital de Trabajo</button>
     <button onclick="showView('debtView',this)"><span class="nav-icon">📉</span>Debt Intelligence</button>
+    <button onclick="showView('costosView',this)"><span class="nav-icon">🏭</span>Análisis de Costos</button>
+    <button onclick="showView('gastosView',this)"><span class="nav-icon">💸</span>Análisis de Gastos</button>
     <button onclick="showView('taxView',this)"><span class="nav-icon">🏛️</span>Tax Intelligence</button>
     <button onclick="showView('financialCenterView',this)"><span class="nav-icon">📑</span>Centro Financiero</button>
 
@@ -2013,6 +2015,42 @@ Mapa Estratégico de Impacto
 
 </div>
 
+</div>
+
+<!-- ==================== ANÁLISIS DE COSTOS ==================== -->
+<div id="costosView" class="view" style="display:none;">
+<header class="topbar">
+  <div><h2 class="page-title">Análisis de Costos</h2><p class="page-subtitle">Composición y sensibilidad del costo de ventas</p></div>
+</header>
+<section class="kpi-grid">
+  <div class="kpi-card accent-red"><div class="kpi-top"><div class="kpi-label">COGS Total</div><div class="kpi-icon red">🏭</div></div><div class="kpi-value" id="cv-kpi-cogs">—</div><div class="kpi-bottom"><div class="kpi-change neutral" id="cv-kpi-cogs-sub">Sin datos</div></div></div>
+  <div class="kpi-card accent-yellow"><div class="kpi-top"><div class="kpi-label">COGS / Ventas</div><div class="kpi-icon yellow">📊</div></div><div class="kpi-value" id="cv-kpi-pct">—</div><div class="kpi-bottom"><div class="kpi-change neutral" id="cv-kpi-pct-sub">Sin datos</div></div></div>
+  <div class="kpi-card accent-green"><div class="kpi-top"><div class="kpi-label">Margen Bruto</div><div class="kpi-icon green">📈</div></div><div class="kpi-value" id="cv-kpi-mb">—</div><div class="kpi-bottom"><div class="kpi-change neutral" id="cv-kpi-mb-sub">Sin datos</div></div></div>
+  <div class="kpi-card accent-blue"><div class="kpi-top"><div class="kpi-label">Mayor Componente</div><div class="kpi-icon blue">🔍</div></div><div class="kpi-value" id="cv-kpi-top">—</div><div class="kpi-bottom"><div class="kpi-change neutral" id="cv-kpi-top-sub">Sin datos</div></div></div>
+</section>
+<div class="financial-grid">
+  <div class="card"><div class="card-header"><div class="card-title">Composición del COGS</div></div><div class="chart-container"><canvas id="costosDonutChart"></canvas></div></div>
+  <div class="card"><div class="card-header"><div class="card-title">% sobre Ventas por Componente</div></div><div class="chart-container"><canvas id="costosBarChart"></canvas></div></div>
+</div>
+<div class="card"><div class="card-header"><div class="card-title">Sensibilidad de Costos</div></div><div id="cv-sens-body" style="padding:16px 20px;"></div></div>
+</div>
+
+<!-- ==================== ANÁLISIS DE GASTOS ==================== -->
+<div id="gastosView" class="view" style="display:none;">
+<header class="topbar">
+  <div><h2 class="page-title">Análisis de Gastos</h2><p class="page-subtitle">Estructura de gastos operativos y financieros</p></div>
+</header>
+<section class="kpi-grid">
+  <div class="kpi-card accent-red"><div class="kpi-top"><div class="kpi-label">Gastos Totales</div><div class="kpi-icon red">💸</div></div><div class="kpi-value" id="gv-kpi-total">—</div><div class="kpi-bottom"><div class="kpi-change neutral" id="gv-kpi-total-sub">Sin datos</div></div></div>
+  <div class="kpi-card accent-yellow"><div class="kpi-top"><div class="kpi-label">Gastos / Ventas</div><div class="kpi-icon yellow">📊</div></div><div class="kpi-value" id="gv-kpi-pct">—</div><div class="kpi-bottom"><div class="kpi-change neutral" id="gv-kpi-pct-sub">Sin datos</div></div></div>
+  <div class="kpi-card accent-blue"><div class="kpi-top"><div class="kpi-label">Mayor Rubro</div><div class="kpi-icon blue">🔍</div></div><div class="kpi-value" id="gv-kpi-top">—</div><div class="kpi-bottom"><div class="kpi-change neutral" id="gv-kpi-top-sub">Sin datos</div></div></div>
+  <div class="kpi-card accent-green"><div class="kpi-top"><div class="kpi-label">Margen Operativo</div><div class="kpi-icon green">⚡</div></div><div class="kpi-value" id="gv-kpi-ebit">—</div><div class="kpi-bottom"><div class="kpi-change neutral" id="gv-kpi-ebit-sub">Sin datos</div></div></div>
+</section>
+<div class="financial-grid">
+  <div class="card"><div class="card-header"><div class="card-title">Gastos por Categoría</div></div><div class="chart-container"><canvas id="gastosDonutChart"></canvas></div></div>
+  <div class="card"><div class="card-header"><div class="card-title">Desglose por Rubro</div></div><div class="chart-container"><canvas id="gastosBarChart"></canvas></div></div>
+</div>
+<div class="card"><div class="card-header"><div class="card-title">Análisis y Recomendaciones</div></div><div class="briefing-grid" id="gv-briefings"><div class="briefing-item info-border"><div class="briefing-title">Sin datos</div><div class="briefing-text">Ingresa datos para ver el análisis.</div></div></div></div>
 </div>
 
 <!-- ==================== TAX INTELLIGENCE ==================== -->
@@ -3715,6 +3753,8 @@ function showView(viewId, button){
   if(viewId==='cashflowView'    && typeof renderCashflowView==='function')   renderCashflowView(r);
   if(viewId==='workingCapitalView' && typeof renderWorkingCapitalView==='function') renderWorkingCapitalView(r);
   if(viewId==='debtView'        && typeof renderDebtView==='function')       renderDebtView(r);
+  if(viewId==='costosView'      && typeof renderCostosView==='function')     renderCostosView(r);
+  if(viewId==='gastosView'      && typeof renderGastosView==='function')     renderGastosView(r);
   if(viewId==='taxView'         && typeof renderTaxView==='function')        renderTaxView(r);
   if(viewId==='financialCenterView' && typeof renderFinancialCenterView==='function') renderFinancialCenterView(r);
   if(viewId==='forecastView'    && typeof renderForecastView==='function')   renderForecastView(r);
@@ -4815,6 +4855,18 @@ function calcularYAplicar(){
     periodo_tipo:($('ii_periodo_tipo')||{}).value||'',
     tiene_inventario:($('ii_tiene_inventario')||{}).checked?'1':'0',
     modo_sucursales:($('ii_modo_sucursales')||{}).checked?'1':'0',
+    cogs_materia:($('cogs_materia')||{}).value||'',
+    cogs_mod:($('cogs_mod')||{}).value||'',
+    cogs_maquila:($('cogs_maquila')||{}).value||'',
+    cogs_otros:($('cogs_otros')||{}).value||'',
+    g_sueldos:($('g_sueldos')||{}).value||'',
+    g_renta:($('g_renta')||{}).value||'',
+    g_servicios:($('g_servicios')||{}).value||'',
+    g_honorarios:($('g_honorarios')||{}).value||'',
+    g_admin_otros:($('g_admin_otros')||{}).value||'',
+    g_publicidad:($('g_publicidad')||{}).value||'',
+    g_comisiones:($('g_comisiones')||{}).value||'',
+    g_ventas_otros:($('g_ventas_otros')||{}).value||'',
   };
   saveData({...dashData, _rawInputs:rawInputs, _calc:r});
   applyData(dashData);
@@ -5002,6 +5054,22 @@ function populateForm(data){
   if(inv) inv.checked=raw.tiene_inventario==='1'||!!data.tieneInventario;
   const suc=document.getElementById('ii_modo_sucursales');
   if(suc) suc.checked=raw.modo_sucursales==='1'||!!data.modoSucursales;
+  // Restaurar desglose COGS
+  const _cogsFlds=['cogs_materia','cogs_mod','cogs_maquila','cogs_otros'];
+  _cogsFlds.forEach(id=>{ if(raw[id]!==undefined) set(id,raw[id]); });
+  if(_cogsFlds.some(id=>raw[id]&&raw[id]!==''&&raw[id]!=='0')){
+    const sec=document.getElementById('desglose-cogs');
+    if(sec){ sec.style.display='block'; const arr=sec.previousElementSibling?.querySelector('span:first-child'); if(arr) arr.textContent='▼'; }
+    if(typeof calcDesgloseCogs==='function') calcDesgloseCogs();
+  }
+  // Restaurar desglose gastos
+  const _gasFlds=['g_sueldos','g_renta','g_servicios','g_honorarios','g_admin_otros','g_publicidad','g_comisiones','g_ventas_otros'];
+  _gasFlds.forEach(id=>{ if(raw[id]!==undefined) set(id,raw[id]); });
+  if(_gasFlds.some(id=>raw[id]&&raw[id]!==''&&raw[id]!=='0')){
+    const sec=document.getElementById('desglose-gastos');
+    if(sec){ sec.style.display='block'; const arr=sec.previousElementSibling?.querySelector('span:first-child'); if(arr) arr.textContent='▼'; }
+    if(typeof calcDesgloseGastos==='function') calcDesgloseGastos();
+  }
 }
 
 /* ── EXCEL: leer y parsear ── */
@@ -5162,6 +5230,29 @@ function parseExcelWorkbook(wb){
     data.gventas      = kvGet(erMap,'gastos de ventas','gastos ventas','comercializaci','marketing y ventas');
     data.depreciacion = kvGet(erMap,'depreci','amortiz','d&a');
     data.gfin         = kvGet(erMap,'gastos financiero','intereses pagado','financiero');
+    // Desglose opcional de COGS
+    data.cogs_materia  = kvGet(erMap,'materia prima');
+    data.cogs_mod      = kvGet(erMap,'mano de obra');
+    data.cogs_maquila  = kvGet(erMap,'maquila');
+    data.cogs_otros    = kvGet(erMap,'otros costos');
+    // Desglose opcional de Gastos Admin
+    data.g_sueldos     = kvGet(erMap,'sueldos admin');
+    data.g_renta       = kvGet(erMap,'renta');
+    data.g_servicios   = kvGet(erMap,'servicios (luz');
+    data.g_honorarios  = kvGet(erMap,'honorarios');
+    data.g_admin_otros = kvGet(erMap,'otros admin');
+    // Desglose opcional de Gastos Ventas
+    data.g_publicidad  = kvGet(erMap,'publicidad');
+    data.g_comisiones  = kvGet(erMap,'comisiones');
+    data.g_ventas_otros= kvGet(erMap,'otros ventas');
+    // Reconciliación ±2%: avisa si el desglose no cuadra, pero no rompe la carga
+    const _warnRec=[];
+    const _sum=arr=>arr.map(v=>parseFloat(v)||0).reduce((a,b)=>a+b,0);
+    const _chk=(lbl,bSum,agg)=>{ if(bSum>0&&agg>0&&Math.abs(bSum-agg)/agg>0.02) _warnRec.push(lbl); };
+    _chk('COGS',_sum([data.cogs_materia,data.cogs_mod,data.cogs_maquila,data.cogs_otros]),parseFloat(data.cogs)||0);
+    _chk('Gastos Admin',_sum([data.g_sueldos,data.g_renta,data.g_servicios,data.g_honorarios,data.g_admin_otros]),parseFloat(data.gadmin)||0);
+    _chk('Gastos Ventas',_sum([data.g_publicidad,data.g_comisiones,data.g_ventas_otros]),parseFloat(data.gventas)||0);
+    if(_warnRec.length) data._breakdownWarning='Desglose de '+_warnRec.join(', ')+' difiere del total (>2%). Se conservó el total agregado.';
 
     // Balance General (current year)
     data.caja         = kvGet(balMap,'caja','efectivo','bancos');
@@ -5544,6 +5635,22 @@ function applyExcelData(){
     setVal('ii_gventas', parseNum(d.gventas));
     setVal('ii_gfin',    parseNum(d.gfin));
   }
+  // ── Desglose opcional desde Excel ──
+  const _xlCogs=['cogs_materia','cogs_mod','cogs_maquila','cogs_otros'];
+  _xlCogs.forEach(id=>{ if(d[id]&&d[id]!=='') setVal(id,parseNum(d[id])); });
+  if(_xlCogs.some(id=>d[id]&&parseNum(d[id])>0)){
+    const sec=document.getElementById('desglose-cogs');
+    if(sec){sec.style.display='block';const arr=sec.previousElementSibling?.querySelector('span:first-child');if(arr)arr.textContent='▼';}
+    if(typeof calcDesgloseCogs==='function') calcDesgloseCogs();
+  }
+  const _xlGas=['g_sueldos','g_renta','g_servicios','g_honorarios','g_admin_otros','g_publicidad','g_comisiones','g_ventas_otros'];
+  _xlGas.forEach(id=>{ if(d[id]&&d[id]!=='') setVal(id,parseNum(d[id])); });
+  if(_xlGas.some(id=>d[id]&&parseNum(d[id])>0)){
+    const sec=document.getElementById('desglose-gastos');
+    if(sec){sec.style.display='block';const arr=sec.previousElementSibling?.querySelector('span:first-child');if(arr)arr.textContent='▼';}
+    if(typeof calcDesgloseGastos==='function') calcDesgloseGastos();
+  }
+  if(d._breakdownWarning) showNotif('⚠️ '+d._breakdownWarning,'warning',7000);
   // ── Datos mensuales por año ──
   if(d.monthlyByYear) window._teralyxMonthlyByYear={...(window._teralyxMonthlyByYear||{}),...d.monthlyByYear};
   if(d.clienteMap) window._teralyxClienteMap=d.clienteMap;
@@ -5653,10 +5760,22 @@ function downloadTemplate(){
     ['','','','',''],
     ['── COSTO DE VENTAS ──','','','',''],
     ['Costo de ventas (COGS)','Materiales, mano de obra directa, servicios subcontratados.',551000,622000,686000],
+    ['  Materia prima','(opcional) Desglose de COGS — si lo llenas, el total se recalcula.','','',''],
+    ['  Mano de obra directa','(opcional) Desglose de COGS','','',''],
+    ['  Maquila / subcontratacion','(opcional) Desglose de COGS','','',''],
+    ['  Otros costos','(opcional) Desglose de COGS','','',''],
     ['','','','',''],
     ['── GASTOS OPERATIVOS ──','','','',''],
     ['Gastos de administración','Sueldos admin, renta, servicios, contabilidad.',482000,524000,570000],
+    ['  Sueldos admin','(opcional) Desglose de Gastos Admin — si lo llenas, el total se recalcula.','','',''],
+    ['  Renta','(opcional) Desglose de Gastos Admin','','',''],
+    ['  Servicios (luz, internet)','(opcional) Desglose de Gastos Admin','','',''],
+    ['  Honorarios','(opcional) Desglose de Gastos Admin','','',''],
+    ['  Otros admin','(opcional) Desglose de Gastos Admin','','',''],
     ['Gastos de ventas','Comisiones, publicidad, marketing, viáticos.',176000,194000,214000],
+    ['  Publicidad','(opcional) Desglose de Gastos Ventas — si lo llenas, el total se recalcula.','','',''],
+    ['  Comisiones','(opcional) Desglose de Gastos Ventas','','',''],
+    ['  Otros ventas','(opcional) Desglose de Gastos Ventas','','',''],
     ['Depreciación','Desgaste de activos fijos. Déjalo vacío si no lo tienes.',43000,47000,51000],
     ['','','','',''],
     ['── GASTOS FINANCIEROS ──','','','',''],
@@ -7027,6 +7146,109 @@ function renderDebtView(r){
     briefs.push({tipo:'info',titulo:'Perfil de vencimientos',texto:'Deuda CP: '+_m(r.pasivoCp)+' · Deuda LP: '+_m(r.pasivoLp)+'. '+(r.pasivoLp>r.pasivoCp?'Perfil de largo plazo saludable.':'Alta concentración en corto plazo. Refinanciar si es posible.')});
     grid.innerHTML=briefs.slice(0,3).map(b=>`<div class="briefing-item ${bg[b.tipo]}"><div class="briefing-title">${b.titulo}</div><div class="briefing-text">${b.texto}</div></div>`).join('');
   }
+}
+
+/* ─────────────────── COSTOS VIEW ─────────────────── */
+function renderCostosView(r){
+  const el=document.getElementById('costosView'); if(!el) return;
+  el.querySelectorAll('[data-nodata]').forEach(n=>n.remove());
+  if(!r){ const g=el.querySelector('.kpi-grid'); if(g) g.insertAdjacentHTML('beforebegin',noDataHtml('🏭','Sin datos de costos','Ingresa ventas y COGS para ver el análisis.')); return; }
+  const bd=r.cogsBreakdown||{};
+  const hasBreakdown=(bd.materia||0)+(bd.mod||0)+(bd.maquila||0)+(bd.otros||0)>0;
+  const pct=r.ventas>0?r.cogs/r.ventas*100:null;
+  const COLORS=['#EF4444','#F59E0B','#8B5CF6','#10B981','#3B82F6','#EC4899','#14B8A6'];
+  // KPIs
+  const k1=document.getElementById('cv-kpi-cogs'); if(k1) k1.innerHTML=_m(r.cogs);
+  const s1=document.getElementById('cv-kpi-cogs-sub'); if(s1){s1.innerHTML=pct!=null?_pp(pct)+' de ventas':'—';s1.className='kpi-change '+(pct==null?'neutral':pct<60?'positive':'negative');}
+  const k2=document.getElementById('cv-kpi-pct'); if(k2){k2.innerHTML=pct!=null?_pp(pct):'—';k2.style.color=pct==null?'':_clr(100-pct,50,35);}
+  const s2=document.getElementById('cv-kpi-pct-sub'); if(s2){s2.innerHTML=pct!=null?(pct<50?'Eficiencia alta':pct<65?'Rango normal':'Revisar estructura'):'—';s2.className='kpi-change '+(pct==null?'neutral':pct<65?'positive':'negative');}
+  const k3=document.getElementById('cv-kpi-mb'); if(k3){k3.innerHTML=_pp(r.margenBruto);k3.style.color=_clr(r.margenBruto,40,25);}
+  const s3=document.getElementById('cv-kpi-mb-sub'); if(s3){s3.innerHTML=r.margenBruto!=null?(r.margenBruto>=40?'Excelente':r.margenBruto>=25?'Saludable':'Bajo'):'—';s3.className='kpi-change '+(r.margenBruto==null?'neutral':r.margenBruto>=25?'positive':'negative');}
+  let topLabel='COGS',topVal=r.cogs,topPct=pct;
+  if(hasBreakdown){const items=[['Materia prima',bd.materia||0],['Mano de obra',bd.mod||0],['Maquila',bd.maquila||0],['Otros costos',bd.otros||0]];const top=items.reduce((a,b)=>b[1]>a[1]?b:a,['—',0]);topLabel=top[0];topVal=top[1];topPct=r.cogs>0?top[1]/r.cogs*100:null;}
+  const k4=document.getElementById('cv-kpi-top'); if(k4) k4.innerHTML=_m(topVal);
+  const s4=document.getElementById('cv-kpi-top-sub'); if(s4) s4.innerHTML=topLabel+(topPct!=null?' · '+_pp(topPct)+' del COGS':'');
+  // Charts
+  if(hasBreakdown){
+    const items=[['Materia prima',bd.materia||0],['Mano de obra',bd.mod||0],['Maquila',bd.maquila||0],['Otros costos',bd.otros||0]].filter(x=>x[1]>0);
+    mkChart('costosDonutChart',{type:'doughnut',data:{labels:items.map(x=>x[0]),datasets:[{data:items.map(x=>+(x[1]/1e6).toFixed(2)),backgroundColor:COLORS,borderColor:'#18181B',borderWidth:3,hoverOffset:6}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'bottom',labels:{color:'#A1A1AA',font:{size:11}}},tooltip:{backgroundColor:'#1E1E22',callbacks:{label:ctx=>` ${ctx.label}: ${_m(ctx.parsed*1e6)}`}}}}});
+    mkChart('costosBarChart',{type:'bar',data:{labels:items.map(x=>x[0]),datasets:[{data:items.map(x=>r.ventas>0?+(x[1]/r.ventas*100).toFixed(1):0),backgroundColor:COLORS,borderRadius:8,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1E1E22',callbacks:{label:ctx=>` ${ctx.parsed.y}% de ventas`}}},scales:{x:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',font:{size:11}}},y:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',callback:v=>v+'%'}}}}});
+  } else {
+    mkChart('costosDonutChart',{type:'doughnut',data:{labels:['COGS','Utilidad bruta'],datasets:[{data:[+(r.cogs/1e6).toFixed(2),+(Math.max(0,r.utilBruta)/1e6).toFixed(2)],backgroundColor:['#EF4444','#10B981'],borderColor:'#18181B',borderWidth:3,hoverOffset:6}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'bottom',labels:{color:'#A1A1AA',font:{size:11}}},tooltip:{backgroundColor:'#1E1E22',callbacks:{label:ctx=>` ${ctx.label}: ${_m(ctx.parsed*1e6)}`}}}}});
+    mkChart('costosBarChart',{type:'bar',data:{labels:['COGS','G. Admin','G. Ventas','G. Financieros'],datasets:[{data:[r.cogs,r.gadmin,r.gventas,r.gfin].map(v=>r.ventas>0?+(v/r.ventas*100).toFixed(1):0),backgroundColor:['#EF4444','#F59E0B','#8B5CF6','#3B82F6'],borderRadius:8,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1E1E22',callbacks:{label:ctx=>` ${ctx.parsed.y}% de ventas`}}},scales:{x:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA'}},y:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',callback:v=>v+'%'}}}}});
+  }
+  // Sensibilidad
+  const sb=document.getElementById('cv-sens-body');
+  if(sb){
+    const cta=hasBreakdown?'':'<p style="margin-top:12px;font-size:12px;color:var(--accent);">Captura el desglose opcional en Ingresar Datos para activar el análisis por componente.</p>';
+    sb.innerHTML=`<div style="display:flex;flex-wrap:wrap;gap:24px;padding:4px 0;">
+      <div><span style="color:var(--muted);font-size:12px;">Reducir COGS 1%</span><br><span style="font-size:18px;font-weight:800;color:var(--success);">+${_m(r.cogs*0.01)}</span><span style="color:var(--muted);font-size:12px;"> EBITDA adicional</span></div>
+      <div><span style="color:var(--muted);font-size:12px;">Reducir COGS 5%</span><br><span style="font-size:18px;font-weight:800;color:var(--success);">+${_m(r.cogs*0.05)}</span><span style="color:var(--muted);font-size:12px;"> EBITDA adicional</span></div>
+      <div><span style="color:var(--muted);font-size:12px;">COGS sobre ventas</span><br><span style="font-size:18px;font-weight:800;">${pct!=null?_pp(pct):'—'}</span><span style="color:var(--muted);font-size:12px;"> (benchmark ~55%)</span></div>
+    </div>${cta}`;
+  }
+}
+
+/* ─────────────────── GASTOS VIEW ─────────────────── */
+function renderGastosView(r){
+  const el=document.getElementById('gastosView'); if(!el) return;
+  el.querySelectorAll('[data-nodata]').forEach(n=>n.remove());
+  if(!r){ const g=el.querySelector('.kpi-grid'); if(g) g.insertAdjacentHTML('beforebegin',noDataHtml('💸','Sin datos de gastos','Ingresa gastos operativos para ver el análisis.')); return; }
+  const bd=r.gastosBreakdown||{};
+  const adm=bd.admin||{}, vts=bd.ventas||{};
+  const hasAdminBD=(adm.sueldos||0)+(adm.renta||0)+(adm.servicios||0)+(adm.honorarios||0)+(adm.otros||0)>0;
+  const hasVtsBD=(vts.publicidad||0)+(vts.comisiones||0)+(vts.otros||0)>0;
+  const hasBreakdown=hasAdminBD||hasVtsBD;
+  const gastoTotal=(r.gadmin||0)+(r.gventas||0)+(r.gfin||0);
+  const pct=r.ventas>0?gastoTotal/r.ventas*100:null;
+  const COLORS=['#F59E0B','#8B5CF6','#3B82F6','#10B981','#EF4444','#EC4899','#14B8A6'];
+  // KPIs
+  const k1=document.getElementById('gv-kpi-total'); if(k1) k1.innerHTML=_m(gastoTotal);
+  const s1=document.getElementById('gv-kpi-total-sub'); if(s1){s1.innerHTML=pct!=null?_pp(pct)+' de ventas':'—';s1.className='kpi-change '+(pct==null?'neutral':pct<30?'positive':'negative');}
+  const k2=document.getElementById('gv-kpi-pct'); if(k2){k2.innerHTML=pct!=null?_pp(pct):'—';k2.style.color=pct==null?'':_clr(100-pct,70,60);}
+  const s2=document.getElementById('gv-kpi-pct-sub'); if(s2){s2.innerHTML=pct!=null?(pct<25?'Estructura eficiente':pct<40?'Rango razonable':'Gastos elevados'):'—';s2.className='kpi-change '+(pct==null?'neutral':pct<40?'positive':'negative');}
+  let topLabel='G. Admin',topVal=r.gadmin||0;
+  if(hasBreakdown){
+    const items=[];
+    if(hasAdminBD) Object.entries({Sueldos:adm.sueldos||0,Renta:adm.renta||0,Servicios:adm.servicios||0,Honorarios:adm.honorarios||0,'Otros admin':adm.otros||0}).forEach(([k,v])=>items.push([k,v]));
+    if(hasVtsBD) Object.entries({Publicidad:vts.publicidad||0,Comisiones:vts.comisiones||0,'Otros ventas':vts.otros||0}).forEach(([k,v])=>items.push([k,v]));
+    if(items.length){const top=items.reduce((a,b)=>b[1]>a[1]?b:a,['—',0]);topLabel=top[0];topVal=top[1];}
+  } else {
+    if((r.gventas||0)>topVal){topLabel='G. Ventas';topVal=r.gventas||0;}
+    if((r.gfin||0)>topVal){topLabel='G. Financieros';topVal=r.gfin||0;}
+  }
+  const k3=document.getElementById('gv-kpi-top'); if(k3) k3.innerHTML=_m(topVal);
+  const s3=document.getElementById('gv-kpi-top-sub'); if(s3) s3.innerHTML=topLabel+(gastoTotal>0?' · '+_pp(topVal/gastoTotal*100)+' del total':'');
+  const k4=document.getElementById('gv-kpi-ebit'); if(k4){k4.innerHTML=_pp(r.margenOp);k4.style.color=_clr(r.margenOp,10,5);}
+  const s4=document.getElementById('gv-kpi-ebit-sub'); if(s4){s4.innerHTML='Margen operativo';s4.className='kpi-change '+(r.margenOp==null?'neutral':r.margenOp>=10?'positive':'negative');}
+  // Charts
+  mkChart('gastosDonutChart',{type:'doughnut',data:{labels:['G. Admin','G. Ventas','G. Financieros'],datasets:[{data:[r.gadmin||0,r.gventas||0,r.gfin||0].map(v=>+(v/1e6).toFixed(2)),backgroundColor:['#F59E0B','#8B5CF6','#3B82F6'],borderColor:'#18181B',borderWidth:3,hoverOffset:6}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'bottom',labels:{color:'#A1A1AA',font:{size:11}}},tooltip:{backgroundColor:'#1E1E22',callbacks:{label:ctx=>` ${ctx.label}: ${_m(ctx.parsed*1e6)}`}}}}});
+  let barLabels,barVals;
+  if(hasBreakdown){
+    const items=[];
+    if(hasAdminBD) Object.entries({Sueldos:adm.sueldos||0,Renta:adm.renta||0,Servicios:adm.servicios||0,Honorarios:adm.honorarios||0,'Otros admin':adm.otros||0}).forEach(([k,v])=>{if(v>0)items.push([k,v]);});
+    if(hasVtsBD) Object.entries({Publicidad:vts.publicidad||0,Comisiones:vts.comisiones||0,'Otros ventas':vts.otros||0}).forEach(([k,v])=>{if(v>0)items.push([k,v]);});
+    items.sort((a,b)=>b[1]-a[1]);
+    barLabels=items.slice(0,6).map(x=>x[0]);
+    barVals=items.slice(0,6).map(x=>r.ventas>0?+(x[1]/r.ventas*100).toFixed(1):0);
+  } else {
+    barLabels=['G. Admin','G. Ventas','G. Financieros'];
+    barVals=[r.gadmin||0,r.gventas||0,r.gfin||0].map(v=>r.ventas>0?+(v/r.ventas*100).toFixed(1):0);
+  }
+  mkChart('gastosBarChart',{type:'bar',data:{labels:barLabels,datasets:[{data:barVals,backgroundColor:COLORS,borderRadius:8,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1E1E22',callbacks:{label:ctx=>` ${ctx.parsed.y}% de ventas`}}},scales:{x:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',font:{size:11}}},y:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',callback:v=>v+'%'}}}}});
+  // Briefings
+  const bg={'pos':'positive-border','info':'info-border','warn':'warning-border','danger':'danger-border'};
+  const briefs=[];
+  if(pct!=null){
+    if(pct<25) briefs.push({tipo:'pos',titulo:'Estructura eficiente',texto:`Gastos del ${_pp(pct)} sobre ventas. Buena relación entre estructura de costos y generación de ingresos.`});
+    else if(pct<40) briefs.push({tipo:'info',titulo:'Gastos en rango razonable',texto:`Gastos del ${_pp(pct)} sobre ventas. Revisar rubros con mayor peso para identificar oportunidades de optimización.`});
+    else briefs.push({tipo:'warn',titulo:'Gastos elevados',texto:`Gastos del ${_pp(pct)} sobre ventas. Priorizar reducción de gastos fijos o mejora de productividad por rubro.`});
+  }
+  if(r.gfin>0&&r.ebitda>0&&r.gfin/gastoTotal>0.15) briefs.push({tipo:'warn',titulo:'Carga financiera relevante',texto:`Gastos financieros de ${_m(r.gfin)} representan ${_pp(r.gfin/gastoTotal*100)} del gasto total. Reducir deuda mejoraría el margen neto.`});
+  if(r.yoy!=null&&r.yoy>0&&pct!=null&&pct>35) briefs.push({tipo:'warn',titulo:'Gastos creciendo con ventas',texto:`Con YoY del ${_pp(r.yoy)}, asegurar que los gastos no crezcan más rápido que los ingresos para proteger el margen operativo.`});
+  if(!hasBreakdown) briefs.push({tipo:'info',titulo:'Activa el análisis detallado',texto:'Captura el desglose opcional en Ingresar Datos para ver el análisis por rubro individual (sueldos, renta, publicidad, comisiones, etc.).'});
+  const grid=document.getElementById('gv-briefings');
+  if(grid) grid.innerHTML=briefs.slice(0,4).map(b=>`<div class="briefing-item ${bg[b.tipo]}"><div class="briefing-title">${b.titulo}</div><div class="briefing-text">${b.texto}</div></div>`).join('');
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
@@ -8487,6 +8709,8 @@ function renderAllViews(r){
   else if(id==='cashflowView')    renderCashflowView(r);
   else if(id==='workingCapitalView') renderWorkingCapitalView(r);
   else if(id==='debtView')        renderDebtView(r);
+  else if(id==='costosView')      renderCostosView(r);
+  else if(id==='gastosView')      renderGastosView(r);
   else if(id==='taxView')         renderTaxView(r);
   else if(id==='financialCenterView') renderFinancialCenterView(r);
   else if(id==='forecastView')    renderForecastView(r);
@@ -8505,6 +8729,8 @@ window.renderAnalyticsView=renderAnalyticsView;
 window.renderCashflowView=renderCashflowView;
 window.renderWorkingCapitalView=renderWorkingCapitalView;
 window.renderDebtView=renderDebtView;
+window.renderCostosView=renderCostosView;
+window.renderGastosView=renderGastosView;
 window.renderTaxView=renderTaxView;
 window.renderFinancialCenterView=renderFinancialCenterView;
 window.renderForecastView=renderForecastView;
