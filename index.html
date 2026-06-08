@@ -5246,20 +5246,30 @@ function parseExcelWorkbook(wb){
     data.g_publicidad  = kvGet(erMap,'publicidad');
     data.g_comisiones  = kvGet(erMap,'comisiones');
     data.g_ventas_otros= kvGet(erMap,'otros ventas');
-    // Fallback: read breakdown from dedicated Costos/Gastos sheets if not found in ER sheet
+    // Fallback: read totals + breakdown from dedicated Costos/Gastos sheets if not found in ER sheet
     const costosWs=getSheet('costos');
     const gastosWs=getSheet('gastos');
     if(costosWs){
       const cm=parseKV(costosWs);
       const cMap=Object.keys(cm.byYear).length>0?cm.byYear[Math.max(...Object.keys(cm.byYear).map(Number))]:cm.map;
+      // Total COGS from sheet if ER didn't provide it
+      if(!parseFloat(data.cogs)) data.cogs=kvGet(cMap,'total cogs','total costo');
       if(!parseFloat(data.cogs_materia)) data.cogs_materia=kvGet(cMap,'materia prima','materia');
       if(!parseFloat(data.cogs_mod))     data.cogs_mod    =kvGet(cMap,'mano de obra');
       if(!parseFloat(data.cogs_maquila)) data.cogs_maquila=kvGet(cMap,'maquila','subcontrat');
       if(!parseFloat(data.cogs_otros))   data.cogs_otros  =kvGet(cMap,'otros costos','otros costos directos');
+      // Derive total from breakdown sum if still missing
+      if(!parseFloat(data.cogs)){
+        const s=[data.cogs_materia,data.cogs_mod,data.cogs_maquila,data.cogs_otros].map(v=>parseFloat(v)||0).reduce((a,b)=>a+b,0);
+        if(s>0) data.cogs=String(s);
+      }
     }
     if(gastosWs){
       const gm=parseKV(gastosWs);
       const gMap=Object.keys(gm.byYear).length>0?gm.byYear[Math.max(...Object.keys(gm.byYear).map(Number))]:gm.map;
+      // Totals from sheet if ER didn't provide them
+      if(!parseFloat(data.gadmin)) data.gadmin=kvGet(gMap,'total g. admin','total g admin','total admin','total gastos admin');
+      if(!parseFloat(data.gventas)) data.gventas=kvGet(gMap,'total g. ventas','total g ventas','total ventas','total gastos ventas');
       if(!parseFloat(data.g_sueldos))      data.g_sueldos    =kvGet(gMap,'sueldos admin','sueldos');
       if(!parseFloat(data.g_renta))        data.g_renta      =kvGet(gMap,'renta');
       if(!parseFloat(data.g_servicios))    data.g_servicios  =kvGet(gMap,'servicios','servicios (luz');
@@ -5268,6 +5278,15 @@ function parseExcelWorkbook(wb){
       if(!parseFloat(data.g_publicidad))   data.g_publicidad =kvGet(gMap,'publicidad');
       if(!parseFloat(data.g_comisiones))   data.g_comisiones =kvGet(gMap,'comisiones');
       if(!parseFloat(data.g_ventas_otros)) data.g_ventas_otros=kvGet(gMap,'otros ventas','otros gastos de ventas');
+      // Derive totals from breakdown sums if still missing
+      if(!parseFloat(data.gadmin)){
+        const s=[data.g_sueldos,data.g_renta,data.g_servicios,data.g_honorarios,data.g_admin_otros].map(v=>parseFloat(v)||0).reduce((a,b)=>a+b,0);
+        if(s>0) data.gadmin=String(s);
+      }
+      if(!parseFloat(data.gventas)){
+        const s=[data.g_publicidad,data.g_comisiones,data.g_ventas_otros].map(v=>parseFloat(v)||0).reduce((a,b)=>a+b,0);
+        if(s>0) data.gventas=String(s);
+      }
     }
     // Reconciliación ±2%: avisa si el desglose no cuadra, pero no rompe la carga
     const _warnRec=[];
