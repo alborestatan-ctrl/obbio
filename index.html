@@ -474,14 +474,14 @@ th[data-tip]:hover::before{opacity:1;}
 .uw-fields{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
 .uw-field{display:flex;flex-direction:column;gap:5px;}
 .uw-field.full{grid-column:1/-1;}
-.uw-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;}
-.uw-opt{font-size:10px;color:var(--muted2);font-weight:400;text-transform:none;letter-spacing:0;margin-left:4px;}
+.uw-label{font-size:12px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.4px;}
+.uw-opt{font-size:10px;color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0;margin-left:4px;}
 .uw-input{width:100%;padding:11px 14px;border-radius:10px;border:1px solid var(--border2);background:rgba(255,255,255,.04);color:var(--text);font-size:14px;font-family:inherit;transition:.15s;box-sizing:border-box;}
 .uw-input:focus{outline:none;border-color:var(--primary);background:rgba(91,142,240,.06);}
 .uw-input-money{position:relative;}
 .uw-input-money .uw-currency{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--muted2);font-size:13px;pointer-events:none;}
 .uw-input-money .uw-input{padding-left:26px;}
-.uw-input-hint{font-size:11px;color:var(--muted2);margin:0 0 4px;}
+.uw-input-hint{font-size:11px;color:var(--muted);margin:0 0 4px;font-weight:700;}
 .uw-two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;}
 .uw-live-prev{background:linear-gradient(135deg,rgba(91,142,240,.08),rgba(167,139,250,.05));border:1px solid rgba(91,142,240,.2);border-radius:16px;padding:20px;}
 .uw-live-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted2);margin-bottom:14px;}
@@ -508,7 +508,7 @@ th[data-tip]:hover::before{opacity:1;}
 .uw-detect-ok{background:rgba(34,211,160,.08);border:1px solid rgba(34,211,160,.2);color:var(--success);}
 .uw-detect-warn{background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.15);color:var(--warning);}
 .uw-detect-miss{background:rgba(244,92,92,.06);border:1px solid rgba(244,92,92,.15);color:var(--danger);}
-.uw-section-sep{display:flex;align-items:center;gap:10px;margin:22px 0 14px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;}
+.uw-section-sep{display:flex;align-items:center;gap:10px;margin:22px 0 14px;font-size:12px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.07em;}
 .uw-section-sep::before,.uw-section-sep::after{content:'';flex:1;height:1px;background:var(--border2);}
 /* ── Data Preview panel ── */
 .dpv-header{display:flex;align-items:flex-start;gap:16px;padding:20px 22px;border-radius:18px;background:linear-gradient(135deg,rgba(91,142,240,.1),rgba(16,185,129,.08));border:1px solid rgba(91,142,240,.25);margin-bottom:20px;}
@@ -5720,6 +5720,20 @@ function downloadTemplate(){
   if(!window.XLSX){ showNotif('❌ Librería no disponible','error'); return; }
   const wb=XLSX.utils.book_new();
 
+  // Bold every non-empty cell in a worksheet
+  function _boldAll(ws){
+    if(!ws['!ref']) return;
+    const rng=XLSX.utils.decode_range(ws['!ref']);
+    for(let r=rng.s.r;r<=rng.e.r;r++){
+      for(let c=rng.s.c;c<=rng.e.c;c++){
+        const ref=XLSX.utils.encode_cell({r,c});
+        if(ws[ref]&&ws[ref].v!==undefined&&ws[ref].v!==''){
+          ws[ref].s=Object.assign({},ws[ref].s||{},{font:Object.assign({sz:11},(ws[ref].s&&ws[ref].s.font)||{},{bold:true})});
+        }
+      }
+    }
+  }
+
   // ── Hoja 0: Instrucciones ──
   const wsI=XLSX.utils.aoa_to_sheet([
     ['PLANTILLA Teralyx Finance','',''],
@@ -5736,6 +5750,8 @@ function downloadTemplate(){
     ['  5. Fiscal','→ Posición de IVA mensual',''],
     ['  6. Bancos','→ Movimientos de cuentas bancarias',''],
     ['  7. Histórico (Opcional)','→ Alternativa: una fila por año con P&L + Balance si prefieres ese formato',''],
+    ['  8. Costos (Opcional)','→ Desglose del Costo de Ventas: materia prima, mano de obra, maquila, otros',''],
+    ['  9. Gastos (Opcional)','→ Desglose de Gastos: administración (sueldos, renta, servicios…) y ventas (publicidad, comisiones…)',''],
     ['','',''],
     ['CÓMO AGREGAR MÁS AÑOS','',''],
     ['  • En Estado de Resultados y Balance: agrega una columna nueva con el año como encabezado.','',''],
@@ -5747,6 +5763,7 @@ function downloadTemplate(){
     ['  • Fechas en formato YYYY-MM o YYYY-MM-DD:','Ej: 2024-01  o  2024-01-15',''],
   ]);
   wsI['!cols']=[{wch:55},{wch:65},{wch:5}];
+  _boldAll(wsI);
   XLSX.utils.book_append_sheet(wb,wsI,'Instrucciones');
 
   // ── Hoja 1: Estado de Resultados (multi-año) ──
@@ -5760,28 +5777,29 @@ function downloadTemplate(){
     ['','','','',''],
     ['── COSTO DE VENTAS ──','','','',''],
     ['Costo de ventas (COGS)','Materiales, mano de obra directa, servicios subcontratados.',551000,622000,686000],
-    ['  Materia prima','(opcional) Desglose de COGS — si lo llenas, el total se recalcula.','','',''],
-    ['  Mano de obra directa','(opcional) Desglose de COGS','','',''],
-    ['  Maquila / subcontratacion','(opcional) Desglose de COGS','','',''],
-    ['  Otros costos','(opcional) Desglose de COGS','','',''],
+    ['  Materia prima','(opcional) Desglose de COGS — si lo llenas, el total se recalcula. Ver hoja Costos.','','',''],
+    ['  Mano de obra directa','(opcional) Desglose de COGS — Ver hoja Costos.','','',''],
+    ['  Maquila / subcontratacion','(opcional) Desglose de COGS — Ver hoja Costos.','','',''],
+    ['  Otros costos','(opcional) Desglose de COGS — Ver hoja Costos.','','',''],
     ['','','','',''],
     ['── GASTOS OPERATIVOS ──','','','',''],
     ['Gastos de administración','Sueldos admin, renta, servicios, contabilidad.',482000,524000,570000],
-    ['  Sueldos admin','(opcional) Desglose de Gastos Admin — si lo llenas, el total se recalcula.','','',''],
-    ['  Renta','(opcional) Desglose de Gastos Admin','','',''],
-    ['  Servicios (luz, internet)','(opcional) Desglose de Gastos Admin','','',''],
-    ['  Honorarios','(opcional) Desglose de Gastos Admin','','',''],
-    ['  Otros admin','(opcional) Desglose de Gastos Admin','','',''],
+    ['  Sueldos admin','(opcional) Desglose de Gastos Admin — Ver hoja Gastos.','','',''],
+    ['  Renta','(opcional) Desglose de Gastos Admin — Ver hoja Gastos.','','',''],
+    ['  Servicios (luz, internet)','(opcional) Desglose de Gastos Admin — Ver hoja Gastos.','','',''],
+    ['  Honorarios','(opcional) Desglose de Gastos Admin — Ver hoja Gastos.','','',''],
+    ['  Otros admin','(opcional) Desglose de Gastos Admin — Ver hoja Gastos.','','',''],
     ['Gastos de ventas','Comisiones, publicidad, marketing, viáticos.',176000,194000,214000],
-    ['  Publicidad','(opcional) Desglose de Gastos Ventas — si lo llenas, el total se recalcula.','','',''],
-    ['  Comisiones','(opcional) Desglose de Gastos Ventas','','',''],
-    ['  Otros ventas','(opcional) Desglose de Gastos Ventas','','',''],
+    ['  Publicidad','(opcional) Desglose de Gastos Ventas — Ver hoja Gastos.','','',''],
+    ['  Comisiones','(opcional) Desglose de Gastos Ventas — Ver hoja Gastos.','','',''],
+    ['  Otros ventas','(opcional) Desglose de Gastos Ventas — Ver hoja Gastos.','','',''],
     ['Depreciación','Desgaste de activos fijos. Déjalo vacío si no lo tienes.',43000,47000,51000],
     ['','','','',''],
     ['── GASTOS FINANCIEROS ──','','','',''],
     ['Gastos financieros','Intereses pagados a bancos. Solo intereses, no capital.',95000,102000,111000],
   ]);
-  wsER['!cols']=[{wch:28},{wch:46},{wch:12},{wch:12},{wch:12}];
+  wsER['!cols']=[{wch:28},{wch:52},{wch:12},{wch:12},{wch:12}];
+  _boldAll(wsER);
   XLSX.utils.book_append_sheet(wb,wsER,'Estado de Resultados');
 
   // ── Hoja 2: Balance General (multi-año) ──
@@ -5808,30 +5826,32 @@ function downloadTemplate(){
     ['── CAPITAL ──','','','',''],
     ['Capital contable','Patrimonio de los socios. Si lo dejas vacío se calcula como Activos − Pasivos.',980000,1130000,1270000],
   ]);
-  wsBG['!cols']=[{wch:28},{wch:46},{wch:12},{wch:12},{wch:12}];
+  wsBG['!cols']=[{wch:28},{wch:52},{wch:12},{wch:12},{wch:12}];
+  _boldAll(wsBG);
   XLSX.utils.book_append_sheet(wb,wsBG,'Balance General');
 
-  // ── Hoja 3: Ventas (Opcional) — una fila por transacción, sin Costos
+  // ── Hoja 3: Ventas (Opcional) ──
   const wsV=XLSX.utils.aoa_to_sheet([
     ['VENTAS (OPCIONAL)','','','',''],
     ['Una fila por venta o factura. El sistema detecta clientes únicos, regiones y distribución mensual.','','','',''],
     ['El importe debe ser SIN IVA. Las columnas Producto y Región son opcionales pero enriquecen el análisis.','','','',''],
     ['','','','',''],
     ['Fecha','Cliente','Producto','Región','Ventas'],
-    ['2024-01-08','ACME Corp','Software Pro','Norte',120000,66000],
-    ['2024-01-22','Beta SA de CV','Consultoría','Centro',85000,38000],
-    ['2024-02-05','Gamma Retail','Software Pro','Sur',140000,77000],
-    ['2024-02-19','ACME Corp','Soporte','Norte',45000,18000],
-    ['2024-03-11','Delta Logística','Consultoría','Norte',98000,44000],
-    ['2024-03-28','Épsilon Tech','Software Pro','Centro',160000,88000],
-    ['2024-04-09','Gamma Retail','Soporte','Sur',55000,22000],
-    ['2024-04-23','Zeta Foods','Consultoría','Centro',110000,49500],
-    ['2024-05-14','ACME Corp','Software Pro','Norte',175000,96250],
+    ['2024-01-08','ACME Corp','Software Pro','Norte',120000],
+    ['2024-01-22','Beta SA de CV','Consultoría','Centro',85000],
+    ['2024-02-05','Gamma Retail','Software Pro','Sur',140000],
+    ['2024-02-19','ACME Corp','Soporte','Norte',45000],
+    ['2024-03-11','Delta Logística','Consultoría','Norte',98000],
+    ['2024-03-28','Épsilon Tech','Software Pro','Centro',160000],
+    ['2024-04-09','Gamma Retail','Soporte','Sur',55000],
+    ['2024-04-23','Zeta Foods','Consultoría','Centro',110000],
+    ['2024-05-14','ACME Corp','Software Pro','Norte',175000],
     ['2024-05-30','Beta SA de CV','Soporte','Sur',60000],
     ['2024-06-12','Eta Pharma','Consultoría','Norte',130000],
     ['2024-06-26','Delta Logística','Software Pro','Centro',190000],
   ]);
   wsV['!cols']=[{wch:12},{wch:20},{wch:16},{wch:10},{wch:12}];
+  _boldAll(wsV);
   XLSX.utils.book_append_sheet(wb,wsV,'Ventas (Opcional)');
 
   // ── Hoja 4: Deuda (Opcional) ──
@@ -5849,9 +5869,10 @@ function downloadTemplate(){
     ['2024-03-01','Arrendamiento equipo',12000,3000,264000],
   ]);
   wsD['!cols']=[{wch:12},{wch:28},{wch:10},{wch:10},{wch:12}];
+  _boldAll(wsD);
   XLSX.utils.book_append_sheet(wb,wsD,'Deuda (Opcional)');
 
-  // ── Hoja 5: Fiscal (Opcional) — sin ISR ──
+  // ── Hoja 5: Fiscal (Opcional) ──
   const wsF=XLSX.utils.aoa_to_sheet([
     ['FISCAL (OPCIONAL)','',''],
     ['Llena el IVA mensual para ver tu posición fiscal y el IVA neto por período.','',''],
@@ -5867,6 +5888,7 @@ function downloadTemplate(){
     ['2024-06',51200,20160],
   ]);
   wsF['!cols']=[{wch:10},{wch:18},{wch:18}];
+  _boldAll(wsF);
   XLSX.utils.book_append_sheet(wb,wsF,'Fiscal (Opcional)');
 
   // ── Hoja 6: Bancos (Opcional) ──
@@ -5884,6 +5906,7 @@ function downloadTemplate(){
     ['2024-03-12','Cobro','Factura Delta Logística',116620,0],
   ]);
   wsB['!cols']=[{wch:12},{wch:10},{wch:28},{wch:12},{wch:12}];
+  _boldAll(wsB);
   XLSX.utils.book_append_sheet(wb,wsB,'Bancos (Opcional)');
 
   // ── Hoja 7: Histórico (Opcional) ──
@@ -5898,9 +5921,64 @@ function downloadTemplate(){
     [2023,1245000,622000,524000,194000,102000],
   ]);
   wsH['!cols']=[{wch:8},{wch:14},{wch:16},{wch:14},{wch:14},{wch:12}];
+  _boldAll(wsH);
   XLSX.utils.book_append_sheet(wb,wsH,'Histórico (Opcional)');
 
-  XLSX.writeFile(wb,'Plantilla_Teralyx_Dashboard.xlsx');
+  // ── Hoja 8: Costos (Opcional) ──
+  const wsC=XLSX.utils.aoa_to_sheet([
+    ['ANÁLISIS DE COSTOS (COGS) — HOJA COMPLEMENTARIA','','','',''],
+    ['Esta hoja es OPCIONAL. Úsala para desglosar tu Costo de Ventas en sus componentes.','','','',''],
+    ['Si rellenas estos campos, el total de COGS en "Estado de Resultados" se recalcula automáticamente.','','','',''],
+    ['Deja vacío lo que no aplique. Los números deben coincidir con los del Estado de Resultados.','','','',''],
+    ['','','','',''],
+    ['Concepto','Descripción',2022,2023,2024],
+    ['── COSTO DIRECTO DE PRODUCCIÓN ──','','','',''],
+    ['Materia prima / mercancía','Materiales, insumos, inventario vendido.',275000,311000,343000],
+    ['Mano de obra directa','Sueldos de producción, operadores, técnicos.',138000,156000,172000],
+    ['Subcontratación / maquila','Maquila externa, manufactura subcontratada.',83000,94000,103000],
+    ['Otros costos directos','Otros costos directos no clasificados.',55000,61000,68000],
+    ['','','','',''],
+    ['  TOTAL COGS','Suma de los conceptos anteriores. Debe coincidir con tu Estado de Resultados.',551000,622000,686000],
+  ]);
+  wsC['!cols']=[{wch:30},{wch:52},{wch:12},{wch:12},{wch:12}];
+  _boldAll(wsC);
+  XLSX.utils.book_append_sheet(wb,wsC,'Costos (Opcional)');
+
+  // ── Hoja 9: Gastos (Opcional) ──
+  const wsG=XLSX.utils.aoa_to_sheet([
+    ['ANÁLISIS DE GASTOS OPERATIVOS — HOJA COMPLEMENTARIA','','','',''],
+    ['Esta hoja es OPCIONAL. Úsala para desglosar tus Gastos de Administración y de Ventas.','','','',''],
+    ['Si rellenas estos campos, los totales de Gastos Admin y Ventas se recalculan automáticamente.','','','',''],
+    ['Deja vacío lo que no aplique. Los números deben coincidir con los del Estado de Resultados.','','','',''],
+    ['','','','',''],
+    ['Concepto','Descripción',2022,2023,2024],
+    ['── GASTOS DE ADMINISTRACIÓN ──','','','',''],
+    ['Sueldos administrativos','Personal admin, contabilidad, dirección general.',193000,210000,228000],
+    ['Renta','Oficinas, bodegas, locales comerciales.',96000,105000,114000],
+    ['Servicios (luz, internet)','Electricidad, internet, agua, teléfono.',48000,52000,57000],
+    ['Honorarios','Contador externo, abogado, consultores.',96000,104000,114000],
+    ['Otros gastos admin','Gastos administrativos no clasificados.',49000,53000,57000],
+    ['','','','',''],
+    ['  TOTAL G. ADMINISTRACIÓN','Suma de los conceptos anteriores. Debe coincidir con Estado de Resultados.',482000,524000,570000],
+    ['','','','',''],
+    ['── GASTOS DE VENTAS ──','','','',''],
+    ['Publicidad y marketing','Redes sociales, publicidad pagada, SEO, diseño.',88000,97000,107000],
+    ['Comisiones a vendedores','Comisiones sobre ventas, bonos comerciales.',53000,58000,64000],
+    ['Otros gastos de ventas','Ferias, viáticos comerciales, material promoc.',35000,39000,43000],
+    ['','','','',''],
+    ['  TOTAL G. VENTAS','Suma de los conceptos anteriores. Debe coincidir con Estado de Resultados.',176000,194000,214000],
+  ]);
+  wsG['!cols']=[{wch:30},{wch:52},{wch:12},{wch:12},{wch:12}];
+  _boldAll(wsG);
+  XLSX.utils.book_append_sheet(wb,wsG,'Gastos (Opcional)');
+
+  // Download with cell styles applied
+  const wbout=XLSX.write(wb,{bookType:'xlsx',type:'array',cellStyles:true});
+  const blob=new Blob([wbout],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download='Plantilla_Teralyx_Dashboard.xlsx'; a.click();
+  URL.revokeObjectURL(url);
   showNotif('✅ Plantilla descargada · empieza por las 2 primeras hojas');
 }
 </script>
