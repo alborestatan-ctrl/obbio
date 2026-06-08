@@ -3193,6 +3193,7 @@ background:#10B981;
     <button id="topbar-save-btn" onclick="guardarCambios()" style="display:none;padding:8px 16px;border-radius:10px;border:1px solid rgba(52,199,89,.35);background:rgba(52,199,89,.08);color:#34c759;font-size:12px;font-weight:600;cursor:pointer;transition:.15s;" onmouseover="this.style.background='rgba(52,199,89,.2)'" onmouseout="this.style.background='rgba(52,199,89,.08)'">💾 Guardar cambios</button>
     <button id="topbar-clear-btn" onclick="limpiarSistema()" style="display:none;padding:8px 16px;border-radius:10px;border:1px solid rgba(244,92,92,.35);background:rgba(244,92,92,.08);color:var(--danger);font-size:12px;font-weight:600;cursor:pointer;transition:.15s;" onmouseover="this.style.background='rgba(244,92,92,.2)'" onmouseout="this.style.background='rgba(244,92,92,.08)'">🗑 Eliminar datos</button>
     <button onclick="downloadTemplate()" class="uw-btn-ghost" style="font-size:12px;padding:8px 14px;">⬇ Plantilla Excel</button>
+    <button onclick="downloadDatosEjemplo()" class="uw-btn-ghost" style="font-size:12px;padding:8px 14px;border-color:rgba(52,199,89,.4);color:#34c759;">🧪 Datos de Prueba</button>
   </div>
 </header>
 
@@ -3229,7 +3230,7 @@ background:#10B981;
     <input type="file" id="excelMainInput" accept=".xlsx,.xls" multiple style="display:none;" onchange="handleExcelFiles(this.files)">
     <div class="uw-or"><div class="uw-or-line"></div><span>o captura manualmente</span><div class="uw-or-line"></div></div>
     <button class="uw-btn-outline" onclick="uwShow('uwM1')">Ingresar datos a mano &nbsp;→</button>
-    <div class="uw-template-hint">¿Primera vez? <button class="uw-link-btn" onclick="downloadTemplate()">Descarga la plantilla con ejemplos →</button></div>
+    <div class="uw-template-hint">¿Primera vez? <button class="uw-link-btn" onclick="downloadTemplate()">Descarga la plantilla →</button> &nbsp;·&nbsp; <button class="uw-link-btn" onclick="downloadDatosEjemplo()" style="color:#34c759;">🧪 Datos de prueba listos para subir →</button></div>
     <div id="uw0-clear-zone" style="display:none;margin-top:18px;padding:14px 18px;border-radius:13px;border:1px solid rgba(244,92,92,.25);background:rgba(244,92,92,.05);align-items:center;justify-content:space-between;gap:12px;">
       <div style="font-size:13px;color:var(--muted);">Ya tienes datos cargados en el sistema.</div>
       <button onclick="limpiarSistema()" style="padding:8px 16px;border-radius:9px;border:1px solid rgba(244,92,92,.4);background:rgba(244,92,92,.1);color:var(--danger);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;transition:.15s;" onmouseover="this.style.background='rgba(244,92,92,.2)'" onmouseout="this.style.background='rgba(244,92,92,.1)'">🗑 Eliminar datos</button>
@@ -5980,6 +5981,293 @@ function downloadTemplate(){
   a.href=url; a.download='Plantilla_Teralyx_Dashboard.xlsx'; a.click();
   URL.revokeObjectURL(url);
   showNotif('✅ Plantilla descargada · empieza por las 2 primeras hojas');
+}
+
+function downloadDatosEjemplo(){
+  if(!window.XLSX){ showNotif('❌ Librería no disponible','error'); return; }
+  const wb=XLSX.utils.book_new();
+
+  function _boldAll(ws){
+    if(!ws['!ref']) return;
+    const rng=XLSX.utils.decode_range(ws['!ref']);
+    for(let r=rng.s.r;r<=rng.e.r;r++){
+      for(let c=rng.s.c;c<=rng.e.c;c++){
+        const ref=XLSX.utils.encode_cell({r,c});
+        if(ws[ref]&&ws[ref].v!==undefined&&ws[ref].v!==''){
+          ws[ref].s=Object.assign({},ws[ref].s||{},{font:Object.assign({sz:11},(ws[ref].s&&ws[ref].s.font)||{},{bold:true})});
+        }
+      }
+    }
+  }
+
+  // ── Estado de Resultados (2022–2024) ──
+  // COGS 2022=4,250,000 | 2023=4,900,000 | 2024=5,600,000
+  // GAdmin 2022=1,275,000 | 2023=1,470,000 | 2024=1,680,000
+  // GVentas 2022=850,000 | 2023=980,000 | 2024=1,120,000
+  const wsER=XLSX.utils.aoa_to_sheet([
+    ['ESTADO DE RESULTADOS','','','',''],
+    ['Distribuidora Industrial del Norte SA de CV · Datos de prueba Teralyx','','','',''],
+    ['','','','',''],
+    ['Concepto','Descripción',2022,2023,2024],
+    ['── INGRESOS ──','','','',''],
+    ['Ventas netas','Total de ingresos del año, SIN IVA.',8500000,9800000,11200000],
+    ['','','','',''],
+    ['── COSTO DE VENTAS ──','','','',''],
+    ['Costo de ventas (COGS)','Ver desglose en hoja Costos.',4250000,4900000,5600000],
+    ['  Materia prima','Desglose COGS',2125000,2450000,2800000],
+    ['  Mano de obra directa','Desglose COGS',1062500,1225000,1400000],
+    ['  Maquila / subcontratacion','Desglose COGS',637500,735000,840000],
+    ['  Otros costos','Desglose COGS',425000,490000,560000],
+    ['','','','',''],
+    ['── GASTOS OPERATIVOS ──','','','',''],
+    ['Gastos de administración','Ver desglose en hoja Gastos.',1275000,1470000,1680000],
+    ['  Sueldos admin','Desglose G.Admin',637500,735000,840000],
+    ['  Renta','Desglose G.Admin',255000,294000,336000],
+    ['  Servicios (luz, internet)','Desglose G.Admin',127500,147000,168000],
+    ['  Honorarios','Desglose G.Admin',191250,220500,252000],
+    ['  Otros admin','Desglose G.Admin',63750,73500,84000],
+    ['Gastos de ventas','Ver desglose en hoja Gastos.',850000,980000,1120000],
+    ['  Publicidad','Desglose G.Ventas',340000,392000,448000],
+    ['  Comisiones','Desglose G.Ventas',382500,441000,504000],
+    ['  Otros ventas','Desglose G.Ventas',127500,147000,168000],
+    ['Depreciación','Desgaste de activos fijos.',320000,340000,360000],
+    ['','','','',''],
+    ['── GASTOS FINANCIEROS ──','','','',''],
+    ['Gastos financieros','Intereses de créditos bancarios.',480000,420000,360000],
+  ]);
+  wsER['!cols']=[{wch:30},{wch:42},{wch:13},{wch:13},{wch:13}];
+  _boldAll(wsER);
+  XLSX.utils.book_append_sheet(wb,wsER,'Estado de Resultados');
+
+  // ── Balance General (2022–2024) ──
+  const wsBG=XLSX.utils.aoa_to_sheet([
+    ['BALANCE GENERAL','','','',''],
+    ['Distribuidora Industrial del Norte SA de CV · Saldos al 31-dic de cada año','','','',''],
+    ['','','','',''],
+    ['Concepto','Descripción',2022,2023,2024],
+    ['── ACTIVOS CIRCULANTES ──','','','',''],
+    ['Caja y bancos','Efectivo + bancos al cierre.',850000,1100000,1350000],
+    ['Cuentas por cobrar','Facturas pendientes de cobro.',1420000,1635000,1870000],
+    ['Inventario','Producto en bodega.',710000,817000,933000],
+    ['','','','',''],
+    ['── ACTIVOS FIJOS ──','','','',''],
+    ['Activo fijo neto','Maquinaria, equipo y vehículos, valor neto.',2500000,2350000,2200000],
+    ['','','','',''],
+    ['── PASIVOS CIRCULANTES ──','','','',''],
+    ['Cuentas por pagar','Facturas pendientes de pago a proveedores.',354000,408000,467000],
+    ['Pasivo corto plazo','Créditos y préstamos con vencimiento < 12 meses.',1200000,1100000,1000000],
+    ['','','','',''],
+    ['── PASIVOS A LARGO PLAZO ──','','','',''],
+    ['Pasivo largo plazo','Créditos bancarios con vencimiento > 12 meses.',2800000,2500000,2200000],
+    ['','','','',''],
+    ['── CAPITAL ──','','','',''],
+    ['Capital contable','Patrimonio de los socios.',1126000,1894000,2686000],
+  ]);
+  wsBG['!cols']=[{wch:30},{wch:42},{wch:13},{wch:13},{wch:13}];
+  _boldAll(wsBG);
+  XLSX.utils.book_append_sheet(wb,wsBG,'Balance General');
+
+  // ── Ventas (Opcional) — 24 transacciones 2024, total = 11,200,000 ──
+  const wsV=XLSX.utils.aoa_to_sheet([
+    ['VENTAS (OPCIONAL)','','','',''],
+    ['Detalle de ventas 2024 · Distribuidora Industrial del Norte SA de CV','','','',''],
+    ['','','','',''],
+    ['Fecha','Cliente','Producto','Región','Ventas'],
+    ['2024-01-08','Manufactura Regiomontana SA de CV','Producto Industrial A','Norte',480000],
+    ['2024-01-22','Distribuidora del Bajío SA de CV','Servicio de Mantenimiento','Centro',380000],
+    ['2024-02-05','Comercializadora del Pacífico SA de CV','Producto Industrial B','Occidente',510000],
+    ['2024-02-19','Manufactura Regiomontana SA de CV','Refacciones','Norte',290000],
+    ['2024-03-11','Servicios Empresariales del Sur SA de CV','Producto Industrial A','Sur',540000],
+    ['2024-03-28','Distribuidora del Bajío SA de CV','Producto Industrial B','Centro',420000],
+    ['2024-04-09','Comercializadora del Pacífico SA de CV','Servicio de Mantenimiento','Occidente',460000],
+    ['2024-04-23','Manufactura Regiomontana SA de CV','Producto Industrial A','Norte',490000],
+    ['2024-05-14','Distribuidora del Bajío SA de CV','Refacciones','Centro',310000],
+    ['2024-05-30','Servicios Empresariales del Sur SA de CV','Producto Industrial B','Sur',520000],
+    ['2024-06-12','Comercializadora del Pacífico SA de CV','Producto Industrial A','Occidente',440000],
+    ['2024-06-26','Manufactura Regiomontana SA de CV','Servicio de Mantenimiento','Norte',530000],
+    ['2024-07-08','Distribuidora del Bajío SA de CV','Producto Industrial A','Centro',470000],
+    ['2024-07-22','Servicios Empresariales del Sur SA de CV','Producto Industrial B','Sur',480000],
+    ['2024-08-05','Comercializadora del Pacífico SA de CV','Refacciones','Occidente',360000],
+    ['2024-08-19','Manufactura Regiomontana SA de CV','Producto Industrial B','Norte',510000],
+    ['2024-09-10','Distribuidora del Bajío SA de CV','Producto Industrial A','Centro',490000],
+    ['2024-09-25','Servicios Empresariales del Sur SA de CV','Servicio de Mantenimiento','Sur',460000],
+    ['2024-10-08','Comercializadora del Pacífico SA de CV','Producto Industrial A','Occidente',540000],
+    ['2024-10-22','Manufactura Regiomontana SA de CV','Producto Industrial B','Norte',470000],
+    ['2024-11-05','Distribuidora del Bajío SA de CV','Servicio de Mantenimiento','Centro',490000],
+    ['2024-11-19','Servicios Empresariales del Sur SA de CV','Refacciones','Sur',380000],
+    ['2024-12-10','Comercializadora del Pacífico SA de CV','Producto Industrial A','Occidente',580000],
+    ['2024-12-23','Manufactura Regiomontana SA de CV','Producto Industrial B','Norte',600000],
+  ]);
+  wsV['!cols']=[{wch:12},{wch:36},{wch:22},{wch:11},{wch:12}];
+  _boldAll(wsV);
+  XLSX.utils.book_append_sheet(wb,wsV,'Ventas (Opcional)');
+
+  // ── Deuda (Opcional) — 2 créditos, 12 meses 2024 ──
+  const wsD=XLSX.utils.aoa_to_sheet([
+    ['DEUDA (OPCIONAL)','','','',''],
+    ['Movimientos 2024 · Dos créditos activos','','','',''],
+    ['','','','',''],
+    ['Fecha','Crédito','Pago','Interés','Saldo'],
+    ['2024-01-01','Crédito Simple BBVA',116000,32000,3084000],
+    ['2024-02-01','Crédito Simple BBVA',116000,30840,2968000],
+    ['2024-03-01','Crédito Simple BBVA',116000,29680,2852000],
+    ['2024-04-01','Crédito Simple BBVA',116000,28520,2736000],
+    ['2024-05-01','Crédito Simple BBVA',116000,27360,2620000],
+    ['2024-06-01','Crédito Simple BBVA',116000,26200,2504000],
+    ['2024-07-01','Crédito Simple BBVA',116000,25040,2388000],
+    ['2024-08-01','Crédito Simple BBVA',116000,23880,2272000],
+    ['2024-09-01','Crédito Simple BBVA',116000,22720,2156000],
+    ['2024-10-01','Crédito Simple BBVA',116000,21560,2040000],
+    ['2024-11-01','Crédito Simple BBVA',116000,20400,1924000],
+    ['2024-12-01','Crédito Simple BBVA',116000,19240,1808000],
+    ['2024-01-01','Arrendamiento Maquinaria Scotiabank',55000,14750,1170000],
+    ['2024-02-01','Arrendamiento Maquinaria Scotiabank',55000,14040,1115000],
+    ['2024-03-01','Arrendamiento Maquinaria Scotiabank',55000,13380,1060000],
+    ['2024-04-01','Arrendamiento Maquinaria Scotiabank',55000,12720,1005000],
+    ['2024-05-01','Arrendamiento Maquinaria Scotiabank',55000,12060,950000],
+    ['2024-06-01','Arrendamiento Maquinaria Scotiabank',55000,11400,895000],
+    ['2024-07-01','Arrendamiento Maquinaria Scotiabank',55000,10740,840000],
+    ['2024-08-01','Arrendamiento Maquinaria Scotiabank',55000,10080,785000],
+    ['2024-09-01','Arrendamiento Maquinaria Scotiabank',55000,9420,730000],
+    ['2024-10-01','Arrendamiento Maquinaria Scotiabank',55000,8760,675000],
+    ['2024-11-01','Arrendamiento Maquinaria Scotiabank',55000,8100,620000],
+    ['2024-12-01','Arrendamiento Maquinaria Scotiabank',55000,7440,565000],
+  ]);
+  wsD['!cols']=[{wch:12},{wch:36},{wch:10},{wch:11},{wch:13}];
+  _boldAll(wsD);
+  XLSX.utils.book_append_sheet(wb,wsD,'Deuda (Opcional)');
+
+  // ── Fiscal (Opcional) — IVA mensual 2024 ──
+  const wsF=XLSX.utils.aoa_to_sheet([
+    ['FISCAL (OPCIONAL)','',''],
+    ['Posición de IVA mensual 2024 · Distribuidora Industrial del Norte SA de CV','',''],
+    ['','',''],
+    ['Fecha','IVA trasladado','IVA acreditable'],
+    ['2024-01',124800,67840],
+    ['2024-02',128000,71200],
+    ['2024-03',153600,78400],
+    ['2024-04',147200,72320],
+    ['2024-05',132800,66880],
+    ['2024-06',155200,75040],
+    ['2024-07',150400,74560],
+    ['2024-08',139200,68320],
+    ['2024-09',148000,73600],
+    ['2024-10',161600,79680],
+    ['2024-11',139200,70880],
+    ['2024-12',192000,88480],
+  ]);
+  wsF['!cols']=[{wch:10},{wch:18},{wch:18}];
+  _boldAll(wsF);
+  XLSX.utils.book_append_sheet(wb,wsF,'Fiscal (Opcional)');
+
+  // ── Bancos (Opcional) — movimientos 2024 ──
+  const wsB=XLSX.utils.aoa_to_sheet([
+    ['BANCOS / CAJA (OPCIONAL)','','','',''],
+    ['Movimientos bancarios 2024 · Cuenta Empresarial BBVA','','','',''],
+    ['','','','',''],
+    ['Fecha','Tipo','Concepto','Entrada','Salida'],
+    ['2024-01-15','Cobro','Factura Manufactura Regiomontana ene',556800,0],
+    ['2024-01-22','Pago','Nómina enero',0,156250],
+    ['2024-01-28','Pago','Renta y servicios enero',0,44502],
+    ['2024-02-10','Cobro','Cobro Distribuidora del Bajío feb',440800,0],
+    ['2024-02-22','Pago','Nómina febrero',0,156250],
+    ['2024-03-08','Cobro','Cobro Comercializadora del Pacífico mar',626800,0],
+    ['2024-03-22','Pago','Nómina marzo',0,156250],
+    ['2024-03-28','Pago','Pago a proveedores Q1',0,318400],
+    ['2024-04-10','Cobro','Cobro Manufactura Regiomontana abr',568400,0],
+    ['2024-04-22','Pago','Nómina abril',0,156250],
+    ['2024-05-09','Cobro','Cobro Distribuidora del Bajío may',359600,0],
+    ['2024-05-22','Pago','Nómina mayo',0,156250],
+    ['2024-06-05','Cobro','Cobro Servicios Empresariales del Sur jun',511840,0],
+    ['2024-06-22','Pago','Nómina junio',0,156250],
+    ['2024-06-28','Pago','Pago a proveedores Q2',0,345600],
+    ['2024-07-10','Cobro','Cobro Manufactura Regiomontana jul',545200,0],
+    ['2024-07-22','Pago','Nómina julio',0,156250],
+    ['2024-09-25','Pago','Abono crédito BBVA + arrendamiento',0,348000],
+    ['2024-10-09','Cobro','Cobro Comercializadora del Pacífico oct',626400,0],
+    ['2024-12-15','Cobro','Cierre anual — Manufactura Regiomontana',695200,0],
+    ['2024-12-28','Pago','Pago a proveedores Q4 + aguinaldo',0,420000],
+  ]);
+  wsB['!cols']=[{wch:12},{wch:8},{wch:38},{wch:12},{wch:12}];
+  _boldAll(wsB);
+  XLSX.utils.book_append_sheet(wb,wsB,'Bancos (Opcional)');
+
+  // ── Histórico (Opcional) — 2020 y 2021 ──
+  const wsH=XLSX.utils.aoa_to_sheet([
+    ['HISTÓRICO DE RESULTADOS (OPCIONAL)','','','','',''],
+    ['Años 2020 y 2021 — 2022-2024 están en la hoja Estado de Resultados','','','','',''],
+    ['','','','','',''],
+    ['Año','Ventas','Costo Ventas','G. Admin','G. Ventas','G. Fin'],
+    [2020,6200000,3100000,930000,620000,660000],
+    [2021,7400000,3700000,1110000,740000,580000],
+  ]);
+  wsH['!cols']=[{wch:8},{wch:14},{wch:16},{wch:14},{wch:14},{wch:12}];
+  _boldAll(wsH);
+  XLSX.utils.book_append_sheet(wb,wsH,'Histórico (Opcional)');
+
+  // ── Costos (Opcional) — desglose COGS exacto ──
+  // Sumas cuadran exactamente con Estado de Resultados:
+  // 2022: 2125000+1062500+637500+425000 = 4,250,000 ✓
+  // 2023: 2450000+1225000+735000+490000 = 4,900,000 ✓
+  // 2024: 2800000+1400000+840000+560000 = 5,600,000 ✓
+  const wsC=XLSX.utils.aoa_to_sheet([
+    ['ANÁLISIS DE COSTOS (COGS)','','','',''],
+    ['Distribuidora Industrial del Norte SA de CV · Desglose exacto de COGS','','','',''],
+    ['Los totales coinciden exactamente con la hoja Estado de Resultados.','','','',''],
+    ['','','','',''],
+    ['Concepto','Descripción',2022,2023,2024],
+    ['── COSTO DIRECTO DE PRODUCCIÓN ──','','','',''],
+    ['Materia prima / mercancía','Materiales e insumos principales.',2125000,2450000,2800000],
+    ['Mano de obra directa','Operadores, técnicos y personal de planta.',1062500,1225000,1400000],
+    ['Subcontratación / maquila','Procesos externos de manufactura.',637500,735000,840000],
+    ['Otros costos directos','Fletes de entrada, herramientas, consumibles.',425000,490000,560000],
+    ['','','','',''],
+    ['  TOTAL COGS','Suma exacta de los conceptos anteriores.',4250000,4900000,5600000],
+  ]);
+  wsC['!cols']=[{wch:30},{wch:44},{wch:13},{wch:13},{wch:13}];
+  _boldAll(wsC);
+  XLSX.utils.book_append_sheet(wb,wsC,'Costos (Opcional)');
+
+  // ── Gastos (Opcional) — desglose exacto ──
+  // G.Admin sumas: 637500+255000+127500+191250+63750 = 1,275,000 ✓ (2022)
+  //                735000+294000+147000+220500+73500 = 1,470,000 ✓ (2023)
+  //                840000+336000+168000+252000+84000 = 1,680,000 ✓ (2024)
+  // G.Ventas sumas: 340000+382500+127500 = 850,000 ✓ (2022)
+  //                 392000+441000+147000 = 980,000 ✓ (2023)
+  //                 448000+504000+168000 = 1,120,000 ✓ (2024)
+  const wsG=XLSX.utils.aoa_to_sheet([
+    ['ANÁLISIS DE GASTOS OPERATIVOS','','','',''],
+    ['Distribuidora Industrial del Norte SA de CV · Desglose exacto de Gastos','','','',''],
+    ['Los totales coinciden exactamente con la hoja Estado de Resultados.','','','',''],
+    ['','','','',''],
+    ['Concepto','Descripción',2022,2023,2024],
+    ['── GASTOS DE ADMINISTRACIÓN ──','','','',''],
+    ['Sueldos administrativos','Gerencia, contabilidad, administración.',637500,735000,840000],
+    ['Renta','Oficinas y bodega principal.',255000,294000,336000],
+    ['Servicios (luz, internet)','Electricidad, internet, agua, teléfono.',127500,147000,168000],
+    ['Honorarios','Contador externo y asesor legal.',191250,220500,252000],
+    ['Otros gastos admin','Papelería, seguros, mantenimiento oficina.',63750,73500,84000],
+    ['','','','',''],
+    ['  TOTAL G. ADMINISTRACIÓN','Suma exacta de los conceptos anteriores.',1275000,1470000,1680000],
+    ['','','','',''],
+    ['── GASTOS DE VENTAS ──','','','',''],
+    ['Publicidad y marketing','Redes sociales, publicidad digital, ferias.',340000,392000,448000],
+    ['Comisiones a vendedores','5% sobre ventas — 3 vendedores.',382500,441000,504000],
+    ['Otros gastos de ventas','Viáticos, muestras, material promocional.',127500,147000,168000],
+    ['','','','',''],
+    ['  TOTAL G. VENTAS','Suma exacta de los conceptos anteriores.',850000,980000,1120000],
+  ]);
+  wsG['!cols']=[{wch:30},{wch:44},{wch:13},{wch:13},{wch:13}];
+  _boldAll(wsG);
+  XLSX.utils.book_append_sheet(wb,wsG,'Gastos (Opcional)');
+
+  const wbout=XLSX.write(wb,{bookType:'xlsx',type:'array',cellStyles:true});
+  const blob=new Blob([wbout],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download='Teralyx_DatosDePrueba.xlsx'; a.click();
+  URL.revokeObjectURL(url);
+  showNotif('✅ Datos de prueba descargados · sube el archivo para probar el sistema completo');
 }
 </script>
 
