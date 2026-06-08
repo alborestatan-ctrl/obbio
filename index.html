@@ -2659,22 +2659,22 @@ background:#10B981;
         <span class="card-badge" id="ai_diag_badge">—</span>
       </div>
       <p style="color:var(--muted);font-size:12.5px;margin-bottom:16px;line-height:1.6;">Lectura ejecutiva de la salud financiera. Cada punto explica <strong>qué significa</strong> el indicador y por qué importa.</p>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px;">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;">
         <div>
-          <div style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--success);margin-bottom:10px;">✅ Fortalezas</div>
-          <div id="diag_fortalezas" style="display:flex;flex-direction:column;gap:8px;"></div>
+          <div style="font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--success);margin-bottom:12px;padding:8px 12px;background:rgba(34,211,160,.08);border-radius:8px;border:1px solid rgba(34,211,160,.18);">✅ Fortalezas</div>
+          <div id="diag_fortalezas" style="display:flex;flex-direction:column;gap:10px;"></div>
         </div>
         <div>
-          <div style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--danger);margin-bottom:10px;">⚠️ Riesgos Detectados</div>
-          <div id="diag_riesgos" style="display:flex;flex-direction:column;gap:8px;"></div>
+          <div style="font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--danger);margin-bottom:12px;padding:8px 12px;background:rgba(244,92,92,.08);border-radius:8px;border:1px solid rgba(244,92,92,.18);">⚠️ Riesgos Detectados</div>
+          <div id="diag_riesgos" style="display:flex;flex-direction:column;gap:10px;"></div>
         </div>
         <div>
-          <div style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--primary);margin-bottom:10px;">🎯 Recomendaciones</div>
-          <div id="diag_recomendaciones" style="display:flex;flex-direction:column;gap:8px;"></div>
+          <div style="font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--primary);margin-bottom:12px;padding:8px 12px;background:rgba(91,142,240,.08);border-radius:8px;border:1px solid rgba(91,142,240,.18);">🎯 Recomendaciones</div>
+          <div id="diag_recomendaciones" style="display:flex;flex-direction:column;gap:10px;"></div>
         </div>
         <div>
-          <div style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--warning);margin-bottom:10px;">💰 Impacto Potencial</div>
-          <div id="diag_impacto" style="display:flex;flex-direction:column;gap:8px;"></div>
+          <div style="font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--warning);margin-bottom:12px;padding:8px 12px;background:rgba(245,166,35,.08);border-radius:8px;border:1px solid rgba(245,166,35,.18);">💰 Impacto Potencial</div>
+          <div id="diag_impacto" style="display:flex;flex-direction:column;gap:10px;"></div>
         </div>
       </div>
     </div>
@@ -5055,18 +5055,18 @@ function populateForm(data){
   if(inv) inv.checked=raw.tiene_inventario==='1'||!!data.tieneInventario;
   const suc=document.getElementById('ii_modo_sucursales');
   if(suc) suc.checked=raw.modo_sucursales==='1'||!!data.modoSucursales;
-  // Restaurar desglose COGS
+  // Restaurar desglose COGS — fallback a data[id] cuando viene de Excel
   const _cogsFlds=['cogs_materia','cogs_mod','cogs_maquila','cogs_otros'];
-  _cogsFlds.forEach(id=>{ if(raw[id]!==undefined) set(id,raw[id]); });
-  if(_cogsFlds.some(id=>raw[id]&&raw[id]!==''&&raw[id]!=='0')){
+  _cogsFlds.forEach(id=>{ const v=raw[id]!==undefined?raw[id]:data[id]; if(v!==undefined) set(id,v); });
+  if(_cogsFlds.some(id=>{ const v=raw[id]!==undefined?raw[id]:data[id]; return v&&v!==''&&String(v)!=='0'; })){
     const sec=document.getElementById('desglose-cogs');
     if(sec){ sec.style.display='block'; const arr=sec.previousElementSibling?.querySelector('span:first-child'); if(arr) arr.textContent='▼'; }
     if(typeof calcDesgloseCogs==='function') calcDesgloseCogs();
   }
-  // Restaurar desglose gastos
+  // Restaurar desglose gastos — fallback a data[id] cuando viene de Excel
   const _gasFlds=['g_sueldos','g_renta','g_servicios','g_honorarios','g_admin_otros','g_publicidad','g_comisiones','g_ventas_otros'];
-  _gasFlds.forEach(id=>{ if(raw[id]!==undefined) set(id,raw[id]); });
-  if(_gasFlds.some(id=>raw[id]&&raw[id]!==''&&raw[id]!=='0')){
+  _gasFlds.forEach(id=>{ const v=raw[id]!==undefined?raw[id]:data[id]; if(v!==undefined) set(id,v); });
+  if(_gasFlds.some(id=>{ const v=raw[id]!==undefined?raw[id]:data[id]; return v&&v!==''&&String(v)!=='0'; })){
     const sec=document.getElementById('desglose-gastos');
     if(sec){ sec.style.display='block'; const arr=sec.previousElementSibling?.querySelector('span:first-child'); if(arr) arr.textContent='▼'; }
     if(typeof calcDesgloseGastos==='function') calcDesgloseGastos();
@@ -6291,18 +6291,18 @@ function downloadDatosEjemplo(){
   function getBM(giro){
     const g=(giro||'').toLowerCase();
     if(g.includes('restaur')||g.includes('aliment')||g.includes('gastro')||g.includes('food')||g.includes('beber'))
-      return {margenEbitda:10,margenNeto:5,razCorriente:1.2,debtEbitda:3.5,cobIntereses:2.5,ccc:25,dso:15,roe:12};
+      return {margenEbitda:10,margenNeto:5,margenBruto:60,gadminPct:14,razCorriente:1.2,debtEbitda:3.5,cobIntereses:2.5,ccc:25,dso:15,roe:12};
     if(g.includes('tecnol')||g.includes('software')||g.includes('tech')||g.includes('digital')||g.includes('sistemas'))
-      return {margenEbitda:25,margenNeto:15,razCorriente:2,debtEbitda:2,cobIntereses:5,ccc:40,dso:30,roe:20};
+      return {margenEbitda:25,margenNeto:15,margenBruto:70,gadminPct:10,razCorriente:2,debtEbitda:2,cobIntereses:5,ccc:40,dso:30,roe:20};
     if(g.includes('manufactur')||g.includes('industri')||g.includes('producc')||g.includes('fabri'))
-      return {margenEbitda:12,margenNeto:7,razCorriente:1.5,debtEbitda:3.5,cobIntereses:3,ccc:75,dso:45,roe:14};
+      return {margenEbitda:12,margenNeto:7,margenBruto:38,gadminPct:12,razCorriente:1.5,debtEbitda:3.5,cobIntereses:3,ccc:75,dso:45,roe:14};
     if(g.includes('salud')||g.includes('medic')||g.includes('clinic')||g.includes('hospital')||g.includes('farmac'))
-      return {margenEbitda:18,margenNeto:10,razCorriente:1.5,debtEbitda:2.5,cobIntereses:4,ccc:40,dso:30,roe:16};
+      return {margenEbitda:18,margenNeto:10,margenBruto:50,gadminPct:11,razCorriente:1.5,debtEbitda:2.5,cobIntereses:4,ccc:40,dso:30,roe:16};
     if(g.includes('construcc')||g.includes('inmobil')||g.includes('bienes raice')||g.includes('develop'))
-      return {margenEbitda:12,margenNeto:8,razCorriente:1.3,debtEbitda:4,cobIntereses:2.5,ccc:90,dso:60,roe:12};
+      return {margenEbitda:12,margenNeto:8,margenBruto:35,gadminPct:13,razCorriente:1.3,debtEbitda:4,cobIntereses:2.5,ccc:90,dso:60,roe:12};
     if(g.includes('transport')||g.includes('logistic')||g.includes('fletam'))
-      return {margenEbitda:11,margenNeto:6,razCorriente:1.3,debtEbitda:3.5,cobIntereses:2.5,ccc:50,dso:30,roe:13};
-    return {margenEbitda:15,margenNeto:8,razCorriente:1.5,debtEbitda:3,cobIntereses:3,ccc:60,dso:45,roe:15};
+      return {margenEbitda:11,margenNeto:6,margenBruto:42,gadminPct:13,razCorriente:1.3,debtEbitda:3.5,cobIntereses:2.5,ccc:50,dso:30,roe:13};
+    return {margenEbitda:15,margenNeto:8,margenBruto:40,gadminPct:12,razCorriente:1.5,debtEbitda:3,cobIntereses:3,ccc:60,dso:45,roe:15};
   }
 
   /* ---------- DIAGNÓSTICO ---------- */
@@ -6348,9 +6348,11 @@ function downloadDatosEjemplo(){
     }
 
     // Margen bruto / estructura de costos (calculable sin balance)
-    if(r.margenBruto>=40) F.push(it('Margen bruto saludable','Tu margen bruto es '+_pp(r.margenBruto)+'. De cada $100 vendidos quedan '+_pp(r.margenBruto)+' tras cubrir el costo directo — por encima del referente de 40%.'));
+    const _bmMB=BM.margenBruto||40;
+    if(r.margenBruto>=_bmMB) F.push(it('Margen bruto saludable','Tu margen bruto es '+_pp(r.margenBruto)+'. De cada $100 vendidos quedan '+_pp(r.margenBruto)+' tras cubrir el costo directo — por encima del referente sectorial de '+_pp(_bmMB)+'.'));
     else if(r.margenBruto<25&&r.margenBruto>0) RI.push(it('Margen bruto bajo','Margen bruto '+_pp(r.margenBruto)+': el costo de ventas consume '+_pp(100-r.margenBruto)+' de cada venta. Revisar precios o eficiencia en producción/compras.'));
-    if(r.gadmin>0&&r.ventas>0&&r.gadmin/r.ventas*100>18) RI.push(it('Gastos administrativos elevados','G&A es '+_pp(r.gadmin/r.ventas*100)+' de las ventas ('+_m(r.gadmin)+'). Referente PyME ~12%. Reducir 5% añadiría '+_m(r.gadmin*0.05)+' al EBITDA.'));
+    const _bmGA=BM.gadminPct||12;
+    if(r.gadmin>0&&r.ventas>0&&r.gadmin/r.ventas*100>_bmGA*1.5) RI.push(it('Gastos administrativos elevados','G&A es '+_pp(r.gadmin/r.ventas*100)+' de las ventas ('+_m(r.gadmin)+'). Referente sectorial ~'+_pp(_bmGA)+'. Reducir 5% añadiría '+_m(r.gadmin*0.05)+' al EBITDA.'));
     else if(r.gadmin>0&&r.ventas>0&&r.gadmin/r.ventas*100<10) F.push(it('Estructura administrativa eficiente','G&A es sólo '+_pp(r.gadmin/r.ventas*100)+' de ventas. Eficiencia que libera margen para crecimiento.'));
     if(r.flujoOp!=null){
       if(r.flujoOp>0) F.push(it('Generación de efectivo operativo','La operación genera '+_m(r.flujoOp)+' de flujo propio — negocio autosustentable.'));
@@ -6413,9 +6415,9 @@ function downloadDatosEjemplo(){
 
   /* ---------- RENDER ---------- */
   function diagCard(it,color){
-    return '<div style="border-left:3px solid '+color+';padding:10px 12px;background:var(--card2);border-radius:8px;">'
-      +'<div style="font-size:13px;font-weight:700;margin-bottom:3px;color:var(--text);">'+_esc(it.titulo)+'</div>'
-      +'<div style="font-size:12px;color:var(--muted);line-height:1.55;">'+_esc(it.texto)+'</div></div>';
+    return '<div style="border-left:3px solid '+color+';padding:13px 15px;background:rgba(255,255,255,.04);border-radius:10px;border:1px solid rgba(255,255,255,.07);">'
+      +'<div style="font-size:14px;font-weight:800;margin-bottom:5px;color:var(--text);line-height:1.35;">'+_esc(it.titulo)+'</div>'
+      +'<div style="font-size:12.5px;color:var(--muted);line-height:1.6;">'+_esc(it.texto)+'</div></div>';
   }
   const PBADGE={alta:['Alta prioridad','#F45C5C'],media:['Media prioridad','#F5A623'],baja:['Baja prioridad','#22D3A0']};
   function insightCard(it){
@@ -9532,7 +9534,7 @@ function renderComparativosView(r){
       {label:'Ventas',data:ds.map(d=>+(d.ventas/1e6).toFixed(2)),backgroundColor:'rgba(91,142,240,.7)',borderRadius:4},
       {label:'EBITDA',data:ds.map(d=>+(d.ebitda/1e6).toFixed(2)),backgroundColor:'rgba(34,211,160,.7)',borderRadius:4},
       {label:'Util. Neta',data:ds.map(d=>+(d.utilNeta/1e6).toFixed(2)),backgroundColor:'rgba(245,166,35,.7)',borderRadius:4},
-    ]},options:{...baseOpts,plugins:{...baseOpts.plugins,legend:{display:true,labels:{color:'#A1A1AA',boxWidth:10,font:{size:11}}}},scales:{x:{...baseOpts.scales.x},y:{...baseOpts.scales.y,ticks:{...baseOpts.scales.y.ticks,callback:v=>v+'M'}}}}}),60);
+    ]},options:{...baseOpts,plugins:{...baseOpts.plugins,legend:{display:true,labels:{color:'#A1A1AA',boxWidth:10,font:{size:11}}}},scales:{x:{...baseOpts.scales.x},y:{...baseOpts.scales.y,ticks:{...baseOpts.scales.y.ticks,callback:v=>(+v.toFixed(1))+'M'}}}}}),60);
 
   /* ──────────── AÑO VS AÑO ──────────── */
   } else if(_compMode==='aniovsanio'){
@@ -9565,7 +9567,7 @@ function renderComparativosView(r){
     setTimeout(()=>mkChart('compChart',{type:'bar',data:{labels:['Ventas','Margen Bruto','EBITDA','Util. Neta'],datasets:[
       {label:String(dA.anio),data:[dA.ventas,dA.utilBruta,dA.ebitda,dA.utilNeta].map(v=>+(v/1e6).toFixed(2)),backgroundColor:'rgba(91,142,240,.6)',borderRadius:4},
       {label:String(dB.anio),data:[dB.ventas,dB.utilBruta,dB.ebitda,dB.utilNeta].map(v=>+(v/1e6).toFixed(2)),backgroundColor:'rgba(34,211,160,.6)',borderRadius:4},
-    ]},options:{...baseOpts,plugins:{...baseOpts.plugins,legend:{display:true,labels:{color:'#A1A1AA',boxWidth:10,font:{size:11}}}},scales:{x:{...baseOpts.scales.x},y:{...baseOpts.scales.y,ticks:{...baseOpts.scales.y.ticks,callback:v=>v+'M'}}}}}),60);
+    ]},options:{...baseOpts,plugins:{...baseOpts.plugins,legend:{display:true,labels:{color:'#A1A1AA',boxWidth:10,font:{size:11}}}},scales:{x:{...baseOpts.scales.x},y:{...baseOpts.scales.y,ticks:{...baseOpts.scales.y.ticks,callback:v=>(+v.toFixed(1))+'M'}}}}}),60);
 
   /* ──────────── MENSUAL YOY ──────────── */
   } else if(_compMode==='mensual'){
@@ -9596,7 +9598,7 @@ function renderComparativosView(r){
     setTimeout(()=>mkChart('compChart',{type:'bar',data:{labels:MTHS,datasets:[
       {label:String(_compYA),data:mA.map(v=>+(v/1e6).toFixed(2)),backgroundColor:'rgba(91,142,240,.55)',borderRadius:3},
       {label:String(_compYB),data:mB.map(v=>+(v/1e6).toFixed(2)),backgroundColor:'rgba(34,211,160,.55)',borderRadius:3},
-    ]},options:{...baseOpts,plugins:{...baseOpts.plugins,legend:{display:true,labels:{color:'#A1A1AA',boxWidth:10,font:{size:11}}}},scales:{x:{...baseOpts.scales.x},y:{...baseOpts.scales.y,ticks:{...baseOpts.scales.y.ticks,callback:v=>v+'M'}}}}}),60);
+    ]},options:{...baseOpts,plugins:{...baseOpts.plugins,legend:{display:true,labels:{color:'#A1A1AA',boxWidth:10,font:{size:11}}}},scales:{x:{...baseOpts.scales.x},y:{...baseOpts.scales.y,ticks:{...baseOpts.scales.y.ticks,callback:v=>(+v.toFixed(1))+'M'}}}}}),60);
 
   /* ──────────── ROLLING 12M ──────────── */
   } else if(_compMode==='rolling'){
@@ -9620,7 +9622,7 @@ function renderComparativosView(r){
     <div class="card"><div class="card-header"><div class="card-title">Ingresos Rolling 12 meses (R12M)</div></div><div style="height:280px;"><canvas id="compChart"></canvas></div></div>`;
     setTimeout(()=>mkChart('compChart',{type:'line',data:{labels:rLabels,datasets:[
       {label:'R12M Ventas',data:rolling.map(v=>+(v/1e6).toFixed(2)),borderColor:'#5B8EF0',backgroundColor:'rgba(91,142,240,.1)',borderWidth:2.5,fill:true,tension:.4,pointRadius:2,pointHoverRadius:5},
-    ]},options:{...baseOpts,plugins:{...baseOpts.plugins,legend:{display:false}},scales:{x:{...baseOpts.scales.x,ticks:{...baseOpts.scales.x.ticks,maxRotation:45,font:{size:10}}},y:{...baseOpts.scales.y,ticks:{...baseOpts.scales.y.ticks,callback:v=>v+'M'}}}}}),60);
+    ]},options:{...baseOpts,plugins:{...baseOpts.plugins,legend:{display:false}},scales:{x:{...baseOpts.scales.x,ticks:{...baseOpts.scales.x.ticks,maxRotation:45,font:{size:10}}},y:{...baseOpts.scales.y,ticks:{...baseOpts.scales.y.ticks,callback:v=>(+v.toFixed(1))+'M'}}}}}),60);
   }
 }
 window.renderComparativosView=renderComparativosView;
