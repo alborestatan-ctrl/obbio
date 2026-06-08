@@ -3232,6 +3232,18 @@ background:#10B981;
         <div class="uw-input-hint">Lo que te cuesta producir o entregar: materiales, mano de obra directa, servicios subcontratados.</div>
         <div class="uw-input-money"><span class="uw-currency">$</span><input class="uw-input" id="ii_cogs" type="number" min="0" placeholder="7,100,000" oninput="previewCalc();uwLivePrev()"></div>
       </div>
+      <div style="margin:-4px 0 18px 2px;">
+        <button type="button" onclick="toggleDesglose('desglose-cogs',this)" style="background:none;border:none;color:var(--accent);font-size:12px;font-weight:600;cursor:pointer;padding:0;display:flex;align-items:center;gap:5px;"><span>▶</span> Desglosar <span class="uw-opt" style="margin-left:2px;">opcional</span></button>
+        <div id="desglose-cogs" style="display:none;margin-top:14px;">
+          <div class="uw-fields">
+            <div class="uw-field"><label class="uw-label">Materia prima / mercancía</label><div class="uw-input-money"><span class="uw-currency">$</span><input class="uw-input" id="cogs_materia" type="number" min="0" placeholder="0" oninput="calcDesgloseCogs()"></div></div>
+            <div class="uw-field"><label class="uw-label">Mano de obra directa</label><div class="uw-input-money"><span class="uw-currency">$</span><input class="uw-input" id="cogs_mod" type="number" min="0" placeholder="0" oninput="calcDesgloseCogs()"></div></div>
+            <div class="uw-field"><label class="uw-label">Subcontratación / maquila</label><div class="uw-input-money"><span class="uw-currency">$</span><input class="uw-input" id="cogs_maquila" type="number" min="0" placeholder="0" oninput="calcDesgloseCogs()"></div></div>
+            <div class="uw-field"><label class="uw-label">Otros costos</label><div class="uw-input-money"><span class="uw-currency">$</span><input class="uw-input" id="cogs_otros" type="number" min="0" placeholder="0" oninput="calcDesgloseCogs()"></div></div>
+          </div>
+          <p style="margin:8px 0 0;font-size:11px;color:var(--muted);">El total se suma automáticamente al campo COGS.</p>
+        </div>
+      </div>
 
       <div class="uw-section-sep">Gastos operativos</div>
       <div class="uw-field full">
@@ -3243,6 +3255,26 @@ background:#10B981;
         <label class="uw-label">Gastos de ventas <span class="uw-opt">opcional</span></label>
         <div class="uw-input-hint">Comisiones a vendedores, publicidad, marketing, ferias, viáticos comerciales.</div>
         <div class="uw-input-money"><span class="uw-currency">$</span><input class="uw-input" id="ii_gventas" type="number" min="0" placeholder="900,000" oninput="previewCalc();uwLivePrev()"></div>
+      </div>
+      <div style="margin:-4px 0 18px 2px;">
+        <button type="button" onclick="toggleDesglose('desglose-gastos',this)" style="background:none;border:none;color:var(--accent);font-size:12px;font-weight:600;cursor:pointer;padding:0;display:flex;align-items:center;gap:5px;"><span>▶</span> Desglosar gastos <span class="uw-opt" style="margin-left:2px;">opcional</span></button>
+        <div id="desglose-gastos" style="display:none;margin-top:14px;">
+          <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px;">Administración</div>
+          <div class="uw-fields">
+            <div class="uw-field"><label class="uw-label">Sueldos administrativos</label><div class="uw-input-money"><span class="uw-currency">$</span><input class="uw-input" id="g_sueldos" type="number" min="0" placeholder="0" oninput="calcDesgloseGastos()"></div></div>
+            <div class="uw-field"><label class="uw-label">Renta</label><div class="uw-input-money"><span class="uw-currency">$</span><input class="uw-input" id="g_renta" type="number" min="0" placeholder="0" oninput="calcDesgloseGastos()"></div></div>
+            <div class="uw-field"><label class="uw-label">Servicios (luz, internet…)</label><div class="uw-input-money"><span class="uw-currency">$</span><input class="uw-input" id="g_servicios" type="number" min="0" placeholder="0" oninput="calcDesgloseGastos()"></div></div>
+            <div class="uw-field"><label class="uw-label">Honorarios / contabilidad</label><div class="uw-input-money"><span class="uw-currency">$</span><input class="uw-input" id="g_honorarios" type="number" min="0" placeholder="0" oninput="calcDesgloseGastos()"></div></div>
+            <div class="uw-field"><label class="uw-label">Otros admin</label><div class="uw-input-money"><span class="uw-currency">$</span><input class="uw-input" id="g_admin_otros" type="number" min="0" placeholder="0" oninput="calcDesgloseGastos()"></div></div>
+          </div>
+          <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin:16px 0 10px;">Ventas</div>
+          <div class="uw-fields">
+            <div class="uw-field"><label class="uw-label">Publicidad y marketing</label><div class="uw-input-money"><span class="uw-currency">$</span><input class="uw-input" id="g_publicidad" type="number" min="0" placeholder="0" oninput="calcDesgloseGastos()"></div></div>
+            <div class="uw-field"><label class="uw-label">Comisiones a vendedores</label><div class="uw-input-money"><span class="uw-currency">$</span><input class="uw-input" id="g_comisiones" type="number" min="0" placeholder="0" oninput="calcDesgloseGastos()"></div></div>
+            <div class="uw-field"><label class="uw-label">Otros ventas</label><div class="uw-input-money"><span class="uw-currency">$</span><input class="uw-input" id="g_ventas_otros" type="number" min="0" placeholder="0" oninput="calcDesgloseGastos()"></div></div>
+          </div>
+          <p style="margin:8px 0 0;font-size:11px;color:var(--muted);">Los totales de Admin y Ventas se calculan automáticamente.</p>
+        </div>
       </div>
       <div class="uw-field full">
         <label class="uw-label">Depreciación <span class="uw-opt">opcional</span></label>
@@ -4576,6 +4608,16 @@ function calcFinanciero(){
     cfMensual     = dist.map(d=>+((flujoNeto*d)/1e6).toFixed(2));
   }
 
+  // Desglose opcional (num() devuelve 0 si el campo aún no existe en el DOM)
+  const cogsBreakdown={
+    materia:num('cogs_materia'), mod:num('cogs_mod'),
+    maquila:num('cogs_maquila'), otros:num('cogs_otros'),
+  };
+  const gastosBreakdown={
+    admin:{sueldos:num('g_sueldos'),renta:num('g_renta'),servicios:num('g_servicios'),honorarios:num('g_honorarios'),otros:num('g_admin_otros')},
+    ventas:{publicidad:num('g_publicidad'),comisiones:num('g_comisiones'),otros:num('g_ventas_otros')},
+  };
+
   return {
     ventas:er.ventas,cogs:er.cogs,gadmin:er.gadmin,gventas:er.gventas,gfin:er.gfin,
     utilBruta,gastosOp,ebit,dep,ebitda,uai,isr,utilNeta,
@@ -4614,6 +4656,7 @@ function calcFinanciero(){
       });
       return arr.length?arr:null;
     })(),
+    cogsBreakdown, gastosBreakdown,
   };
 }
 
@@ -4648,6 +4691,31 @@ function generarBriefings(r){
   if(r.concentracion!=null&&r.concentracion<=3) B.push({tipo:'warn',titulo:'Riesgo de concentración',texto:`${r.concentracion} clientes generan el 80% de los ingresos. Alta dependencia: diversificar cartera.`});
 
   return B.slice(0,4);
+}
+
+/* ── Desglose opcional de costos y gastos ── */
+function toggleDesglose(id,btn){
+  const el=document.getElementById(id);
+  const arrow=btn.querySelector('span:first-child');
+  if(!el) return;
+  const open=el.style.display==='none';
+  el.style.display=open?'block':'none';
+  if(arrow) arrow.textContent=open?'▼':'▶';
+}
+function calcDesgloseCogs(){
+  const total=num('cogs_materia')+num('cogs_mod')+num('cogs_maquila')+num('cogs_otros');
+  const el=$('ii_cogs'); if(!el) return;
+  if(total>0){ el.value=total; el.readOnly=true; el.style.opacity='.6'; }
+  else { el.readOnly=false; el.style.opacity=''; }
+  previewCalc(); if(typeof uwLivePrev==='function') uwLivePrev();
+}
+function calcDesgloseGastos(){
+  const admin=num('g_sueldos')+num('g_renta')+num('g_servicios')+num('g_honorarios')+num('g_admin_otros');
+  const ventas=num('g_publicidad')+num('g_comisiones')+num('g_ventas_otros');
+  const ea=$('ii_gadmin'), ev=$('ii_gventas');
+  if(ea){ if(admin>0){ ea.value=admin; ea.readOnly=true; ea.style.opacity='.6'; } else { ea.readOnly=false; ea.style.opacity=''; } }
+  if(ev){ if(ventas>0){ ev.value=ventas; ev.readOnly=true; ev.style.opacity='.6'; } else { ev.readOnly=false; ev.style.opacity=''; } }
+  previewCalc(); if(typeof uwLivePrev==='function') uwLivePrev();
 }
 
 /* ── Preview en tiempo real ── */
@@ -4755,6 +4823,7 @@ function calcularYAplicar(){
   // Notificación
   // Fuente única para Diagnóstico IA, CFO Insights y Reporte PDF
   window._teralyxCalc = r;
+  window._epiCalc = r;
   try{ sessionStorage.setItem('teralyx_calc_v1', JSON.stringify(r)); }catch(e){}
   if(typeof renderAIView==='function') renderAIView(r);
   if(typeof renderAllViews==='function') renderAllViews(r);
