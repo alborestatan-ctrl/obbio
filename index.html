@@ -6938,7 +6938,7 @@ function downloadDatosEjemplo(){
       // linea punteada separador
       if(i<tocSections.length-1&&(i+1)%half!==0){
         ss(...C.border);doc.setLineWidth(.3);
-        doc.setLineDashPattern([1,2],0);doc.line(tx+28,ty+18,tx+colW2-5,ty+18);doc.setLineDashPattern([],0);
+        doc.setLineDash([1,2],0);doc.line(tx+28,ty+18,tx+colW2-5,ty+18);doc.setLineDash([],0);
       }
     });
     y+=half*26+16;
@@ -7018,10 +7018,10 @@ function downloadDatosEjemplo(){
     const plItems=[
       {label:'Ingresos Totales',         val:r.ventas,         style:'bold'},
       {label:'(-) Costo de Ventas',       val:-(r.cogs||0),    style:'normal'},
-      {label:'Margen Bruto',             val:r.margenBruto,   style:'total'},
-      {label:'  (-) G. Administracion',  val:-(r.gAdmin||0),  style:'normal'},
-      {label:'  (-) G. Ventas/Marketing',val:-(r.gVentas||0), style:'normal'},
-      {label:'  (-) Gastos Financieros', val:-(r.gFin||0),    style:'normal'},
+      {label:'Margen Bruto',             val:r.utilBruta,     style:'total'},
+      {label:'  (-) G. Administracion',  val:-(r.gadmin||0),  style:'normal'},
+      {label:'  (-) G. Ventas/Marketing',val:-(r.gventas||0), style:'normal'},
+      {label:'  (-) Gastos Financieros', val:-(r.gfin||0),    style:'normal'},
       {label:'Ganancia Operativa',       val:r.ebitda,        style:'total'},
     ];
     if(r.isr) plItems.push({label:'  (-) ISR / Impuesto Renta',val:-r.isr,style:'normal'});
@@ -7031,7 +7031,7 @@ function downloadDatosEjemplo(){
     // Cuadro de margenes
     ensure(36);
     const mgW=(CW-12)/3;
-    [[_pv(r.margenBrutoP),'Margen Bruto',r.margenBrutoP>=40?C.green:r.margenBrutoP>=25?C.amber:C.red],
+    [[_pv(r.margenBruto),'Margen Bruto',r.margenBruto>=40?C.green:r.margenBruto>=25?C.amber:C.red],
      [_pv(r.margenEbitda),'G. Operativa',r.margenEbitda>=20?C.green:r.margenEbitda>=10?C.amber:C.red],
      [_pv(r.margenNeto),'G. Final',r.margenNeto>=15?C.green:r.margenNeto>=5?C.amber:C.red]]
     .forEach(([val,lbl,col],i)=>{
@@ -7052,7 +7052,7 @@ function downloadDatosEjemplo(){
     const cogsPct=r.ventas>0?r.cogs/r.ventas*100:null;
     const cW3=(CW-8)/3,cH3=56;ensure(cH3+2);
     KCARD(ML,        y,cW3,cH3,'COGS Total',   _mv(r.cogs),  cogsPct!=null?_pv(cogsPct)+' de ventas':'N/D',C.red);
-    KCARD(ML+cW3+4,  y,cW3,cH3,'Margen Bruto', _pv(r.margenBrutoP),r.margenBrutoP>=40?'Excelente':r.margenBrutoP>=25?'Saludable':'Bajo',r.margenBrutoP>=40?C.green:r.margenBrutoP>=25?C.amber:C.red);
+    KCARD(ML+cW3+4,  y,cW3,cH3,'Margen Bruto', _pv(r.margenBruto),r.margenBruto>=40?'Excelente':r.margenBruto>=25?'Saludable':'Bajo',r.margenBruto>=40?C.green:r.margenBruto>=25?C.amber:C.red);
     KCARD(ML+2*(cW3+4),y,cW3,cH3,'Importe Bruto',_mv(r.margenBruto),'Ventas - COGS',C.green);
     y+=cH3+10;
     if(hasBreakdown){
@@ -7073,7 +7073,7 @@ function downloadDatosEjemplo(){
     } else {
       TABLE(['Concepto','Importe','% Ventas'],
         [['Costo de Ventas (COGS)',_mv(r.cogs),cogsPct!=null?_pv(cogsPct):'N/D'],
-         ['Utilidad Bruta',_mv(r.margenBruto),r.ventas>0?_pv(r.margenBrutoP):'N/D']],
+         ['Utilidad Bruta',_mv(r.utilBruta),r.ventas>0?_pv(r.margenBruto):'N/D']],
         {widths:[CW*0.54,CW*0.24,CW*0.22],rightAlign:[1,2]});
     }
     // Impacto visual
@@ -7096,13 +7096,13 @@ function downloadDatosEjemplo(){
     const gadm=gbr.admin||{}, gvts=gbr.ventas||{};
     const hasAdmBD=(gadm.sueldos||0)+(gadm.renta||0)+(gadm.servicios||0)+(gadm.honorarios||0)+(gadm.otros||0)>0;
     const hasVtsBD=(gvts.publicidad||0)+(gvts.comisiones||0)+(gvts.otros||0)>0;
-    const gastoTotal=(r.gAdmin||0)+(r.gVentas||0)+(r.gFin||0);
+    const gastoTotal=(r.gadmin||0)+(r.gventas||0)+(r.gfin||0);
     const gPct=r.ventas>0?gastoTotal/r.ventas*100:null;
     const gW4=(CW-12)/4,gH4=56;ensure(gH4+2);
     KCARD(ML,           y,gW4,gH4,'Gastos Totales',    _mv(gastoTotal),   gPct!=null?_pv(gPct)+' de ventas':'N/D',gPct<30?C.green:gPct<40?C.amber:C.red);
-    KCARD(ML+gW4+4,     y,gW4,gH4,'G. Administracion', _mv(r.gAdmin||0),  gastoTotal>0?_pv((r.gAdmin||0)/gastoTotal*100)+' del total':'N/D',C.amber);
-    KCARD(ML+2*(gW4+4), y,gW4,gH4,'G. Ventas',         _mv(r.gVentas||0), gastoTotal>0?_pv((r.gVentas||0)/gastoTotal*100)+' del total':'N/D',C.purple);
-    KCARD(ML+3*(gW4+4), y,gW4,gH4,'G. Financieros',    _mv(r.gFin||0),    gastoTotal>0?_pv((r.gFin||0)/gastoTotal*100)+' del total':'N/D',C.blue);
+    KCARD(ML+gW4+4,     y,gW4,gH4,'G. Administracion', _mv(r.gadmin||0),  gastoTotal>0?_pv((r.gadmin||0)/gastoTotal*100)+' del total':'N/D',C.amber);
+    KCARD(ML+2*(gW4+4), y,gW4,gH4,'G. Ventas',         _mv(r.gventas||0), gastoTotal>0?_pv((r.gventas||0)/gastoTotal*100)+' del total':'N/D',C.purple);
+    KCARD(ML+3*(gW4+4), y,gW4,gH4,'G. Financieros',    _mv(r.gfin||0),    gastoTotal>0?_pv((r.gfin||0)/gastoTotal*100)+' del total':'N/D',C.blue);
     y+=gH4+10;
     if(hasAdmBD||hasVtsBD){
       const gItems=[];
@@ -7123,9 +7123,9 @@ function downloadDatosEjemplo(){
         {widths:[CW*0.40,CW*0.20,CW*0.20,CW*0.20],rightAlign:[1,2,3]});
     } else {
       TABLE(['Categoria','Importe','% Ventas'],
-        [['G. Administracion',_mv(r.gAdmin||0),r.ventas>0?_pv((r.gAdmin||0)/r.ventas*100):'N/D'],
-         ['G. Ventas/Marketing',_mv(r.gVentas||0),r.ventas>0?_pv((r.gVentas||0)/r.ventas*100):'N/D'],
-         ['G. Financieros',_mv(r.gFin||0),r.ventas>0?_pv((r.gFin||0)/r.ventas*100):'N/D'],
+        [['G. Administracion',_mv(r.gadmin||0),r.ventas>0?_pv((r.gadmin||0)/r.ventas*100):'N/D'],
+         ['G. Ventas/Marketing',_mv(r.gventas||0),r.ventas>0?_pv((r.gventas||0)/r.ventas*100):'N/D'],
+         ['G. Financieros',_mv(r.gfin||0),r.ventas>0?_pv((r.gfin||0)/r.ventas*100):'N/D'],
          ['Total Gastos Operativos',_mv(gastoTotal),gPct!=null?_pv(gPct):'N/D']],
         {widths:[CW*0.50,CW*0.26,CW*0.24],rightAlign:[1,2]});
     }
@@ -7141,20 +7141,20 @@ function downloadDatosEjemplo(){
     y+=34;
 
     // ── 05. BALANCE GENERAL ──
-    const hasBal=(r.actTotal||0)>0||(r.pasTotal||0)>0;
+    const hasBal=(r.totalActivos||0)>0||(r.totalPasivos||0)>0;
     if(hasBal){
       PB(180);SEC('Balance General','Snapshot al cierre del periodo','05');
       TABLE(['Concepto','Importe','% Activo'],[
-        ['Activo Circulante',_mv(r.actCirc||0),r.actTotal>0?_pv((r.actCirc||0)/r.actTotal*100):'N/D'],
-        ['Activo Fijo',_mv(r.actFijo||0),r.actTotal>0?_pv((r.actFijo||0)/r.actTotal*100):'N/D'],
-        ['Total Activos',_mv(r.actTotal),'100%'],
-        ['Pasivo CP',_mv(r.pasCP||0),r.actTotal>0?_pv((r.pasCP||0)/r.actTotal*100):'N/D'],
-        ['Pasivo LP',_mv(r.pasLP||0),r.actTotal>0?_pv((r.pasLP||0)/r.actTotal*100):'N/D'],
-        ['Patrimonio / Capital',_mv(r.equity),r.actTotal>0?_pv(r.equity/r.actTotal*100):'N/D'],
+        ['Activo Circulante',_mv(r.activoCirc||0),r.totalActivos>0?_pv((r.activoCirc||0)/r.totalActivos*100):'N/D'],
+        ['Activo Fijo',_mv(r.activoFijo||0),r.totalActivos>0?_pv((r.activoFijo||0)/r.totalActivos*100):'N/D'],
+        ['Total Activos',_mv(r.totalActivos),'100%'],
+        ['Pasivo CP',_mv(r.pasivoCp||0),r.totalActivos>0?_pv((r.pasivoCp||0)/r.totalActivos*100):'N/D'],
+        ['Pasivo LP',_mv(r.pasivoLp||0),r.totalActivos>0?_pv((r.pasivoLp||0)/r.totalActivos*100):'N/D'],
+        ['Patrimonio / Capital',_mv(r.capital),r.totalActivos>0?_pv(r.capital/r.totalActivos*100):'N/D'],
       ],{widths:[CW*0.52,CW*0.26,CW*0.22],rightAlign:[1,2]});
       const bkW=(CW-12)/4;ensure(62);
       KCARD(ML,           y,bkW,56,'Liquidez Corriente',_t(_x(r.razCorriente))+'x','',r.razCorriente>=1.5?C.green:r.razCorriente>=1?C.amber:C.red);
-      KCARD(ML+bkW+4,     y,bkW,56,'Nivel de Deuda',   _pv(r.ratEndeudamiento),'',r.ratEndeudamiento<=50?C.green:r.ratEndeudamiento<=70?C.amber:C.red);
+      KCARD(ML+bkW+4,     y,bkW,56,'Nivel de Deuda',   _pv(r.apalancamiento),'',r.apalancamiento<=50?C.green:r.apalancamiento<=70?C.amber:C.red);
       KCARD(ML+2*(bkW+4), y,bkW,56,'Efic. de Activos', _pv(r.roa),'',r.roa>=10?C.green:r.roa>=5?C.blue:C.amber);
       KCARD(ML+3*(bkW+4), y,bkW,56,'Rend. Inversion',  _pv(r.roe),'',r.roe>=15?C.green:r.roe>=8?C.blue:C.amber);
       y+=64;
@@ -7246,7 +7246,7 @@ function downloadDatosEjemplo(){
       ['Deuda Total',_mv((r.pasivoCp||0)+(r.pasivoLp||0)),'N/D','N/D'],
       ['Deuda / Ganancia Operativa',_t(_x(r.debtEbitda))+'x','<= 2.0x',r.debtEbitda<=2?'Saludable':r.debtEbitda<=4?'Moderado':'Elevado'],
       ['Cobertura de Intereses',_t(_x(r.cobIntereses))+'x','>= 3.0x',r.cobIntereses>=3?'Adecuada':r.cobIntereses>=1.5?'Ajustada':'Insuficiente'],
-      ['Nivel de Endeudamiento',_pv(r.ratEndeudamiento||0),'<= 50%',r.ratEndeudamiento<=50?'Saludable':r.ratEndeudamiento<=70?'Moderado':'Alto'],
+      ['Nivel de Endeudamiento',_pv(r.apalancamiento||0),'<= 50%',r.apalancamiento<=50?'Saludable':r.apalancamiento<=70?'Moderado':'Alto'],
     ],{widths:[CW*0.42,CW*0.16,CW*0.18,CW*0.24]});
 
     // ── 09. TAX INTELLIGENCE ──
