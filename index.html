@@ -10363,7 +10363,7 @@ window.closeSidebar=closeSidebar;
   window.enhanceAllTables=enhanceAll;
 })();
 </script>
-
+<script>
 function toggleTheme(){
   const html=document.documentElement;
   const isLight=html.dataset.theme==='light';
@@ -10390,5 +10390,6 @@ function _updateThemeUI(){
   if(saved==='light') document.documentElement.dataset.theme='light';
   document.addEventListener('DOMContentLoaded',_updateThemeUI);
 })();
+</script>
 </body>
 </html>
