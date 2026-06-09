@@ -827,27 +827,27 @@ th[data-tip]:hover::before{opacity:1;}
   <nav class="nav">
     <div class="nav-section-label">Principal</div>
     <button class="active" onclick="showView('dashboardView',this)"><span class="nav-icon">🏠</span>Dashboard Ejecutivo</button>
-    <button onclick="showView('financeView',this)"><span class="nav-icon">💰</span>Financial Intelligence</button>
-    <button id="navAnalyticsBtn" onclick="showView('analyticsView',this)" style="display:none;"><span class="nav-icon">📈</span>Performance Analytics</button>
+    <button onclick="showView('financeView',this)"><span class="nav-icon">💰</span>Inteligencia Financiera</button>
+    <button id="navAnalyticsBtn" onclick="showView('analyticsView',this)" style="display:none;"><span class="nav-icon">📈</span>Análisis de Desempeño</button>
     <button onclick="showView('comparativosView',this)"><span class="nav-icon">🔁</span>Comparativos</button>
     <button onclick="showView('productosView',this)"><span class="nav-icon">📦</span>Ventas por Producto</button>
 
     <div class="nav-section-label">Finanzas</div>
-    <button onclick="showView('cashflowView',this)"><span class="nav-icon">💧</span>Cash Flow Center</button>
+    <button onclick="showView('cashflowView',this)"><span class="nav-icon">💧</span>Centro de Flujo de Caja</button>
     <button onclick="showView('workingCapitalView',this)"><span class="nav-icon">🏦</span>Capital de Trabajo</button>
-    <button onclick="showView('debtView',this)"><span class="nav-icon">📉</span>Debt Intelligence</button>
+    <button onclick="showView('debtView',this)"><span class="nav-icon">📉</span>Análisis de Endeudamiento</button>
     <button onclick="showView('costosView',this)"><span class="nav-icon">🏭</span>Análisis de Costos</button>
     <button onclick="showView('gastosView',this)"><span class="nav-icon">💸</span>Análisis de Gastos</button>
-    <button onclick="showView('taxView',this)"><span class="nav-icon">🏛️</span>Tax Intelligence</button>
+    <button onclick="showView('taxView',this)"><span class="nav-icon">🏛️</span>Inteligencia Fiscal</button>
     <button onclick="showView('financialCenterView',this)"><span class="nav-icon">📑</span>Centro Financiero</button>
 
     <div class="nav-section-label">Estrategia</div>
-    <button onclick="showView('forecastView',this)"><span class="nav-icon">📊</span>Forecast & Planning</button>
-    <button onclick="showView('modelView',this)"><span class="nav-icon">🧮</span>Financial Model Builder</button>
-    <button onclick="showView('strategyView',this)"><span class="nav-icon">🧠</span>Executive Strategy</button>
-    <button onclick="showView('aiView',this)"><span class="nav-icon">✨</span>AI Insights</button>
-    <button onclick="showView('riskView',this)"><span class="nav-icon">⚠️</span>Risk Center</button>
-    <button onclick="openChatbot()"><span class="nav-icon">🤖</span>CFO Copilot</button>
+    <button onclick="showView('forecastView',this)"><span class="nav-icon">📊</span>Pronóstico y Planeación</button>
+    <button onclick="showView('modelView',this)"><span class="nav-icon">🧮</span>Modelo Financiero</button>
+    <button onclick="showView('strategyView',this)"><span class="nav-icon">🧠</span>Estrategia Ejecutiva</button>
+    <button onclick="showView('aiView',this)"><span class="nav-icon">✨</span>Insights con IA</button>
+    <button onclick="showView('riskView',this)"><span class="nav-icon">⚠️</span>Centro de Riesgos</button>
+    <button onclick="openChatbot()"><span class="nav-icon">🤖</span>Copiloto CFO</button>
 
     <div class="nav-section-label">Datos</div>
     <button onclick="showView('ingresodatosView',this)"><span class="nav-icon">⚡</span>Ingresar Datos</button>
@@ -1094,7 +1094,7 @@ th[data-tip]:hover::before{opacity:1;}
 <!-- ==================== ANALYTICS ==================== -->
 <div id="analyticsView" class="view" style="display:none;">
   <header class="topbar">
-    <div><h2 class="page-title">Performance Analytics</h2><p class="page-subtitle" id="analyticsSubtitle">Análisis de desempeño por sucursales, regiones y clientes</p></div>
+    <div><h2 class="page-title">Análisis de Desempeño</h2><p class="page-subtitle" id="analyticsSubtitle">Análisis de desempeño por sucursales, regiones y clientes</p></div>
   </header>
   <section class="kpi-grid" id="analyticsKpiGrid">
     <div class="kpi-card accent-green">
@@ -1124,7 +1124,7 @@ th[data-tip]:hover::before{opacity:1;}
 <!-- ==================== FINANCE ==================== -->
 <div id="financeView" class="view" style="display:none;">
   <header class="topbar">
-    <div><h2 class="page-title">Financial Intelligence</h2><p class="page-subtitle">Estado de resultados y salud financiera · <span id="periodoFinanceSub">—</span></p></div>
+    <div><h2 class="page-title">Inteligencia Financiera</h2><p class="page-subtitle">Estado de resultados y salud financiera · <span id="periodoFinanceSub">—</span></p></div>
   </header>
   <section class="kpi-grid">
     <div class="kpi-card accent-blue">
@@ -1187,7 +1187,7 @@ th[data-tip]:hover::before{opacity:1;}
 <!-- ==================== FORECAST ==================== -->
 <div id="forecastView" class="view" style="display:none;">
   <header class="topbar">
-    <div><h2 class="page-title">Forecast & Planning</h2><p class="page-subtitle">Proyecciones y escenarios para 2025</p></div>
+    <div><h2 class="page-title">Pronóstico y Planeación</h2><p class="page-subtitle">Proyecciones y escenarios para 2025</p></div>
   </header>
   <div class="forecast-grid">
     <div class="scenario-card optimistic">
@@ -1226,7 +1226,7 @@ th[data-tip]:hover::before{opacity:1;}
 
 <header class="topbar">
     <div>
-        <h2 class="page-title">Cash Flow Center</h2>
+        <h2 class="page-title">Centro de Flujo de Caja</h2>
         <p class="page-subtitle">
             Flujo de efectivo y posición de caja
         </p>
@@ -1563,7 +1563,7 @@ th[data-tip]:hover::before{opacity:1;}
 <header class="topbar">
     <div>
         <h2 class="page-title">
-            Debt Intelligence
+            Análisis de Endeudamiento
         </h2>
 
         <p class="page-subtitle">
@@ -1785,7 +1785,7 @@ th[data-tip]:hover::before{opacity:1;}
 <div id="modelView" class="view" style="display:none;">
 <header class="topbar">
   <div>
-    <h2 class="page-title">Financial Model Builder</h2>
+    <h2 class="page-title">Modelo Financiero</h2>
     <p class="page-subtitle">Mueve los sliders · La tabla y gráfica se actualizan en tiempo real</p>
   </div>
   <div class="topbar-actions">
@@ -1929,7 +1929,7 @@ th[data-tip]:hover::before{opacity:1;}
 
 <div>
 <h2 class="page-title">
-Executive Strategy Center
+Estrategia Ejecutiva
 </h2>
 
 <p class="page-subtitle">
@@ -2165,7 +2165,7 @@ Mapa Estratégico de Impacto
 <header class="topbar">
     <div>
         <h2 class="page-title">
-            Tax Intelligence Center
+            Inteligencia Fiscal
         </h2>
 
         <p class="page-subtitle">
@@ -2811,7 +2811,7 @@ background:#10B981;
 <!-- ==================== RISK ==================== -->
 <div id="riskView" class="view" style="display:none;">
   <header class="topbar">
-    <div><h2 class="page-title">Risk Center</h2><p class="page-subtitle">Monitoreo de riesgos financieros y operativos</p></div>
+    <div><h2 class="page-title">Centro de Riesgos</h2><p class="page-subtitle">Monitoreo de riesgos financieros y operativos</p></div>
   </header>
   <section class="kpi-grid">
     <div class="kpi-card accent-green">
@@ -2874,7 +2874,7 @@ background:#10B981;
 <div id="copilotView" class="view" style="display:none;">
   <header class="topbar">
     <div>
-      <h2 class="page-title">🤖 CFO Copilot</h2>
+      <h2 class="page-title">🤖 Copiloto CFO</h2>
       <p class="page-subtitle">Pregunta cualquier cosa sobre tus datos financieros · respuestas basadas en tus números reales</p>
     </div>
   </header>
@@ -2920,7 +2920,7 @@ background:#10B981;
     <div>
 
         <h2 class="page-title">
-            Fiscal Intelligence
+            Inteligencia Fiscal
         </h2>
 
         <p class="page-subtitle">
@@ -7396,6 +7396,12 @@ function renderCashflowView(r){
   if(kpis[1]) kpis[1].innerHTML=_m(r.flujoInv);
   if(kpis[2]) kpis[2].innerHTML=_m(r.flujoFin);
   if(kpis[3]) kpis[3].innerHTML=_m(r.caja);
+  // subtítulos kpi-change
+  const chg=el.querySelectorAll('.kpi-change');
+  if(chg[0]){ chg[0].innerHTML=r.flujoOp>=0?'Operación genera caja':'Operación consume caja'; chg[0].className='kpi-change '+(r.flujoOp>=0?'positive':'negative'); }
+  if(chg[1]){ chg[1].innerHTML=r.flujoInv<=0?'Inversión activa':'Desinversión neta'; chg[1].className='kpi-change '+(r.flujoInv<=0?'neutral':'positive'); }
+  if(chg[2]){ chg[2].innerHTML=r.flujoFin>=0?'Financiamiento neto':'Amortización neta'; chg[2].className='kpi-change neutral'; }
+  if(chg[3]){ chg[3].innerHTML=r.razCorriente!=null?'RC '+_x(r.razCorriente)+'x':'Posición actual'; chg[3].className='kpi-change '+(r.razCorriente==null?'neutral':r.razCorriente>=1?'positive':'negative'); }
   // Tabla composición
   const svs=el.querySelectorAll('.statement-value');
   if(svs[0]){ svs[0].innerHTML=_m(r.flujoOp); svs[0].className='statement-value'+(r.flujoOp>=0?' positive':''); svs[0].style.color=r.flujoOp>=0?'var(--success)':'var(--danger)'; }
@@ -7792,7 +7798,7 @@ const TaxNarratives=(function(){
 function renderTaxView(r){
   const el=document.getElementById('taxView'); if(!el) return;
   if(!r||!r.ventas){
-    el.innerHTML=`<header class="topbar"><div><h2 class="page-title">🏛️ Tax Intelligence</h2><p class="page-subtitle">Auditoría fiscal inteligente · SAT / AEAT</p></div></header>`
+    el.innerHTML=`<header class="topbar"><div><h2 class="page-title">🏛️ Inteligencia Fiscal</h2><p class="page-subtitle">Auditoría fiscal inteligente · SAT / AEAT</p></div></header>`
       +noDataHtml('🏛️','Sin datos fiscales','Ingresa ventas y gastos para activar el motor de análisis tributario.');
     return;
   }
@@ -7828,7 +7834,7 @@ function renderTaxView(r){
     <div>
       <h2 class="page-title" style="display:flex;align-items:center;gap:10px;">
         ${isMX?'🇲🇽':'🇪🇸'}
-        <span>${isMX?'SAT Intelligence':'AEAT Intelligence'}</span>
+        <span>${isMX?'Inteligencia SAT':'Inteligencia AEAT'}</span>
         <span style="font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;background:rgba(34,197,94,.15);color:var(--primary);border:1px solid rgba(34,197,94,.3);">${isMX?'SAT · IVA 16% · ISR':'AEAT · IVA 21% · IS 25%'}</span>
       </h2>
       <p class="page-subtitle">${r.empresa||'Empresa'} · Período ${r.anio||'—'} · Análisis tributario automatizado</p>
@@ -8408,7 +8414,7 @@ function _riskCat(id,nom,icon,score,kpi,accion){
 function renderRiskView(r){
   const el=document.getElementById('riskView'); if(!el) return;
   if(!r){
-    el.innerHTML=`<header class="topbar"><div><h2 class="page-title">⚠️ Risk Center</h2><p class="page-subtitle">Motor de riesgo financiero · 6 categorías</p></div></header>`
+    el.innerHTML=`<header class="topbar"><div><h2 class="page-title">⚠️ Centro de Riesgos</h2><p class="page-subtitle">Motor de riesgo financiero · 6 categorías</p></div></header>`
       +noDataHtml('⚠️','Sin datos de riesgo','Ingresa tus datos para calcular el perfil de riesgo real.');
     return;
   }
@@ -8456,7 +8462,7 @@ function renderRiskView(r){
 
   el.innerHTML=`
   <header class="topbar">
-    <div><h2 class="page-title">⚠️ Risk Center</h2>
+    <div><h2 class="page-title">⚠️ Centro de Riesgos</h2>
     <p class="page-subtitle">Score global: ${gRisk}/100 · ${gLabel} · ${cats.length} categorías · ${r.empresa||''}</p></div>
   </header>
   <section class="kpi-grid">
