@@ -7445,7 +7445,7 @@ function renderCostosView(r){
   const k4=document.getElementById('cv-kpi-top'); if(k4) k4.innerHTML=_m(topVal);
   const s4=document.getElementById('cv-kpi-top-sub'); if(s4) s4.innerHTML=topLabel+(topPct!=null?' · '+_pp(topPct)+' del COGS':'');
   const cogsLabel=pct!=null?_pp(pct):'—';
-  const cogsCtr=[{id:'cogsCtr',afterDraw(ch){const {ctx,chartArea:{top,bottom,left,right}}=ch;const cx=(left+right)/2,cy=(top+bottom)/2;ctx.save();ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='700 20px Inter,sans-serif';ctx.fillStyle='#F4F4F5';ctx.fillText(cogsLabel,cx,cy-10);ctx.font='500 11px Inter,sans-serif';ctx.fillStyle='#6B7280';ctx.fillText('COGS/Ventas',cx,cy+10);ctx.restore();}}];
+  const cogsCtr=[{id:'cogsCtr',afterDraw(ch){const {ctx,chartArea:{top,bottom,left,right}}=ch;const cx=(left+right)/2,cy=(top+bottom)/2;ctx.save();ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='700 20px Inter,sans-serif';const _lt1=document.documentElement.dataset.theme==='light';ctx.fillStyle=_lt1?'#0F172A':'#F4F4F5';ctx.fillText(cogsLabel,cx,cy-10);ctx.font='500 11px Inter,sans-serif';ctx.fillStyle=_lt1?'#64748B':'#6B7280';ctx.fillText('COGS/Ventas',cx,cy+10);ctx.restore();}}];
   if(hasBreakdown){
     const items=[['Materia prima',bd.materia||0],['Mano de obra',bd.mod||0],['Maquila',bd.maquila||0],['Otros costos',bd.otros||0]].filter(x=>x[1]>0);
     mkChart('costosDonutChart',{type:'doughnut',data:{labels:items.map(x=>x[0]),datasets:[{data:items.map(x=>+(x[1]/1e6).toFixed(2)),backgroundColor:COLORS,hoverOffset:12}]},plugins:cogsCtr,options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{position:'bottom'},tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${_m(ctx.parsed*1e6)}`}}}}});
@@ -7496,7 +7496,7 @@ function renderGastosView(r){
   const k4=document.getElementById('gv-kpi-ebit'); if(k4){k4.innerHTML=_pp(r.margenOp);k4.style.color=_clr(r.margenOp,10,5);}
   const s4=document.getElementById('gv-kpi-ebit-sub'); if(s4){s4.innerHTML='Margen operativo';s4.className='kpi-change '+(r.margenOp==null?'neutral':r.margenOp>=10?'positive':'negative');}
   const gLabel=pct!=null?_pp(pct):'—';
-  const gCtr=[{id:'gCtr',afterDraw(ch){const {ctx,chartArea:{top,bottom,left,right}}=ch;const cx=(left+right)/2,cy=(top+bottom)/2;ctx.save();ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='700 20px Inter,sans-serif';ctx.fillStyle='#F4F4F5';ctx.fillText(gLabel,cx,cy-10);ctx.font='500 11px Inter,sans-serif';ctx.fillStyle='#6B7280';ctx.fillText('Gastos/Ventas',cx,cy+10);ctx.restore();}}];
+  const gCtr=[{id:'gCtr',afterDraw(ch){const {ctx,chartArea:{top,bottom,left,right}}=ch;const cx=(left+right)/2,cy=(top+bottom)/2;ctx.save();ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='700 20px Inter,sans-serif';const _lt2=document.documentElement.dataset.theme==='light';ctx.fillStyle=_lt2?'#0F172A':'#F4F4F5';ctx.fillText(gLabel,cx,cy-10);ctx.font='500 11px Inter,sans-serif';ctx.fillStyle=_lt2?'#64748B':'#6B7280';ctx.fillText('Gastos/Ventas',cx,cy+10);ctx.restore();}}];
   mkChart('gastosDonutChart',{type:'doughnut',data:{labels:['G. Admin','G. Ventas','G. Financieros'],datasets:[{data:[r.gadmin||0,r.gventas||0,r.gfin||0].map(v=>+(v/1e6).toFixed(2)),backgroundColor:['#F59E0B','#8B5CF6','#06B6D4'],hoverOffset:12}]},plugins:gCtr,options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{position:'bottom'},tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${_m(ctx.parsed*1e6)}`}}}}});
   let barItems;
   if(hasBreakdown){
@@ -10432,6 +10432,15 @@ function _updateThemeUI(){
   if(lbl) lbl.textContent=lt?'☀️ Modo claro':'🌙 Modo oscuro';
   if(dot) dot.style.left=lt?'19px':'3px';
   if(row) row.style.background=lt?'rgba(0,0,0,.04)':'rgba(255,255,255,.03)';
+  if(typeof Chart!=='undefined'){
+    Chart.defaults.color=lt?'#64748B':'#8892A8';
+    Chart.defaults.borderColor=lt?'rgba(0,0,0,.08)':'rgba(255,255,255,.06)';
+    Chart.defaults.plugins.tooltip.backgroundColor=lt?'#fff':'#1E1E22';
+    Chart.defaults.plugins.tooltip.titleColor=lt?'#0F172A':'#fff';
+    Chart.defaults.plugins.tooltip.bodyColor=lt?'#64748B':'#A1A1AA';
+    Chart.defaults.plugins.tooltip.borderColor=lt?'rgba(0,0,0,.12)':'rgba(255,255,255,.1)';
+    Chart.defaults.plugins.tooltip.borderWidth=1;
+  }
 }
 (function(){
   const saved=localStorage.getItem('obbio-theme');
