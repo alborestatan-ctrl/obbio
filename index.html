@@ -6612,7 +6612,7 @@ function downloadDatosEjemplo(){
 
     // ── COMMENTARY WRITER ──
     let commentaryParagraphs=[];
-    if(typeof showNotif==='function') showNotif('✍️ Analizando tu negocio...','success',8000);
+    if(typeof showNotif==='function') showNotif('✍️ Generando reporte completo...','success',12000);
     try{
       const _cPayload={
         question:'Genera el análisis',
@@ -6629,15 +6629,15 @@ function downloadDatosEjemplo(){
           '- Score financiero: '+Math.round(r.score)+'/100\n'+
           '- Crecimiento vs año anterior: '+(r.yoy!=null?_pp(r.yoy):'no disponible')+'\n\n'+
           'Escribe EXACTAMENTE 4 párrafos, cada uno de máximo 50 palabras, separados por el símbolo |||\n\n'+
-          'Párrafo 1 (Estado general): Cómo está el negocio hoy en términos simples. Menciona el score y qué significa.\n'+
+          'Párrafo 1 (Estado general): Cómo está el negocio hoy en términos simples.\n'+
           'Párrafo 2 (Lo que va bien): Máximo 2 cosas positivas concretas con números reales.\n'+
-          'Párrafo 3 (Lo urgente): El problema MÁS importante que debe atender ahora, con número concreto del impacto.\n'+
-          'Párrafo 4 (Acción del mes): UNA acción específica y accionable para este mes, con resultado esperado en pesos o porcentaje.\n\n'+
+          'Párrafo 3 (Lo urgente): El problema MÁS importante con número concreto del impacto.\n'+
+          'Párrafo 4 (Acción del mes): UNA acción específica para este mes con resultado esperado.\n\n'+
           'Tono: directo, claro, como un amigo experto en finanzas. Sin saludos ni despedidas.',
         history:[]
       };
       const _fetchP=fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_cPayload)}).then(re=>re.json());
-      const _timeoutP=new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),8000));
+      const _timeoutP=new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),9000));
       const _result=await Promise.race([_fetchP,_timeoutP]);
       if(_result&&_result.text) commentaryParagraphs=_result.text.split('|||').map(p=>p.trim()).filter(p=>p.length>0);
     }catch(e){/* fallback silencioso */}
@@ -6646,7 +6646,6 @@ function downloadDatosEjemplo(){
     const W=doc.internal.pageSize.getWidth(),H=doc.internal.pageSize.getHeight();
     const ML=44,MR=44,MT=56,CW=W-ML-MR;
 
-    // Paleta profesional: blanco limpio + verde Obbio
     const C={
       ink:[15,23,42],white:[255,255,255],
       green:[34,197,94],greenDk:[21,128,61],greenPl:[220,252,231],
@@ -6654,6 +6653,8 @@ function downloadDatosEjemplo(){
       amber:[245,158,11],amberPl:[254,243,199],
       red:[220,38,38],redPl:[254,226,226],
       blue:[59,130,246],bluePl:[219,234,254],
+      teal:[20,184,166],tealPl:[204,251,241],
+      purple:[139,92,246],purplePl:[237,233,254],
     };
 
     let y=MT;
@@ -6678,7 +6679,7 @@ function downloadDatosEjemplo(){
       }
     };
 
-    // ── SEC: encabezado de sección ──
+    // ── SEC ──
     const SEC=(title,sub)=>{
       ensure(sub?56:44);
       doc.setFont('helvetica','bold');doc.setFontSize(15);sc(...C.ink);doc.text(title,ML,y+16);
@@ -6689,20 +6690,18 @@ function downloadDatosEjemplo(){
       y=lineY+12;
     };
 
-    // ── HDR ──
     const HDR=(t,col)=>{
       ensure(22);
       doc.setFont('helvetica','bold');doc.setFontSize(10);sc(...(col||C.slate));doc.text(t,ML,y);y+=16;
     };
 
-    // ── P: párrafo ──
     const P=(t,o={})=>{
       doc.setFont('helvetica',o.b?'bold':'normal');doc.setFontSize(o.s||9.5);sc(...(o.c||C.ink));
       doc.splitTextToSize(t,CW-(o.ind||0)).forEach(ln=>{ensure(o.lh||14);doc.text(ln,ML+(o.ind||0),y);y+=(o.lh||14);});
       if(o.mb) y+=o.mb;
     };
 
-    // ── KCARD: tarjeta KPI con barra lateral izquierda ──
+    // ── KCARD ──
     const KCARD=(x,cy,w,h,label,value,sub,accent)=>{
       sf(...C.card);doc.roundedRect(x,cy,w,h,4,4,'F');
       ss(...C.border);doc.setLineWidth(.3);doc.roundedRect(x,cy,w,h,4,4,'S');
@@ -6717,7 +6716,7 @@ function downloadDatosEjemplo(){
       }
     };
 
-    // ── TABLE: tabla con cabecera slate ──
+    // ── TABLE ──
     const TABLE=(hdrs,rows,opts={})=>{
       const cols=hdrs.length;
       const colW=opts.widths||(()=>{const w=CW/cols;return Array(cols).fill(w);})();
@@ -6748,7 +6747,7 @@ function downloadDatosEjemplo(){
       y+=10;
     };
 
-    // ── PLR: fila de P&L con verdes para totales ──
+    // ── PLR ──
     const PLR=(label,value,indent,style)=>{
       const rH=style==='spacer'?5:16;
       if(style==='spacer'){y+=rH;return;}
@@ -6777,6 +6776,15 @@ function downloadDatosEjemplo(){
       return tw+4;
     };
 
+    // ── INFO CARD (2 columnas) ──
+    const ICARD2=(x,cy,w,h,label,value,accent)=>{
+      sf(...C.card);doc.roundedRect(x,cy,w,h,4,4,'F');
+      ss(...C.border);doc.setLineWidth(.3);doc.roundedRect(x,cy,w,h,4,4,'S');
+      sf(...accent);doc.rect(x,cy+4,3,h-8,'F');
+      doc.setFont('helvetica','bold');doc.setFontSize(6.5);sc(...C.muted);doc.text(label.toUpperCase(),x+11,cy+14);
+      doc.setFont('helvetica','bold');doc.setFontSize(13);sc(...C.ink);doc.text(String(value),x+11,cy+32);
+    };
+
     const d=typeof generarDiagnostico==='function'?generarDiagnostico(r):{fortalezas:[],riesgos:[],recomendaciones:[]};
     const ins=typeof generarCFOInsights==='function'?generarCFOInsights(r):[];
     const cls=r.score>=80?'Excelente':r.score>=60?'Buena':r.score>=40?'Moderado':'Alto Riesgo';
@@ -6784,23 +6792,17 @@ function downloadDatosEjemplo(){
     const PB=(avail=200)=>{ if(y>H-56-avail){doc.addPage();y=MT;}else{y+=10;} };
 
     // ══════════════════════════════════════════════
-    // PORTADA — fondo blanco, banda verde superior
+    // PORTADA
     // ══════════════════════════════════════════════
     sf(...C.white);doc.rect(0,0,W,H,'F');
-
-    // Banda verde superior
     sf(...C.green);doc.rect(0,0,W,54,'F');
     doc.setFont('helvetica','bold');doc.setFontSize(20);sc(...C.white);doc.text('OBBIO',ML,36);
     doc.setFont('helvetica','normal');doc.setFontSize(9);sc(220,252,231);doc.text('Finance · Strategy · Intelligence',ML+86,36);
     doc.setFontSize(8.5);sc(220,252,231);doc.text(new Date().toLocaleDateString('es-MX',{year:'numeric',month:'long',day:'numeric'}),W-MR,36,{align:'right'});
-
-    // Título
     doc.setFont('helvetica','bold');doc.setFontSize(44);sc(...C.ink);doc.text('Reporte',ML,138);
     doc.setFont('helvetica','bold');doc.setFontSize(44);sc(...C.green);doc.text('Ejecutivo',ML,190);
     doc.setFont('helvetica','normal');doc.setFontSize(12);sc(...C.muted);doc.text('Análisis Financiero Integral',ML,214);
     ss(...C.border);doc.setLineWidth(.8);doc.line(ML,224,ML+210,224);
-
-    // Tarjeta empresa
     sf(...C.card);doc.roundedRect(ML,250,222,148,8,8,'F');
     ss(...C.border);doc.setLineWidth(.4);doc.roundedRect(ML,250,222,148,8,8,'S');
     sf(...C.green);doc.rect(ML,250,3,148,'F');
@@ -6811,10 +6813,7 @@ function downloadDatosEjemplo(){
     doc.text((r.pais==='ES'?'España':'México')+' · '+(r.giro||'—'),ML+14,320);
     doc.text('Moneda: '+(r.moneda||'MXN'),ML+14,334);
     doc.text('Generado: '+new Date().toLocaleDateString('es-MX'),ML+14,348);
-    doc.setFont('helvetica','bold');doc.setFontSize(8.5);sc(...scoreC);
-    doc.text(cls,ML+14,372);
-
-    // Círculo de score
+    doc.setFont('helvetica','bold');doc.setFontSize(8.5);sc(...scoreC);doc.text(cls,ML+14,372);
     const scX=W-MR-158;
     sf(...C.card);doc.roundedRect(scX,250,152,148,8,8,'F');
     ss(...C.border);doc.setLineWidth(.4);doc.roundedRect(scX,250,152,148,8,8,'S');
@@ -6824,26 +6823,22 @@ function downloadDatosEjemplo(){
     doc.setFont('helvetica','normal');doc.setFontSize(8.5);sc(...C.muted);doc.text('Health Score',scX+76,372,{align:'center'});
     sf(...C.border);doc.roundedRect(scX+14,380,124,7,3,3,'F');
     if(r.score!=null){sf(...scoreC);doc.roundedRect(scX+14,380,Math.max(2,r.score/100*124),7,3,3,'F');}
-
-    // Banda slate con métricas
     sf(...C.slate);doc.rect(0,H-100,W,100,'F');
     sf(...C.green);doc.rect(0,H-102,W,2,'F');
     [['Ingresos',_m(r.ventas)],['Ganancia Op.',_m(r.ebitda)],['Ganancia Final',_m(r.utilNeta)],['Efectivo Op.',_m(r.flujoOp)],['Score',r.score!=null?Math.round(r.score)+'/100':'—']]
     .forEach(([lbl,val],i,arr)=>{
       const kx=i*(W/arr.length);
-      if(i>0){doc.setDrawColor(255,255,255);doc.setGState&&doc.setGState(new doc.GState({opacity:.15}));doc.setLineWidth(.3);doc.line(kx,H-88,kx,H-18);doc.setGState&&doc.setGState(new doc.GState({opacity:1}));}
       doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(148,163,184);doc.text(lbl,kx+W/arr.length/2,H-76,{align:'center'});
       doc.setFont('helvetica','bold');doc.setFontSize(14);sc(...C.white);doc.text(val,kx+W/arr.length/2,H-50,{align:'center'});
     });
     ss(...C.border);doc.setLineWidth(.3);doc.line(ML,H-14,W-MR,H-14);
     doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(100,116,139);doc.text('Documento confidencial — Generado por Obbio · obbio.vercel.app',W/2,H-5,{align:'center'});
 
-    // ══════════════════════════════════════════════
-    // CONTENIDO desde pág 2
-    // ══════════════════════════════════════════════
     doc.addPage();y=MT;
 
-    // ── RESUMEN EJECUTIVO ──
+    // ══════════════════════════════════════════════
+    // 1. RESUMEN EJECUTIVO
+    // ══════════════════════════════════════════════
     SEC('Resumen Ejecutivo','Indicadores clave de desempeño financiero');
     const kW4=(CW-12)/4,kH4=62;
     ensure(kH4+2);
@@ -6858,8 +6853,6 @@ function downloadDatosEjemplo(){
     KCARD(ML+2*(kW4+4), y,kW4,kH4,'Rend. s/ Inversión',   _pp(r.roe),          r.roe>=15?'Excelente':r.roe>=8?'Bueno':'Mejorar',                   r.roe>=15?C.green:r.roe>=8?C.blue:C.amber);
     KCARD(ML+3*(kW4+4), y,kW4,kH4,'Ciclo de Caja',        Math.round(r.ccc||0)+'d',r.ccc<=60?'Eficiente':r.ccc<=90?'Normal':'Lento',               r.ccc<=60?C.green:r.ccc<=90?C.amber:C.red);
     y+=kH4+14;
-
-    // dos columnas fortalezas / riesgos
     const tw2=(CW-10)/2;
     const fRows=d.fortalezas.slice(0,3),rRows=d.riesgos.slice(0,3);
     const col2H=Math.max(fRows.length,rRows.length,1)*18+44;
@@ -6869,14 +6862,14 @@ function downloadDatosEjemplo(){
     sf(...C.green);doc.roundedRect(ML,sy2,3,col2H,1,1,'F');
     doc.setFont('helvetica','bold');doc.setFontSize(9);sc(...C.greenDk);doc.text('Fortalezas',ML+12,sy2+18);
     let fy=sy2+32;
-    if(fRows.length){fRows.forEach(f=>{doc.setFont('helvetica','normal');doc.setFontSize(8.5);sc(...C.ink);doc.text('• '+f.titulo,ML+12,fy);fy+=17;});}
+    if(fRows.length){fRows.forEach(f=>{ doc.setFont('helvetica','normal');doc.setFontSize(8.5);sc(...C.ink);doc.text('• '+f.titulo,ML+12,fy);fy+=17; });}
     else{doc.setFont('helvetica','normal');doc.setFontSize(8.5);sc(...C.muted);doc.text('Sin fortalezas destacadas',ML+12,fy);}
     const rx2=ML+tw2+10;
     sf(...C.redPl);doc.roundedRect(rx2,sy2,tw2,col2H,5,5,'F');
     sf(...C.red);doc.roundedRect(rx2,sy2,3,col2H,1,1,'F');
     doc.setFont('helvetica','bold');doc.setFontSize(9);sc(...C.red);doc.text('Riesgos Identificados',rx2+12,sy2+18);
     let ry2=sy2+32;
-    if(rRows.length){rRows.forEach(rf=>{doc.setFont('helvetica','normal');doc.setFontSize(8.5);sc(...C.ink);doc.text('• '+rf.titulo,rx2+12,ry2);ry2+=17;});}
+    if(rRows.length){rRows.forEach(rf=>{ doc.setFont('helvetica','normal');doc.setFontSize(8.5);sc(...C.ink);doc.text('• '+rf.titulo,rx2+12,ry2);ry2+=17; });}
     else{doc.setFont('helvetica','normal');doc.setFontSize(8.5);sc(...C.muted);doc.text('Sin riesgos críticos detectados',rx2+12,ry2);}
     y=sy2+col2H+12;
 
@@ -6902,7 +6895,9 @@ function downloadDatosEjemplo(){
       y+=4;
     }
 
-    // ── ESTADO DE RESULTADOS ──
+    // ══════════════════════════════════════════════
+    // 2. ESTADO DE RESULTADOS
+    // ══════════════════════════════════════════════
     PB(220);
     SEC('Estado de Resultados','Período '+(r.anio||'')+'  ·  cifras en '+(r.moneda||'MXN'));
     PLR('Ingresos Totales',_m(r.ventas),0,'bold');
@@ -6916,7 +6911,114 @@ function downloadDatosEjemplo(){
     PLR('Ganancia Final',_m(r.utilNeta)+'  ('+_pp(r.margenNeto)+')',0,'total');
     y+=8;
 
-    // ── BALANCE (condicional) ──
+    // ══════════════════════════════════════════════
+    // 3. ANÁLISIS DE COSTOS
+    // ══════════════════════════════════════════════
+    PB(180);
+    SEC('Análisis de Costos (COGS)','Estructura y composición del costo de ventas');
+    const bd=r.cogsBreakdown||{};
+    const hasBreakdown=(bd.materia||0)+(bd.mod||0)+(bd.maquila||0)+(bd.otros||0)>0;
+    const cogsPct=r.ventas>0?r.cogs/r.ventas*100:null;
+    const cW3=(CW-8)/3,cH3=58;
+    ensure(cH3+2);
+    KCARD(ML,        y,cW3,cH3,'COGS Total',       _m(r.cogs),    cogsPct!=null?_pp(cogsPct)+' de ventas':'—',     C.red);
+    KCARD(ML+cW3+4,  y,cW3,cH3,'Margen Bruto',     _pp(r.margenBrutoP), r.margenBrutoP>=40?'Excelente':r.margenBrutoP>=25?'Saludable':'Bajo', r.margenBrutoP>=40?C.green:r.margenBrutoP>=25?C.amber:C.red);
+    KCARD(ML+2*(cW3+4),y,cW3,cH3,'Importe Bruto',  _m(r.margenBruto),'Ventas − COGS',                           C.green);
+    y+=cH3+10;
+    if(hasBreakdown){
+      const items=[['Materia prima',bd.materia||0],['Mano de obra directa',bd.mod||0],['Maquila',bd.maquila||0],['Otros costos',bd.otros||0]].filter(x=>x[1]>0);
+      TABLE(['Componente COGS','Importe','% COGS','% Ventas'],
+        items.map(x=>[x[0],_m(x[1]),r.cogs>0?_pp(x[1]/r.cogs*100):'—',r.ventas>0?_pp(x[1]/r.ventas*100):'—']),
+        {widths:[CW*0.40,CW*0.20,CW*0.20,CW*0.20],rightAlign:[1,2,3]});
+    } else {
+      TABLE(['Concepto','Importe','% Ventas'],
+        [['Costo de Ventas (COGS)',_m(r.cogs),cogsPct!=null?_pp(cogsPct):'—'],['Utilidad Bruta',_m(r.margenBruto),r.ventas>0?_pp(r.margenBrutoP):'—']],
+        {widths:[CW*0.55,CW*0.25,CW*0.20],rightAlign:[1,2]});
+    }
+    // Sensibilidad
+    ensure(38);
+    const benchGapC=cogsPct!=null?(cogsPct-55).toFixed(1):null;
+    const barColorC=cogsPct==null?C.muted:cogsPct<55?C.green:cogsPct<70?C.amber:C.red;
+    sf(...C.card);doc.roundedRect(ML,y,CW,30,4,4,'F');
+    ss(...C.border);doc.setLineWidth(.3);doc.roundedRect(ML,y,CW,30,4,4,'S');
+    doc.setFont('helvetica','bold');doc.setFontSize(8);sc(...C.muted);doc.text('COGS/VENTAS',ML+8,y+10);
+    doc.setFont('helvetica','bold');doc.setFontSize(9);sc(...barColorC);
+    doc.text(cogsPct!=null?_pp(cogsPct):'—',ML+80,y+10);
+    if(benchGapC!=null) {doc.setFont('helvetica','normal');doc.setFontSize(7.5);sc(...C.muted);doc.text('Benchmark 55% · Diferencia: '+(benchGapC>0?'+':'')+benchGapC+'pp',ML+116,y+10);}
+    const bW=CW-16,bH=6,bX=ML+8,bY=y+18;
+    sf(...C.border);doc.roundedRect(bX,bY,bW,bH,2,2,'F');
+    if(cogsPct!=null){sf(...barColorC);doc.roundedRect(bX,bY,Math.max(2,Math.min(bW,cogsPct/100*bW)),bH,2,2,'F');}
+    y+=38;
+    ensure(36);
+    const iW=(CW-16)/3;
+    [['+'+_m(r.cogs*0.01),'Reducir COGS 1%',C.green],['+'+_m(r.cogs*0.05),'Reducir COGS 5%',C.green],[_pp(r.margenBrutoP),'Margen bruto',r.margenBrutoP>=25?C.green:C.amber]]
+    .forEach(([val,lbl,col],i)=>{
+      const ix=ML+i*(iW+8);
+      sf(...C.card);doc.roundedRect(ix,y,iW,30,4,4,'F');
+      ss(...C.border);doc.setLineWidth(.3);doc.roundedRect(ix,y,iW,30,4,4,'S');
+      doc.setFont('helvetica','bold');doc.setFontSize(7);sc(...C.muted);doc.text(lbl.toUpperCase(),ix+8,y+10);
+      doc.setFont('helvetica','bold');doc.setFontSize(12);sc(...col);doc.text(val,ix+8,y+24);
+    });
+    y+=38;
+
+    // ══════════════════════════════════════════════
+    // 4. ANÁLISIS DE GASTOS OPERATIVOS
+    // ══════════════════════════════════════════════
+    PB(180);
+    SEC('Análisis de Gastos Operativos','Desglose de administración, ventas y gastos financieros');
+    const gbr=r.gastosBreakdown||{};
+    const gadm=gbr.admin||{}, gvts=gbr.ventas||{};
+    const hasAdmBD=(gadm.sueldos||0)+(gadm.renta||0)+(gadm.servicios||0)+(gadm.honorarios||0)+(gadm.otros||0)>0;
+    const hasVtsBD=(gvts.publicidad||0)+(gvts.comisiones||0)+(gvts.otros||0)>0;
+    const gastoTotal=(r.gAdmin||0)+(r.gVentas||0)+(r.gFin||0);
+    const gPct=r.ventas>0?gastoTotal/r.ventas*100:null;
+    const gW4=(CW-12)/4,gH4=58;
+    ensure(gH4+2);
+    KCARD(ML,           y,gW4,gH4,'Gastos Totales',    _m(gastoTotal),   gPct!=null?_pp(gPct)+' de ventas':'—',                gPct<30?C.green:gPct<40?C.amber:C.red);
+    KCARD(ML+gW4+4,     y,gW4,gH4,'G. Administración', _m(r.gAdmin||0),  gastoTotal>0?_pp((r.gAdmin||0)/gastoTotal*100)+' del total':'—',C.amber);
+    KCARD(ML+2*(gW4+4), y,gW4,gH4,'G. Ventas',         _m(r.gVentas||0), gastoTotal>0?_pp((r.gVentas||0)/gastoTotal*100)+' del total':'—',C.purple);
+    KCARD(ML+3*(gW4+4), y,gW4,gH4,'G. Financieros',    _m(r.gFin||0),    gastoTotal>0?_pp((r.gFin||0)/gastoTotal*100)+' del total':'—',C.blue);
+    y+=gH4+10;
+    if(hasAdmBD||hasVtsBD){
+      const gItems=[];
+      if(hasAdmBD){
+        if(gadm.sueldos)  gItems.push(['Sueldos admin',      gadm.sueldos]);
+        if(gadm.renta)    gItems.push(['Renta',              gadm.renta]);
+        if(gadm.servicios)gItems.push(['Servicios (luz/internet)',gadm.servicios]);
+        if(gadm.honorarios)gItems.push(['Honorarios',        gadm.honorarios]);
+        if(gadm.otros)    gItems.push(['Otros admin',        gadm.otros]);
+      }
+      if(hasVtsBD){
+        if(gvts.publicidad) gItems.push(['Publicidad',       gvts.publicidad]);
+        if(gvts.comisiones) gItems.push(['Comisiones',       gvts.comisiones]);
+        if(gvts.otros)      gItems.push(['Otros ventas',     gvts.otros]);
+      }
+      TABLE(['Rubro','Importe','% Gastos Total','% Ventas'],
+        gItems.map(x=>[x[0],_m(x[1]),gastoTotal>0?_pp(x[1]/gastoTotal*100):'—',r.ventas>0?_pp(x[1]/r.ventas*100):'—']),
+        {widths:[CW*0.40,CW*0.20,CW*0.20,CW*0.20],rightAlign:[1,2,3]});
+    } else {
+      TABLE(['Categoría','Importe','% de Ventas'],
+        [['G. Administración',_m(r.gAdmin||0),r.ventas>0?_pp((r.gAdmin||0)/r.ventas*100):'—'],
+         ['G. Ventas / Marketing',_m(r.gVentas||0),r.ventas>0?_pp((r.gVentas||0)/r.ventas*100):'—'],
+         ['G. Financieros',_m(r.gFin||0),r.ventas>0?_pp((r.gFin||0)/r.ventas*100):'—'],
+         ['Total Gastos Operativos',_m(gastoTotal),gPct!=null?_pp(gPct):'—']],
+        {widths:[CW*0.50,CW*0.26,CW*0.24],rightAlign:[1,2]});
+    }
+    ensure(32);
+    const barColorG=gPct==null?C.muted:gPct<25?C.green:gPct<40?C.amber:C.red;
+    sf(...C.card);doc.roundedRect(ML,y,CW,26,4,4,'F');
+    ss(...C.border);doc.setLineWidth(.3);doc.roundedRect(ML,y,CW,26,4,4,'S');
+    doc.setFont('helvetica','bold');doc.setFontSize(8);sc(...C.muted);doc.text('GASTOS/VENTAS',ML+8,y+9);
+    doc.setFont('helvetica','bold');doc.setFontSize(9);sc(...barColorG);doc.text(gPct!=null?_pp(gPct):'—',ML+92,y+9);
+    doc.setFont('helvetica','normal');doc.setFontSize(7.5);sc(...C.muted);doc.text('Benchmark ~30%',ML+128,y+9);
+    const gbX=ML+8,gbY=y+16,gbW=CW-16;
+    sf(...C.border);doc.roundedRect(gbX,gbY,gbW,5,2,2,'F');
+    if(gPct!=null){sf(...barColorG);doc.roundedRect(gbX,gbY,Math.max(2,Math.min(gbW,gPct/100*gbW)),5,2,2,'F');}
+    y+=34;
+
+    // ══════════════════════════════════════════════
+    // 5. BALANCE GENERAL
+    // ══════════════════════════════════════════════
     const hasBal=(r.actTotal||0)>0||(r.pasTotal||0)>0;
     if(hasBal){
       PB(180);
@@ -6930,7 +7032,7 @@ function downloadDatosEjemplo(){
         ['Patrimonio / Capital',_m(r.equity),r.actTotal>0?_pp(r.equity/r.actTotal*100):'—'],
       ],{widths:[CW*0.52,CW*0.26,CW*0.22],rightAlign:[1,2]});
       const bkW=(CW-12)/4;
-      ensure(64);
+      ensure(62);
       KCARD(ML,           y,bkW,58,'Liquidez Corriente', _x(r.razCorriente)+'x','',r.razCorriente>=1.5?C.green:r.razCorriente>=1?C.amber:C.red);
       KCARD(ML+bkW+4,     y,bkW,58,'Nivel de Deuda',    _pp(r.ratEndeudamiento),'',r.ratEndeudamiento<=50?C.green:r.ratEndeudamiento<=70?C.amber:C.red);
       KCARD(ML+2*(bkW+4), y,bkW,58,'Efic. de Activos',  _pp(r.roa),'',r.roa>=10?C.green:r.roa>=5?C.blue:C.amber);
@@ -6938,35 +7040,201 @@ function downloadDatosEjemplo(){
       y+=66;
     }
 
-    // ── GRÁFICAS ──
+    // ══════════════════════════════════════════════
+    // 6. CASH FLOW
+    // ══════════════════════════════════════════════
+    PB(160);
+    SEC('Cash Flow Center','Análisis de flujos de efectivo operativo, de inversión y financiero');
+    const cfW=(CW-12)/4,cfH=58;
+    ensure(cfH+2);
+    KCARD(ML,           y,cfW,cfH,'Flujo Operativo',   _m(r.flujoOp),   r.flujoOp>=0?'Autosustentable':'Déficit',                   r.flujoOp>=0?C.teal:C.red);
+    KCARD(ML+cfW+4,     y,cfW,cfH,'Flujo de Inversión',_m(r.flujoInv),  r.flujoInv<0?'Inversión activa':'Sin inversión',             r.flujoInv<0?C.blue:C.muted);
+    KCARD(ML+2*(cfW+4), y,cfW,cfH,'Flujo Financiero',  _m(r.flujoFin),  r.flujoFin>=0?'Financiamiento neto':'Pago de deuda',        r.flujoFin>=0?C.amber:C.slate);
+    KCARD(ML+3*(cfW+4), y,cfW,cfH,'Caja y Bancos',     _m(r.caja||0),   r.flujoNeto>=0?'Positivo':'Consumo neto',                   r.flujoNeto>=0?C.green:C.red);
+    y+=cfH+10;
+    TABLE(['Componente del Flujo','Importe','Interpretación'],[
+      ['(+) Flujo Operativo',_m(r.flujoOp),r.flujoOp>=0?'Operación genera efectivo':'Operación consume efectivo'],
+      ['(+/−) Flujo de Inversión',_m(r.flujoInv),r.flujoInv<0?'Inversión en activos o proyectos':'Desinversión / activos vendidos'],
+      ['(+/−) Flujo Financiero',_m(r.flujoFin),r.flujoFin>=0?'Nueva deuda o capital captado':'Pago de deuda o dividendos'],
+      ['= Flujo Neto del Período',_m(r.flujoNeto),r.flujoNeto>=0?'Generación neta de efectivo':'Consumo neto de efectivo'],
+    ],{widths:[CW*0.30,CW*0.22,CW*0.48],rightAlign:[1]});
+    if(r.cfMensual&&r.cfMensual.some(v=>v!==0)){
+      const MESES=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+      const cfPos=r.cfMensual.filter(v=>v>=0).length, cfNeg=r.cfMensual.filter(v=>v<0).length;
+      ensure(18);
+      doc.setFont('helvetica','normal');doc.setFontSize(8.5);sc(...C.ink);
+      doc.text('Distribución mensual: '+cfPos+' meses positivos · '+cfNeg+' meses negativos',ML,y);y+=14;
+      const maxCF=Math.max(...r.cfMensual.map(Math.abs));
+      if(maxCF>0){
+        ensure(32);
+        const barSlotW=(CW-4)/12;
+        r.cfMensual.forEach((v,i)=>{
+          const barH=Math.max(2,Math.abs(v)/maxCF*22);
+          const bx=ML+2+i*barSlotW+1, by=v>=0?y+24-barH:y+24;
+          sf(...(v>=0?C.teal:C.red));doc.rect(bx,by,barSlotW-2,barH,'F');
+          doc.setFont('helvetica','normal');doc.setFontSize(5.5);sc(...C.muted);
+          doc.text(MESES[i],bx+(barSlotW-2)/2,y+28,{align:'center'});
+        });
+        y+=32;
+      }
+    }
+
+    // ══════════════════════════════════════════════
+    // 7. CAPITAL DE TRABAJO
+    // ══════════════════════════════════════════════
+    PB(160);
+    SEC('Capital de Trabajo','Ciclo operativo: cobros, inventario y pagos a proveedores');
+    const capW=(CW-12)/4,capH=58;
+    ensure(capH+2);
+    KCARD(ML,           y,capW,capH,'Cuentas x Cobrar',  _m(r.cxc||0),    'DSO: '+Math.round(r.diasCobro||0)+' días',                 r.diasCobro<=45?C.green:r.diasCobro<=60?C.amber:C.red);
+    KCARD(ML+capW+4,    y,capW,capH,'Inventario',         _m(r.inventario||0),'DIO: '+Math.round(r.diasInv||0)+' días',               r.diasInv<=60?C.green:r.diasInv<=90?C.amber:C.red);
+    KCARD(ML+2*(capW+4),y,capW,capH,'Cuentas x Pagar',   _m(r.cxp||0),    'DPO: '+Math.round(r.diasPago||0)+' días',                 C.teal);
+    KCARD(ML+3*(capW+4),y,capW,capH,'Cap. Trabajo Neto',  _m(r.capTrabNeto||0),r.capTrabNeto>=0?'Saludable':'Déficit',               r.capTrabNeto>=0?C.green:C.red);
+    y+=capH+10;
+    TABLE(['Indicador','Días','Benchmark','Estado'],[
+      ['Días de Cobro (DSO)',  Math.round(r.diasCobro||0)+' d','≤ 45 días', r.diasCobro<=45?'Eficiente':r.diasCobro<=60?'Aceptable':'Lento'],
+      ['Días Inventario (DIO)',Math.round(r.diasInv||0)+' d',  '≤ 60 días', r.diasInv<=60?'Óptimo':r.diasInv<=90?'Normal':'Elevado'],
+      ['Días de Pago (DPO)',   Math.round(r.diasPago||0)+' d', '≥ 30 días', r.diasPago>=30?'Bueno':'Mejorable'],
+      ['Ciclo de Caja (CCC)',  Math.round(r.ccc||0)+' d',      '≤ 60 días', r.ccc<=60?'Eficiente':r.ccc<=90?'Normal':'Largo'],
+    ],{widths:[CW*0.35,CW*0.15,CW*0.20,CW*0.30]});
+    if(r.diasCobro>45){
+      ensure(22);
+      doc.setFont('helvetica','normal');doc.setFontSize(8.5);sc(...C.amber);
+      doc.text('→ Reducir DSO a 45 días liberaría aprox. '+_m((r.cxc||0)*(Math.max(0,r.diasCobro-45)/r.diasCobro))+' de efectivo.',ML,y);y+=16;
+    }
+
+    // ══════════════════════════════════════════════
+    // 8. DEBT INTELLIGENCE
+    // ══════════════════════════════════════════════
+    PB(160);
+    SEC('Debt Intelligence','Estructura de deuda, cobertura y capacidad de endeudamiento');
+    const dtW=(CW-12)/4,dtH=58;
+    ensure(dtH+2);
+    KCARD(ML,           y,dtW,dtH,'Deuda Corto Plazo',  _m(r.pasivoCp||0),   '<12 meses',                                             r.pasivoCp<=r.ebitda?C.green:C.red);
+    KCARD(ML+dtW+4,     y,dtW,dtH,'Deuda Largo Plazo',  _m(r.pasivoLp||0),   '>12 meses',                                             C.slate);
+    KCARD(ML+2*(dtW+4), y,dtW,dtH,'Deuda / G. Oper.',   _x(r.debtEbitda)+'x',r.debtEbitda<=2?'Saludable':r.debtEbitda<=4?'Moderado':'Elevado',r.debtEbitda<=2?C.green:r.debtEbitda<=4?C.amber:C.red);
+    KCARD(ML+3*(dtW+4), y,dtW,dtH,'Cobertura Intereses',_x(r.cobIntereses)+'x',r.cobIntereses>5?'Sólida':r.cobIntereses>2?'Aceptable':'Riesgo',r.cobIntereses>5?C.green:r.cobIntereses>2?C.amber:C.red);
+    y+=dtH+10;
+    TABLE(['Indicador de Deuda','Valor','Benchmark','Evaluación'],[
+      ['Deuda Total',_m((r.pasivoCp||0)+(r.pasivoLp||0)),'—','—'],
+      ['Deuda / Ganancia Operativa',_x(r.debtEbitda)+'x','≤ 2.0x', r.debtEbitda<=2?'Saludable':r.debtEbitda<=4?'Moderado':'Elevado'],
+      ['Cobertura de Intereses',_x(r.cobIntereses)+'x','≥ 3.0x', r.cobIntereses>=3?'Adecuada':r.cobIntereses>=1.5?'Ajustada':'Insuficiente'],
+      ['Deuda / Capital (D/E)',_x(r.debtEquity)+'x','≤ 1.5x', r.debtEquity<=1.5?'Controlado':r.debtEquity<=3?'Moderado':'Elevado'],
+      ['Nivel de Endeudamiento',_pp(r.ratEndeudamiento||0),'≤ 50%',  r.ratEndeudamiento<=50?'Saludable':r.ratEndeudamiento<=70?'Moderado':'Alto'],
+    ],{widths:[CW*0.42,CW*0.16,CW*0.18,CW*0.24]});
+
+    // ══════════════════════════════════════════════
+    // 9. TAX INTELLIGENCE
+    // ══════════════════════════════════════════════
+    PB(140);
+    SEC('Tax Intelligence','Posición fiscal y estimaciones tributarias');
+    const f=r.fiscal||(typeof motorFiscal==='function'?motorFiscal(r.pais||'MX',r.uai||r.utilNeta,r.ventas,r.cogs):{});
+    const isMX=(r.pais||'MX')==='MX';
+    const ivaN=f.ivaNeto||0, ivaT=f.ivaTrasladado||0, ivaA=f.ivaAcreditable||0;
+    const isrEst=r.isr||f.isr||0;
+    const cargaTotal=isrEst+ivaN;
+    const cargaEfPct=r.ventas>0?cargaTotal/r.ventas*100:null;
+    const txW=(CW-12)/4,txH=58;
+    ensure(txH+2);
+    KCARD(ML,           y,txW,txH,isMX?'ISR Estimado':'Impuesto S. Bnf.',_m(isrEst),isrEst>0?_pp(isrEst/r.ventas*100)+' de ventas':'—',C.red);
+    KCARD(ML+txW+4,     y,txW,txH,'IVA Trasladado',  _m(ivaT),  isMX?'IVA cobrado 16%':'IVA cobrado 21%',                              C.slate);
+    KCARD(ML+2*(txW+4), y,txW,txH,'IVA Acreditable', _m(ivaA),  'IVA pagado deducible',                                               C.teal);
+    KCARD(ML+3*(txW+4), y,txW,txH,'IVA Neto a Pagar',_m(ivaN),  ivaN>0?'Pago al '+(isMX?'SAT':'AEAT'):'Saldo a favor',                 ivaN>0?C.amber:C.green);
+    y+=txH+10;
+    TABLE(['Concepto Fiscal','Importe','% Ventas'],
+      [[isMX?'ISR estimado (tasa efectiva)':'Impuesto Sociedades estimado',_m(isrEst),r.ventas>0?_pp(isrEst/r.ventas*100):'—'],
+       ['IVA trasladado (ventas)',_m(ivaT),r.ventas>0?_pp(ivaT/r.ventas*100):'—'],
+       ['IVA acreditable (compras)',_m(ivaA),r.ventas>0?_pp(ivaA/r.ventas*100):'—'],
+       ['IVA neto a pagar / favor',_m(ivaN),r.ventas>0?_pp(ivaN/r.ventas*100):'—'],
+       ['Carga fiscal total estimada',_m(cargaTotal),cargaEfPct!=null?_pp(cargaEfPct):'—']],
+      {widths:[CW*0.55,CW*0.25,CW*0.20],rightAlign:[1,2]});
+
+    // ══════════════════════════════════════════════
+    // 10. COMPARATIVOS HISTÓRICOS
+    // ══════════════════════════════════════════════
+    const ds=typeof buildYearDatasets==='function'?buildYearDatasets(r):[];
+    if(ds.length>=2){
+      PB(160);
+      SEC('Comparativos Históricos','Evolución multi-año de los principales indicadores');
+      TABLE(['Año','Ventas','Margen Bruto','G. Operativa','Util. Neta','% G. Op.','% U. Neta'],
+        ds.map((d,i)=>{
+          const prev=ds[i-1];
+          const crec=prev&&prev.ventas?((d.ventas/prev.ventas-1)*100):null;
+          return [String(d.anio)+(d._isCurrent?' ★':''),
+            _m(d.ventas),_m(d.utilBruta),_m(d.ebitda),_m(d.utilNeta),
+            d.margenEbitda!=null?_pp(d.margenEbitda):'—',
+            d.margenNeto!=null?_pp(d.margenNeto):'—'];
+        }),{widths:[46,CW*0.17,CW*0.15,CW*0.15,CW*0.15,CW*0.10,CW*0.10],rightAlign:[1,2,3,4,5,6]});
+      if(ds.length>=2){
+        const last=ds[ds.length-1],prev=ds[ds.length-2];
+        const crecV=prev.ventas?((last.ventas/prev.ventas-1)*100):null;
+        const crecE=prev.ebitda?((last.ebitda/prev.ebitda-1)*100):null;
+        ensure(18);
+        doc.setFont('helvetica','normal');doc.setFontSize(8.5);sc(...C.ink);
+        const compLine='Comparativo '+prev.anio+' → '+last.anio+': '+
+          'Ventas '+(crecV!=null?(crecV>=0?'+':'')+crecV.toFixed(1)+'%':'—')+
+          ' · Ganancia Op. '+(crecE!=null?(crecE>=0?'+':'')+crecE.toFixed(1)+'%':'—')+'.';
+        doc.text(compLine,ML,y);y+=16;
+      }
+    }
+
+    // ══════════════════════════════════════════════
+    // 11. GRÁFICAS
+    // ══════════════════════════════════════════════
     const chM=window._teralyxCharts&&window._teralyxCharts['mainChart'];
     const chF=window._teralyxCharts&&window._teralyxCharts['forecastChart'];
     if(chM){
       try{
         const imgM=chM.toBase64Image('image/jpeg',.92);
-        PB(170);
-        SEC('Ingresos y Ganancia Operativa');
+        PB(170);SEC('Ingresos y Ganancia Operativa');
         ensure(142);
         sf(...C.card);doc.roundedRect(ML,y,CW,136,6,6,'F');
         ss(...C.border);doc.setLineWidth(.4);doc.roundedRect(ML,y,CW,136,6,6,'S');
-        doc.addImage(imgM,'JPEG',ML+6,y+6,CW-12,124);
-        y+=142;
+        doc.addImage(imgM,'JPEG',ML+6,y+6,CW-12,124);y+=142;
       }catch(e){}
     }
     if(chF){
       try{
         const imgF=chF.toBase64Image('image/jpeg',.92);
-        PB(150);
-        SEC('Proyección Forecast — 3 Escenarios');
+        PB(150);SEC('Proyección Forecast — 3 Escenarios');
         ensure(128);
         sf(...C.card);doc.roundedRect(ML,y,CW,122,6,6,'F');
         ss(...C.border);doc.setLineWidth(.4);doc.roundedRect(ML,y,CW,122,6,6,'S');
-        doc.addImage(imgF,'JPEG',ML+6,y+6,CW-12,110);
-        y+=128;
+        doc.addImage(imgF,'JPEG',ML+6,y+6,CW-12,110);y+=128;
       }catch(e){}
     }
 
-    // ── DIAGNÓSTICO FINANCIERO ──
+    // ══════════════════════════════════════════════
+    // 12. EXECUTIVE STRATEGY
+    // ══════════════════════════════════════════════
+    PB(140);
+    SEC('Executive Strategy','Prioridades estratégicas e iniciativas de alto impacto');
+    const impactDSO=r.cxc>0&&r.diasCobro>45?r.cxc*(Math.max(0,r.diasCobro-45)/r.diasCobro):0;
+    const impactGastos=(r.gastosOp||gastoTotal)*0.05;
+    const stratBriefs=[];
+    if(r.diasCobro>45) stratBriefs.push({tipo:'pos',titulo:'PRIORIDAD ALTA: Acelerar cobranza',texto:'Reducir DSO de '+Math.round(r.diasCobro)+' a 45 días liberaría '+_m(impactDSO)+' de efectivo.',c:C.green,bg:C.greenPl});
+    if(r.margenEbitda<15) stratBriefs.push({tipo:'warn',titulo:'PRIORIDAD ALTA: Reducir costos operativos',texto:'Margen operativo '+_pp(r.margenEbitda)+' bajo benchmark 15%. Reducir gastos 5% = '+_m(impactGastos)+'.',c:C.amber,bg:C.amberPl});
+    if(r.debtEbitda>3) stratBriefs.push({tipo:'warn',titulo:'RIESGO: Apalancamiento elevado',texto:'Deuda/G.Op. '+_x(r.debtEbitda)+'. Priorizar pago deuda CP '+_m(r.pasivoCp||0)+'.',c:C.red,bg:C.redPl});
+    else if(r.debtEbitda<1.5) stratBriefs.push({tipo:'info',titulo:'OPORTUNIDAD: Capacidad de deuda disponible',texto:'Deuda/G.Op. '+_x(r.debtEbitda)+' bajo. Margen para financiar crecimiento.',c:C.blue,bg:C.bluePl});
+    if(r.yoy!=null&&r.yoy>10) stratBriefs.push({tipo:'pos',titulo:'FORTALEZA: Crecimiento acelerado',texto:'Crecimiento '+r.yoy.toFixed(1)+'% YoY. Aprovechar momentum para expandir.',c:C.green,bg:C.greenPl});
+    if(!stratBriefs.length) stratBriefs.push({tipo:'info',titulo:'Desempeño equilibrado',texto:'Indicadores dentro de rangos saludables. Mantener disciplina financiera.',c:C.slate,bg:C.card});
+    stratBriefs.slice(0,4).forEach(b=>{
+      const linesT=doc.splitTextToSize(b.texto,CW-30);
+      const cH=Math.max(44,linesT.length*13+28);
+      ensure(cH+4);
+      sf(...b.bg);doc.roundedRect(ML,y,CW,cH,5,5,'F');
+      ss(...C.border);doc.setLineWidth(.3);doc.roundedRect(ML,y,CW,cH,5,5,'S');
+      sf(...b.c);doc.rect(ML,y+4,3,cH-8,'F');
+      doc.setFont('helvetica','bold');doc.setFontSize(9);sc(...b.c);doc.text(b.titulo,ML+12,y+14);
+      doc.setFont('helvetica','normal');doc.setFontSize(8.5);sc(...C.ink);
+      linesT.forEach((ln,li)=>doc.text(ln,ML+12,y+28+li*13));
+      y+=cH+5;
+    });
+    y+=4;
+
+    // ══════════════════════════════════════════════
+    // 13. DIAGNÓSTICO FINANCIERO
+    // ══════════════════════════════════════════════
     PB(160);
     SEC('Diagnóstico Financiero','Análisis detallado de fortalezas, riesgos y recomendaciones');
     const diagBlock=(items,label,bg,accent)=>{
@@ -6993,16 +7261,20 @@ function downloadDatosEjemplo(){
     diagBlock(d.riesgos,'Riesgos Detectados',C.redPl,C.red);
     diagBlock(d.recomendaciones,'Qué hacer en los próximos 30 días',C.card,C.slate);
 
-    // ── ACCIONES CFO ──
+    // ══════════════════════════════════════════════
+    // 14. ACCIONES CFO
+    // ══════════════════════════════════════════════
     if(ins.length){
       PB(120);
-      SEC('Acciones Prioritarias','Iniciativas de alto impacto para el próximo ciclo');
+      SEC('Acciones Prioritarias CFO','Iniciativas de alto impacto para el próximo ciclo');
       TABLE(['#','Área','Iniciativa','Impacto','Urgencia'],
-        ins.slice(0,8).map((x,i)=>[i+1,(x.categoria||'—').slice(0,13),(x.titulo||'—').slice(0,32),(x.impacto||'—').slice(0,20),(x.prioridad||'MEDIA').toUpperCase().slice(0,5)]),
+        ins.slice(0,10).map((x,i)=>[i+1,(x.categoria||'—').slice(0,13),(x.titulo||'—').slice(0,32),(x.impacto||'—').slice(0,20),(x.prioridad||'MEDIA').toUpperCase().slice(0,5)]),
         {widths:[22,84,182,118,88]});
     }
 
-    // ── FORECAST ──
+    // ══════════════════════════════════════════════
+    // 15. FORECAST
+    // ══════════════════════════════════════════════
     PB(260);
     SEC('Proyecciones y Forecast','Planificación basada en 3 escenarios para el próximo ejercicio');
     const gBase=r.yoy!=null?r.yoy/100:0.05;
@@ -7012,42 +7284,43 @@ function downloadDatosEjemplo(){
     const pm0=new Date().getMonth();
     const pMonths=Array.from({length:6},(_,i)=>MESES[(pm0+i+1)%12]);
     const projVal=(g,i)=>pLastM*(1+g)**((i+1)/12);
-    const scW=(CW-16)/3;
+    const scW2=(CW-16)/3;
     ensure(88);
     const scY=y;
     [{label:'Conservador',g:gCons,c:C.amber,bg:C.amberPl},{label:'Base',g:gBase,c:C.slate,bg:C.card},{label:'Optimista',g:gOpt,c:C.green,bg:C.greenPl}]
     .forEach((sco,i)=>{
-      const sx=ML+i*(scW+8);
-      sf(...sco.bg);doc.roundedRect(sx,scY,scW,80,5,5,'F');
-      ss(...C.border);doc.setLineWidth(.3);doc.roundedRect(sx,scY,scW,80,5,5,'S');
-      sf(...sco.c);doc.rect(sx,scY,scW,3,'F');
-      doc.setFont('helvetica','bold');doc.setFontSize(10);sc(...sco.c);doc.text(sco.label,sx+scW/2,scY+22,{align:'center'});
-      doc.setFont('helvetica','normal');doc.setFontSize(8.5);sc(...C.muted);doc.text((sco.g>=0?'+':'')+Math.round(sco.g*100)+'% anual',sx+scW/2,scY+36,{align:'center'});
-      doc.setFont('helvetica','bold');doc.setFontSize(15);sc(...C.ink);doc.text(_m(r.ventas*(1+sco.g)),sx+scW/2,scY+58,{align:'center'});
-      doc.setFont('helvetica','normal');doc.setFontSize(7.5);sc(...C.muted);doc.text('Ingresos anuales est.',sx+scW/2,scY+72,{align:'center'});
+      const sx=ML+i*(scW2+8);
+      sf(...sco.bg);doc.roundedRect(sx,scY,scW2,80,5,5,'F');
+      ss(...C.border);doc.setLineWidth(.3);doc.roundedRect(sx,scY,scW2,80,5,5,'S');
+      sf(...sco.c);doc.rect(sx,scY,scW2,3,'F');
+      doc.setFont('helvetica','bold');doc.setFontSize(10);sc(...sco.c);doc.text(sco.label,sx+scW2/2,scY+22,{align:'center'});
+      doc.setFont('helvetica','normal');doc.setFontSize(8.5);sc(...C.muted);doc.text((sco.g>=0?'+':'')+Math.round(sco.g*100)+'% anual',sx+scW2/2,scY+36,{align:'center'});
+      doc.setFont('helvetica','bold');doc.setFontSize(15);sc(...C.ink);doc.text(_m(r.ventas*(1+sco.g)),sx+scW2/2,scY+58,{align:'center'});
+      doc.setFont('helvetica','normal');doc.setFontSize(7.5);sc(...C.muted);doc.text('Ingresos anuales est.',sx+scW2/2,scY+72,{align:'center'});
     });
     y=scY+88;
     TABLE(['Mes','Optimista ('+_pp(gOpt*100)+')','Base ('+_pp(gBase*100)+')','Conservador ('+_pp(gCons*100)+')'],
       pMonths.map((m,i)=>[m,_m(projVal(gOpt,i)),_m(projVal(gBase,i)),_m(projVal(gCons,i))]),
       {rightAlign:[1,2,3]});
     if(r.ccc!=null){
-      ensure(90);
-      HDR('Ciclo de Capital de Trabajo',C.slate);
+      ensure(90);HDR('Ciclo de Capital de Trabajo',C.slate);
       TABLE(['Indicador','Valor','Descripción'],[
-        ['Días de cobro (DSO)',  Math.round(r.dso||0)+' días','Plazo promedio de cobro a clientes'],
+        ['Días de cobro (DSO)',Math.round(r.dso||0)+' días','Plazo promedio de cobro a clientes'],
         ['Días inventario (DIO)',Math.round(r.dio||0)+' días','Rotación del inventario en días'],
-        ['Días de pago (DPO)',   Math.round(r.dpo||0)+' días','Plazo negociado con proveedores'],
-        ['Ciclo de caja (CCC)',  Math.round(r.ccc)+' días',   'Eficiencia del capital de trabajo'],
+        ['Días de pago (DPO)',Math.round(r.dpo||0)+' días','Plazo negociado con proveedores'],
+        ['Ciclo de caja (CCC)',Math.round(r.ccc)+' días','Eficiencia del capital de trabajo'],
       ],{widths:[CW*0.3,CW*0.18,CW*0.52]});
     }
 
-    // ── RIESGOS ──
+    // ══════════════════════════════════════════════
+    // 16. RIESGOS
+    // ══════════════════════════════════════════════
     PB(160);
     SEC('Análisis de Riesgos','Evaluación de exposición financiera y plan de mitigación');
     const risks=[];
     if(r.razCorriente<1)        risks.push({area:'Liquidez',       sev:'ALTA', detail:'Razón corriente '+_x(r.razCorriente)+'x — por debajo de 1.0',        accion:'Restructurar deuda CP; inyectar capital de trabajo',c:C.red,  bg:C.redPl});
     else if(r.razCorriente<1.5) risks.push({area:'Liquidez',       sev:'MEDIA',detail:'Razón corriente '+_x(r.razCorriente)+'x — margen ajustado',           accion:'Monitorear flujo mensual; reducir pasivos CP',      c:C.amber,bg:C.amberPl});
-    if(r.debtEbitda>4)          risks.push({area:'Apalancamiento', sev:'ALTA', detail:'D/Ganancia Op. '+_x(r.debtEbitda)+'x — nivel elevado',                accion:'Amortización acelerada; revisar estructura de capital',c:C.red,bg:C.redPl});
+    if(r.debtEbitda>4)          risks.push({area:'Apalancamiento', sev:'ALTA', detail:'D/G.Op. '+_x(r.debtEbitda)+'x — nivel elevado',                       accion:'Amortización acelerada; revisar estructura de capital',c:C.red,bg:C.redPl});
     if(r.margenEbitda<10)       risks.push({area:'Rentabilidad',   sev:'MEDIA',detail:'Margen operativo '+_pp(r.margenEbitda)+' — bajo benchmark del sector', accion:'Revisión de costos y eficiencia operativa',         c:C.amber,bg:C.amberPl});
     if(r.ccc>90)                risks.push({area:'Cap. Trabajo',   sev:'MEDIA',detail:'CCC '+Math.round(r.ccc)+' días — ciclo de caja largo',                 accion:'Acelerar cobros; renegociar plazos con proveedores', c:C.amber,bg:C.amberPl});
     if(r.flujoNeto<0)           risks.push({area:'Flujo de Caja',  sev:'ALTA', detail:'Flujo neto negativo: '+_m(r.flujoNeto),                                accion:'Revisión urgente de estructura de financiamiento',  c:C.red,  bg:C.redPl});
@@ -7064,7 +7337,9 @@ function downloadDatosEjemplo(){
       y+=62;
     });
 
-    // ── CONCLUSIONES ──
+    // ══════════════════════════════════════════════
+    // 17. CONCLUSIONES
+    // ══════════════════════════════════════════════
     PB(140);
     SEC('Conclusiones y Plan de Acción');
     ensure(78);
@@ -7088,7 +7363,7 @@ function downloadDatosEjemplo(){
 
     FOOTER();
     doc.save('Reporte_Obbio_'+(String(r.empresa||'Empresa').replace(/[^a-z0-9]/gi,'_'))+'_'+(r.anio||new Date().getFullYear())+'.pdf');
-    if(typeof showNotif==='function') showNotif('📄 Reporte PDF generado exitosamente');
+    if(typeof showNotif==='function') showNotif('📄 Reporte PDF completo generado exitosamente');
   }
   window.generarReportePDF=generarReportePDF;
   window.generarDiagnostico=generarDiagnostico;
