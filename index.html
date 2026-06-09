@@ -138,6 +138,19 @@ body{background:var(--bg);color:var(--text);overflow-x:hidden;}
 
 /* CONTENT */
 .content{margin-left:272px;width:calc(100% - 272px);padding:32px 36px;}
+  /* Colapso de sidebar en desktop (móvil usa el drawer existente) */
+  #deskSidebarToggle{display:none;}
+  @media(min-width:861px){
+    .sidebar{transition:transform .25s ease;}
+    .content{transition:margin-left .25s ease,width .25s ease;}
+    body.sidebar-collapsed .sidebar{transform:translateX(-100%);}
+    body.sidebar-collapsed .content{margin-left:0;width:100%;}
+    #deskSidebarToggle{display:flex;align-items:center;justify-content:center;position:fixed;top:16px;left:257px;z-index:1001;width:30px;height:30px;border-radius:8px;background:var(--card);border:1px solid var(--border);color:var(--muted);cursor:pointer;font-size:16px;line-height:1;transition:left .25s ease,color .2s;}
+    #deskSidebarToggle:hover{color:var(--text);}
+    body.sidebar-collapsed #deskSidebarToggle{left:14px;}
+    #deskSidebarToggle::before{content:'‹';}
+    body.sidebar-collapsed #deskSidebarToggle::before{content:'›';}
+  }
 .view{display:none;animation:fadeIn .25s ease;}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
 
@@ -744,6 +757,7 @@ th[data-tip]:hover::before{opacity:1;}
 <!-- Hamburguesa y overlay de sidebar (solo móvil) -->
 <button id="menuToggle" onclick="toggleSidebar()" aria-label="Menú">☰</button>
 <div id="sidebarOverlay" onclick="closeSidebar()"></div>
+<button id="deskSidebarToggle" onclick="toggleSidebarDesktop()" aria-label="Ocultar o mostrar menú" title="Ocultar / mostrar menú"></button>
 
 <!-- ==================== SUPABASE LOGIN OVERLAY ==================== -->
 <div id="sbLoginOverlay" style="position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;">
@@ -7559,6 +7573,12 @@ function renderDebtView(r){
   if(kpis[1]) kpis[1].innerHTML=_m(r.pasivoLp);
   if(kpis[2]){ kpis[2].innerHTML=_x(r.debtEbitda); kpis[2].style.color=_clr(-r.debtEbitda,-4,-2)||'var(--success)'; }
   if(kpis[3]){ kpis[3].innerHTML=_x(r.cobIntereses); kpis[3].style.color=_clr(r.cobIntereses,5,3); }
+  // subtítulos kpi-change (corrige el "Sin datos" estático)
+  const chg=el.querySelectorAll('.kpi-change');
+  if(chg[0]) chg[0].innerHTML='< 12 meses';
+  if(chg[1]) chg[1].innerHTML='> 12 meses';
+  if(chg[2]){ chg[2].innerHTML = r.debtEbitda!=null?'Meta ≤ 3.0x':'—'; chg[2].className='kpi-change '+(r.debtEbitda==null?'neutral':r.debtEbitda<=3?'positive':'negative'); }
+  if(chg[3]){ chg[3].innerHTML = r.cobIntereses!=null?'Meta ≥ 3.0x':'—'; chg[3].className='kpi-change '+(r.cobIntereses==null?'neutral':r.cobIntereses>=3?'positive':'negative'); }
   const fv=el.querySelectorAll('.fin-kpi-value');
   if(fv[0]){ fv[0].innerHTML=_x(r.debtEquity); }
   if(fv[1]){ fv[1].innerHTML=_pp(r.apalancamiento); fv[1].style.color=_clr(100-r.apalancamiento,50,30); }
@@ -10115,6 +10135,8 @@ document.addEventListener('DOMContentLoaded',()=>{
 });
 window.toggleSidebar=toggleSidebar;
 window.closeSidebar=closeSidebar;
+function toggleSidebarDesktop(){ document.body.classList.toggle('sidebar-collapsed'); }
+window.toggleSidebarDesktop=toggleSidebarDesktop;
 
 /* ══════════════════════════════════════════════════════════════
    VENTAS POR PRODUCTO  ·  ingesta · análisis · render
