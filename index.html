@@ -29,17 +29,23 @@
 --indigo:#6366F1;
 }
 
-body.light{
---bg:#F2F5FB;--sidebar:#FFFFFF;--card:#FFFFFF;--card2:#F7F9FD;
---border:rgba(0,0,0,.09);--border2:rgba(0,0,0,.05);
---text:#0F1221;--muted:#4B5563;--muted2:#9CA3AF;
+[data-theme="light"]{
+--bg:#F0F4F8;--sidebar:#FFFFFF;--card:#FFFFFF;--card2:#F5F7FA;
+--border:rgba(0,0,0,.09);--border2:rgba(0,0,0,.06);
+--text:#0F172A;--muted:#64748B;--muted2:#94A3B8;
 }
-body.light .card{box-shadow:0 2px 14px rgba(0,0,0,.07);}
-body.light .sidebar{box-shadow:2px 0 18px rgba(0,0,0,.08);}
-body.light .nav button{color:var(--muted);}
-body.light .nav button.active{color:var(--primary);}
-body.light .data-input,body.light .iinput,body.light .uw-tinput,body.light .filter-select{background:#F0F4FA;border-color:rgba(0,0,0,.15);color:var(--text);}
-body.light .kpi-card{box-shadow:0 2px 12px rgba(0,0,0,.06);}
+[data-theme="light"] body{color:var(--text);}
+[data-theme="light"] .nav button:hover{background:rgba(0,0,0,.04);}
+[data-theme="light"] .nav button.active{background:rgba(34,197,94,.11);border-color:rgba(34,197,94,.28);}
+[data-theme="light"] .iinput{background:#F8FAFC;color:var(--text);border-color:var(--border);}
+[data-theme="light"] .data-input{background:#F8FAFC;color:var(--text);border-color:var(--border);}
+[data-theme="light"] .filter-select{background:#F8FAFC;color:var(--text);border-color:var(--border);}
+[data-theme="light"] .tbl-col-menu{background:#fff;box-shadow:0 8px 28px rgba(0,0,0,.12);}
+[data-theme="light"] .tbl-col-item{color:var(--muted);}
+[data-theme="light"] .sb-warn-note{background:rgba(0,0,0,.03);}
+[data-theme="light"] .sidebar-data-btn button{background:linear-gradient(135deg,rgba(34,197,94,.09),rgba(167,139,250,.05));}
+[data-theme="light"] select,
+[data-theme="light"] select option{background:#fff;color:var(--text);}
 body{background:var(--bg);color:var(--text);overflow-x:hidden;}
 .app{display:flex;min-height:100vh;}
 
@@ -750,6 +756,8 @@ th[data-tip]:hover::before{opacity:1;}
     <button onclick="showView('cashflowView',this)"><span class="nav-icon">💧</span>Cash Flow Center</button>
     <button onclick="showView('workingCapitalView',this)"><span class="nav-icon">🏦</span>Capital de Trabajo</button>
     <button onclick="showView('debtView',this)"><span class="nav-icon">📉</span>Debt Intelligence</button>
+    <button onclick="showView('costosView',this)"><span class="nav-icon">🏭</span>Análisis de Costos</button>
+    <button onclick="showView('gastosView',this)"><span class="nav-icon">💸</span>Análisis de Gastos</button>
     <button onclick="showView('taxView',this)"><span class="nav-icon">🏛️</span>Tax Intelligence</button>
     <button onclick="showView('financialCenterView',this)"><span class="nav-icon">📑</span>Centro Financiero</button>
 
@@ -775,7 +783,15 @@ th[data-tip]:hover::before{opacity:1;}
         <div style="font-size:10px;color:var(--muted2)">Sesión activa</div>
       </div>
     </div>
-    <div style="font-size:10px;color:var(--muted2);margin-bottom:8px;line-height:1.5;padding:7px 9px;background:rgba(255,255,255,.03);border-radius:7px;border:1px solid var(--border2);">
+    <!-- Theme toggle -->
+    <div onclick="toggleTheme()" id="themeToggleRow" style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:rgba(255,255,255,.03);border-radius:8px;border:1px solid var(--border2);margin-bottom:8px;cursor:pointer;transition:.15s;"
+      onmouseover="this.style.borderColor='rgba(34,197,94,.3)'" onmouseout="this.style.borderColor='var(--border2)'">
+      <span style="font-size:11px;font-weight:600;color:var(--muted);" id="themeLabel">🌙 Modo oscuro</span>
+      <div id="themeTogglePill" style="width:36px;height:20px;border-radius:10px;background:var(--primary-dim);border:1px solid rgba(34,197,94,.3);position:relative;flex-shrink:0;">
+        <div id="themeToggleDot" style="width:14px;height:14px;border-radius:7px;background:var(--primary);position:absolute;top:3px;left:3px;transition:left .2s;"></div>
+      </div>
+    </div>
+    <div class="sb-warn-note" style="font-size:10px;color:var(--muted2);margin-bottom:8px;line-height:1.5;padding:7px 9px;background:rgba(255,255,255,.03);border-radius:7px;border:1px solid var(--border2);">
       ⚠️ Tu sesión permanece activa aunque cierres el navegador. Presiona <strong style="color:var(--muted);">Cerrar sesión</strong> si usas un equipo compartido.
     </div>
     <div style="display:flex;gap:6px;margin-bottom:2px;">
@@ -804,7 +820,6 @@ th[data-tip]:hover::before{opacity:1;}
       <p class="page-subtitle" id="pageSubtitle">Transformando datos en decisiones estratégicas · Dic 2024</p>
     </div>
     <div class="topbar-actions">
-      <button id="themeToggle" onclick="toggleTheme()" style="padding:8px 12px;border-radius:9px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:15px;cursor:pointer;transition:.2s;line-height:1;" title="Modo claro/oscuro">🌙</button>
       <button onclick="generarReportePDF&&generarReportePDF()" style="padding:8px 16px;border-radius:9px;border:1px solid rgba(34,197,94,.35);background:var(--primary-dim);color:var(--primary);font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">📄 PDF</button>
       <button id="dash-clear-btn" onclick="limpiarSistema()" style="display:none;padding:8px 16px;border-radius:9px;border:1px solid rgba(244,92,92,.35);background:rgba(244,92,92,.08);color:var(--danger);font-size:12px;font-weight:700;cursor:pointer;transition:.15s;" onmouseover="this.style.background='rgba(244,92,92,.2)'" onmouseout="this.style.background='rgba(244,92,92,.08)'">🗑 Eliminar datos</button>
     </div>
@@ -2026,6 +2041,42 @@ Mapa Estratégico de Impacto
 
 </div>
 
+</div>
+
+<!-- ==================== ANÁLISIS DE COSTOS ==================== -->
+<div id="costosView" class="view" style="display:none;">
+<header class="topbar">
+  <div><h2 class="page-title">Análisis de Costos</h2><p class="page-subtitle">Composición y sensibilidad del costo de ventas</p></div>
+</header>
+<section class="kpi-grid">
+  <div class="kpi-card accent-red"><div class="kpi-top"><div class="kpi-label">COGS Total</div><div class="kpi-icon red">🏭</div></div><div class="kpi-value" id="cv-kpi-cogs">—</div><div class="kpi-bottom"><div class="kpi-change neutral" id="cv-kpi-cogs-sub">Sin datos</div></div></div>
+  <div class="kpi-card accent-yellow"><div class="kpi-top"><div class="kpi-label">COGS / Ventas</div><div class="kpi-icon yellow">📊</div></div><div class="kpi-value" id="cv-kpi-pct">—</div><div class="kpi-bottom"><div class="kpi-change neutral" id="cv-kpi-pct-sub">Sin datos</div></div></div>
+  <div class="kpi-card accent-green"><div class="kpi-top"><div class="kpi-label">Margen Bruto</div><div class="kpi-icon green">📈</div></div><div class="kpi-value" id="cv-kpi-mb">—</div><div class="kpi-bottom"><div class="kpi-change neutral" id="cv-kpi-mb-sub">Sin datos</div></div></div>
+  <div class="kpi-card accent-blue"><div class="kpi-top"><div class="kpi-label">Mayor Componente</div><div class="kpi-icon blue">🔍</div></div><div class="kpi-value" id="cv-kpi-top">—</div><div class="kpi-bottom"><div class="kpi-change neutral" id="cv-kpi-top-sub">Sin datos</div></div></div>
+</section>
+<div class="financial-grid">
+  <div class="card"><div class="card-header"><div class="card-title">Composición del COGS</div></div><div class="chart-container"><canvas id="costosDonutChart"></canvas></div></div>
+  <div class="card"><div class="card-header"><div class="card-title">% sobre Ventas por Componente</div></div><div class="chart-container"><canvas id="costosBarChart"></canvas></div></div>
+</div>
+<div class="card"><div class="card-header"><div class="card-title">Sensibilidad de Costos</div></div><div id="cv-sens-body" style="padding:16px 20px;"></div></div>
+</div>
+
+<!-- ==================== ANÁLISIS DE GASTOS ==================== -->
+<div id="gastosView" class="view" style="display:none;">
+<header class="topbar">
+  <div><h2 class="page-title">Análisis de Gastos</h2><p class="page-subtitle">Estructura de gastos operativos y financieros</p></div>
+</header>
+<section class="kpi-grid">
+  <div class="kpi-card accent-red"><div class="kpi-top"><div class="kpi-label">Gastos Totales</div><div class="kpi-icon red">💸</div></div><div class="kpi-value" id="gv-kpi-total">—</div><div class="kpi-bottom"><div class="kpi-change neutral" id="gv-kpi-total-sub">Sin datos</div></div></div>
+  <div class="kpi-card accent-yellow"><div class="kpi-top"><div class="kpi-label">Gastos / Ventas</div><div class="kpi-icon yellow">📊</div></div><div class="kpi-value" id="gv-kpi-pct">—</div><div class="kpi-bottom"><div class="kpi-change neutral" id="gv-kpi-pct-sub">Sin datos</div></div></div>
+  <div class="kpi-card accent-blue"><div class="kpi-top"><div class="kpi-label">Mayor Rubro</div><div class="kpi-icon blue">🔍</div></div><div class="kpi-value" id="gv-kpi-top">—</div><div class="kpi-bottom"><div class="kpi-change neutral" id="gv-kpi-top-sub">Sin datos</div></div></div>
+  <div class="kpi-card accent-green"><div class="kpi-top"><div class="kpi-label">Margen Operativo</div><div class="kpi-icon green">⚡</div></div><div class="kpi-value" id="gv-kpi-ebit">—</div><div class="kpi-bottom"><div class="kpi-change neutral" id="gv-kpi-ebit-sub">Sin datos</div></div></div>
+</section>
+<div class="financial-grid">
+  <div class="card"><div class="card-header"><div class="card-title">Gastos por Categoría</div></div><div class="chart-container"><canvas id="gastosDonutChart"></canvas></div></div>
+  <div class="card"><div class="card-header"><div class="card-title">Desglose por Rubro</div></div><div class="chart-container"><canvas id="gastosBarChart"></canvas></div></div>
+</div>
+<div class="card"><div class="card-header"><div class="card-title">Análisis y Recomendaciones</div></div><div class="briefing-grid" id="gv-briefings"><div class="briefing-item info-border"><div class="briefing-title">Sin datos</div><div class="briefing-text">Ingresa datos para ver el análisis.</div></div></div></div>
 </div>
 
 <!-- ==================== TAX INTELLIGENCE ==================== -->
@@ -3696,6 +3747,8 @@ function showView(viewId, button){
   if(viewId==='cashflowView'    && typeof renderCashflowView==='function')   renderCashflowView(r);
   if(viewId==='workingCapitalView' && typeof renderWorkingCapitalView==='function') renderWorkingCapitalView(r);
   if(viewId==='debtView'        && typeof renderDebtView==='function')       renderDebtView(r);
+  if(viewId==='costosView'      && typeof renderCostosView==='function')     renderCostosView(r);
+  if(viewId==='gastosView'      && typeof renderGastosView==='function')     renderGastosView(r);
   if(viewId==='taxView'         && typeof renderTaxView==='function')        renderTaxView(r);
   if(viewId==='financialCenterView' && typeof renderFinancialCenterView==='function') renderFinancialCenterView(r);
   if(viewId==='forecastView'    && typeof renderForecastView==='function')   renderForecastView(r);
@@ -5725,7 +5778,61 @@ function downloadTemplate(){
   wsH['!cols']=[{wch:8},{wch:14},{wch:16},{wch:14},{wch:14},{wch:12}];
   XLSX.utils.book_append_sheet(wb,wsH,'Histórico (Opcional)');
 
-  XLSX.writeFile(wb,'Plantilla_Obbio_Dashboard.xlsx');
+
+  // ── Hoja 8: Costos (Opcional) ──
+  const wsC=XLSX.utils.aoa_to_sheet([
+    ['ANÁLISIS DE COSTOS (COGS) — HOJA COMPLEMENTARIA','','','',''],
+    ['Esta hoja es OPCIONAL. Úsala para desglosar tu Costo de Ventas en sus componentes.','','','',''],
+    ['Si rellenas estos campos, el total de COGS en "Estado de Resultados" se recalcula automáticamente.','','','',''],
+    ['Deja vacío lo que no aplique. Los números deben coincidir con los del Estado de Resultados.','','','',''],
+    ['','','','',''],
+    ['Concepto','Descripción',2022,2023,2024],
+    ['── COSTO DIRECTO DE PRODUCCIÓN ──','','','',''],
+    ['Materia prima / mercancía','Materiales, insumos, inventario vendido.',275000,311000,343000],
+    ['Mano de obra directa','Sueldos de producción, operadores, técnicos.',138000,156000,172000],
+    ['Subcontratación / maquila','Maquila externa, manufactura subcontratada.',83000,94000,103000],
+    ['Otros costos directos','Otros costos directos no clasificados.',55000,61000,68000],
+    ['','','','',''],
+    ['  TOTAL COGS','Suma de los conceptos anteriores. Debe coincidir con tu Estado de Resultados.',551000,622000,686000],
+  ]);
+  wsC['!cols']=[{wch:30},{wch:52},{wch:12},{wch:12},{wch:12}];
+  _boldAll(wsC);
+  XLSX.utils.book_append_sheet(wb,wsC,'Costos (Opcional)');
+
+  // ── Hoja 9: Gastos (Opcional) ──
+  const wsG=XLSX.utils.aoa_to_sheet([
+    ['ANÁLISIS DE GASTOS OPERATIVOS — HOJA COMPLEMENTARIA','','','',''],
+    ['Esta hoja es OPCIONAL. Úsala para desglosar tus Gastos de Administración y de Ventas.','','','',''],
+    ['Si rellenas estos campos, los totales de Gastos Admin y Ventas se recalculan automáticamente.','','','',''],
+    ['Deja vacío lo que no aplique. Los números deben coincidir con los del Estado de Resultados.','','','',''],
+    ['','','','',''],
+    ['Concepto','Descripción',2022,2023,2024],
+    ['── GASTOS DE ADMINISTRACIÓN ──','','','',''],
+    ['Sueldos administrativos','Personal admin, contabilidad, dirección general.',193000,210000,228000],
+    ['Renta','Oficinas, bodegas, locales comerciales.',96000,105000,114000],
+    ['Servicios (luz, internet)','Electricidad, internet, agua, teléfono.',48000,52000,57000],
+    ['Honorarios','Contador externo, abogado, consultores.',96000,104000,114000],
+    ['Otros gastos admin','Gastos administrativos no clasificados.',49000,53000,57000],
+    ['','','','',''],
+    ['  TOTAL G. ADMINISTRACIÓN','Suma de los conceptos anteriores. Debe coincidir con Estado de Resultados.',482000,524000,570000],
+    ['','','','',''],
+    ['── GASTOS DE VENTAS ──','','','',''],
+    ['Publicidad y marketing','Redes sociales, publicidad pagada, SEO, diseño.',88000,97000,107000],
+    ['Comisiones a vendedores','Comisiones sobre ventas, bonos comerciales.',53000,58000,64000],
+    ['Otros gastos de ventas','Ferias, viáticos comerciales, material promoc.',35000,39000,43000],
+    ['','','','',''],
+    ['  TOTAL G. VENTAS','Suma de los conceptos anteriores. Debe coincidir con Estado de Resultados.',176000,194000,214000],
+  ]);
+  wsG['!cols']=[{wch:30},{wch:52},{wch:12},{wch:12},{wch:12}];
+  _boldAll(wsG);
+  XLSX.utils.book_append_sheet(wb,wsG,'Gastos (Opcional)');
+
+  const wbout=XLSX.write(wb,{bookType:'xlsx',type:'array',cellStyles:true});
+  const blob=new Blob([wbout],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download='Plantilla_Obbio_Dashboard.xlsx'; a.click();
+  URL.revokeObjectURL(url);
   showNotif('✅ Plantilla descargada · empieza por las 2 primeras hojas');
 }
 </script>
@@ -7270,6 +7377,107 @@ function renderWorkingCapitalView(r){
   }
 }
 
+/* ─────────────────── COSTOS VIEW ─────────────────── */
+function renderCostosView(r){
+  const el=document.getElementById('costosView'); if(!el) return;
+  el.querySelectorAll('[data-nodata]').forEach(n=>n.remove());
+  if(!r){ const g=el.querySelector('.kpi-grid'); if(g) g.insertAdjacentHTML('beforebegin',noDataHtml('🏭','Sin datos de costos','Ingresa ventas y COGS para ver el análisis.')); return; }
+  const bd=r.cogsBreakdown||{};
+  const hasBreakdown=(bd.materia||0)+(bd.mod||0)+(bd.maquila||0)+(bd.otros||0)>0;
+  const pct=r.ventas>0?r.cogs/r.ventas*100:null;
+  const COLORS=['#EF4444','#F59E0B','#8B5CF6','#22C55E','#06B6D4','#EC4899','#F97316'];
+  const k1=document.getElementById('cv-kpi-cogs'); if(k1) k1.innerHTML=_m(r.cogs);
+  const s1=document.getElementById('cv-kpi-cogs-sub'); if(s1){s1.innerHTML=pct!=null?_pp(pct)+' de ventas':'—';s1.className='kpi-change '+(pct==null?'neutral':pct<60?'positive':'negative');}
+  const k2=document.getElementById('cv-kpi-pct'); if(k2){k2.innerHTML=pct!=null?_pp(pct):'—';k2.style.color=pct==null?'':_clr(100-pct,50,35);}
+  const s2=document.getElementById('cv-kpi-pct-sub'); if(s2){s2.innerHTML=pct!=null?(pct<50?'Eficiencia alta':pct<65?'Rango normal':'Revisar estructura'):'—';s2.className='kpi-change '+(pct==null?'neutral':pct<65?'positive':'negative');}
+  const k3=document.getElementById('cv-kpi-mb'); if(k3){k3.innerHTML=_pp(r.margenBruto);k3.style.color=_clr(r.margenBruto,40,25);}
+  const s3=document.getElementById('cv-kpi-mb-sub'); if(s3){s3.innerHTML=r.margenBruto!=null?(r.margenBruto>=40?'Excelente':r.margenBruto>=25?'Saludable':'Bajo'):'—';s3.className='kpi-change '+(r.margenBruto==null?'neutral':r.margenBruto>=25?'positive':'negative');}
+  let topLabel='COGS',topVal=r.cogs,topPct=pct;
+  if(hasBreakdown){const items=[['Materia prima',bd.materia||0],['Mano de obra',bd.mod||0],['Maquila',bd.maquila||0],['Otros costos',bd.otros||0]];const top=items.reduce((a,b)=>b[1]>a[1]?b:a,['—',0]);topLabel=top[0];topVal=top[1];topPct=r.cogs>0?top[1]/r.cogs*100:null;}
+  const k4=document.getElementById('cv-kpi-top'); if(k4) k4.innerHTML=_m(topVal);
+  const s4=document.getElementById('cv-kpi-top-sub'); if(s4) s4.innerHTML=topLabel+(topPct!=null?' · '+_pp(topPct)+' del COGS':'');
+  const cogsLabel=pct!=null?_pp(pct):'—';
+  const cogsCtr=[{id:'cogsCtr',afterDraw(ch){const {ctx,chartArea:{top,bottom,left,right}}=ch;const cx=(left+right)/2,cy=(top+bottom)/2;ctx.save();ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='700 20px Inter,sans-serif';ctx.fillStyle='#F4F4F5';ctx.fillText(cogsLabel,cx,cy-10);ctx.font='500 11px Inter,sans-serif';ctx.fillStyle='#6B7280';ctx.fillText('COGS/Ventas',cx,cy+10);ctx.restore();}}];
+  if(hasBreakdown){
+    const items=[['Materia prima',bd.materia||0],['Mano de obra',bd.mod||0],['Maquila',bd.maquila||0],['Otros costos',bd.otros||0]].filter(x=>x[1]>0);
+    mkChart('costosDonutChart',{type:'doughnut',data:{labels:items.map(x=>x[0]),datasets:[{data:items.map(x=>+(x[1]/1e6).toFixed(2)),backgroundColor:COLORS,hoverOffset:12}]},plugins:cogsCtr,options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{position:'bottom'},tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${_m(ctx.parsed*1e6)}`}}}}});
+    mkChart('costosBarChart',{type:'bar',data:{labels:items.map(x=>x[0]),datasets:[{data:items.map(x=>r.cogs>0?+(x[1]/r.cogs*100).toFixed(1):0),backgroundColor:COLORS,borderRadius:7,borderSkipped:false}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.parsed.x}% del COGS · ${_m(items[ctx.dataIndex][1])}`}}},scales:{x:{ticks:{callback:v=>v+'%'},max:Math.ceil((items[0]?r.cogs>0?items[0][1]/r.cogs*100:0:60)/10)*10+10},y:{grid:{display:false}}}}});
+  } else {
+    mkChart('costosDonutChart',{type:'doughnut',data:{labels:['COGS','Utilidad bruta'],datasets:[{data:[+(r.cogs/1e6).toFixed(2),+(Math.max(0,r.utilBruta)/1e6).toFixed(2)],backgroundColor:['#EF4444','#22C55E'],hoverOffset:12}]},plugins:cogsCtr,options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{position:'bottom'},tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${_m(ctx.parsed*1e6)}`}}}}});
+    mkChart('costosBarChart',{type:'bar',data:{labels:['COGS','G. Admin','G. Ventas','G. Financieros'],datasets:[{data:[r.cogs,r.gadmin,r.gventas,r.gfin].map(v=>r.ventas>0?+(v/r.ventas*100).toFixed(1):0),backgroundColor:['#EF4444','#F59E0B','#8B5CF6','#06B6D4'],borderRadius:7,borderSkipped:false}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.parsed.x}% de ventas`}}},scales:{x:{ticks:{callback:v=>v+'%'}},y:{grid:{display:false}}}}});
+  }
+  const sb=document.getElementById('cv-sens-body');
+  if(sb){
+    const benchPct=55,benchGap=pct!=null?(pct-benchPct).toFixed(1):null;
+    const barW=pct!=null?Math.min(100,pct):0;
+    const barColor=pct==null?'var(--muted)':pct<55?'#22C55E':pct<70?'#F59E0B':'#EF4444';
+    const cta=hasBreakdown?'':'<p style="margin-top:14px;font-size:12px;color:var(--accent);border-top:1px solid rgba(255,255,255,.06);padding-top:12px;">💡 Captura el desglose opcional en Ingresar Datos para ver el análisis por componente.</p>';
+    sb.innerHTML=`<div style="padding:4px 0 16px;"><div style="margin-bottom:14px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><span style="font-size:12px;color:var(--muted);">COGS sobre ventas</span><span style="font-size:13px;font-weight:700;color:${barColor};">${pct!=null?_pp(pct):'—'}${benchGap!=null?' (benchmark 55% · '+(benchGap>0?'+':'')+benchGap+'pp)':''}</span></div><div style="height:8px;background:rgba(255,255,255,.07);border-radius:99px;overflow:hidden;"><div style="height:100%;width:${barW}%;background:${barColor};border-radius:99px;transition:width .6s ease;"></div></div></div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;"><div style="background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.18);border-radius:10px;padding:12px;"><div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Reducir COGS 1%</div><div style="font-size:17px;font-weight:800;color:#22C55E;">+${_m(r.cogs*0.01)}</div><div style="font-size:11px;color:var(--muted);">EBITDA adicional</div></div><div style="background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.18);border-radius:10px;padding:12px;"><div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Reducir COGS 5%</div><div style="font-size:17px;font-weight:800;color:#22C55E;">+${_m(r.cogs*0.05)}</div><div style="font-size:11px;color:var(--muted);">EBITDA adicional</div></div><div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:12px;"><div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Margen bruto</div><div style="font-size:17px;font-weight:800;color:${_clr(r.margenBruto,40,25)};">${_pp(r.margenBruto)}</div><div style="font-size:11px;color:var(--muted);">${r.margenBruto>=40?'Excelente':r.margenBruto>=25?'Saludable':'Bajo'}</div></div></div>${cta}</div>`;
+  }
+}
+
+/* ─────────────────── GASTOS VIEW ─────────────────── */
+function renderGastosView(r){
+  const el=document.getElementById('gastosView'); if(!el) return;
+  el.querySelectorAll('[data-nodata]').forEach(n=>n.remove());
+  if(!r){ const g=el.querySelector('.kpi-grid'); if(g) g.insertAdjacentHTML('beforebegin',noDataHtml('💸','Sin datos de gastos','Ingresa gastos operativos para ver el análisis.')); return; }
+  const bd=r.gastosBreakdown||{};
+  const adm=bd.admin||{},vts=bd.ventas||{};
+  const hasAdminBD=(adm.sueldos||0)+(adm.renta||0)+(adm.servicios||0)+(adm.honorarios||0)+(adm.otros||0)>0;
+  const hasVtsBD=(vts.publicidad||0)+(vts.comisiones||0)+(vts.otros||0)>0;
+  const hasBreakdown=hasAdminBD||hasVtsBD;
+  const gastoTotal=(r.gadmin||0)+(r.gventas||0)+(r.gfin||0);
+  const pct=r.ventas>0?gastoTotal/r.ventas*100:null;
+  const COLORS=['#F59E0B','#8B5CF6','#22C55E','#06B6D4','#EF4444','#EC4899','#F97316'];
+  const k1=document.getElementById('gv-kpi-total'); if(k1) k1.innerHTML=_m(gastoTotal);
+  const s1=document.getElementById('gv-kpi-total-sub'); if(s1){s1.innerHTML=pct!=null?_pp(pct)+' de ventas':'—';s1.className='kpi-change '+(pct==null?'neutral':pct<30?'positive':'negative');}
+  const k2=document.getElementById('gv-kpi-pct'); if(k2){k2.innerHTML=pct!=null?_pp(pct):'—';k2.style.color=pct==null?'':_clr(100-pct,70,60);}
+  const s2=document.getElementById('gv-kpi-pct-sub'); if(s2){s2.innerHTML=pct!=null?(pct<25?'Estructura eficiente':pct<40?'Rango razonable':'Gastos elevados'):'—';s2.className='kpi-change '+(pct==null?'neutral':pct<40?'positive':'negative');}
+  let topLabel='G. Admin',topVal=r.gadmin||0;
+  if(hasBreakdown){
+    const items=[];
+    if(hasAdminBD) Object.entries({Sueldos:adm.sueldos||0,Renta:adm.renta||0,Servicios:adm.servicios||0,Honorarios:adm.honorarios||0,'Otros admin':adm.otros||0}).forEach(([k,v])=>items.push([k,v]));
+    if(hasVtsBD) Object.entries({Publicidad:vts.publicidad||0,Comisiones:vts.comisiones||0,'Otros ventas':vts.otros||0}).forEach(([k,v])=>items.push([k,v]));
+    if(items.length){const top=items.reduce((a,b)=>b[1]>a[1]?b:a,['—',0]);topLabel=top[0];topVal=top[1];}
+  } else {
+    if((r.gventas||0)>topVal){topLabel='G. Ventas';topVal=r.gventas||0;}
+    if((r.gfin||0)>topVal){topLabel='G. Financieros';topVal=r.gfin||0;}
+  }
+  const k3=document.getElementById('gv-kpi-top'); if(k3) k3.innerHTML=_m(topVal);
+  const s3=document.getElementById('gv-kpi-top-sub'); if(s3) s3.innerHTML=topLabel+(gastoTotal>0?' · '+_pp(topVal/gastoTotal*100)+' del total':'');
+  const k4=document.getElementById('gv-kpi-ebit'); if(k4){k4.innerHTML=_pp(r.margenOp);k4.style.color=_clr(r.margenOp,10,5);}
+  const s4=document.getElementById('gv-kpi-ebit-sub'); if(s4){s4.innerHTML='Margen operativo';s4.className='kpi-change '+(r.margenOp==null?'neutral':r.margenOp>=10?'positive':'negative');}
+  const gLabel=pct!=null?_pp(pct):'—';
+  const gCtr=[{id:'gCtr',afterDraw(ch){const {ctx,chartArea:{top,bottom,left,right}}=ch;const cx=(left+right)/2,cy=(top+bottom)/2;ctx.save();ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='700 20px Inter,sans-serif';ctx.fillStyle='#F4F4F5';ctx.fillText(gLabel,cx,cy-10);ctx.font='500 11px Inter,sans-serif';ctx.fillStyle='#6B7280';ctx.fillText('Gastos/Ventas',cx,cy+10);ctx.restore();}}];
+  mkChart('gastosDonutChart',{type:'doughnut',data:{labels:['G. Admin','G. Ventas','G. Financieros'],datasets:[{data:[r.gadmin||0,r.gventas||0,r.gfin||0].map(v=>+(v/1e6).toFixed(2)),backgroundColor:['#F59E0B','#8B5CF6','#06B6D4'],hoverOffset:12}]},plugins:gCtr,options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{position:'bottom'},tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${_m(ctx.parsed*1e6)}`}}}}});
+  let barItems;
+  if(hasBreakdown){
+    barItems=[];
+    if(hasAdminBD) Object.entries({Sueldos:adm.sueldos||0,Renta:adm.renta||0,Servicios:adm.servicios||0,Honorarios:adm.honorarios||0,'Otros admin':adm.otros||0}).forEach(([k,v])=>{if(v>0)barItems.push([k,v]);});
+    if(hasVtsBD) Object.entries({Publicidad:vts.publicidad||0,Comisiones:vts.comisiones||0,'Otros ventas':vts.otros||0}).forEach(([k,v])=>{if(v>0)barItems.push([k,v]);});
+    barItems.sort((a,b)=>b[1]-a[1]);barItems=barItems.slice(0,7);
+  } else {
+    barItems=[['G. Admin',r.gadmin||0],['G. Ventas',r.gventas||0],['G. Financieros',r.gfin||0]];
+  }
+  const barVals=barItems.map(x=>gastoTotal>0?+(x[1]/gastoTotal*100).toFixed(1):0);
+  mkChart('gastosBarChart',{type:'bar',data:{labels:barItems.map(x=>x[0]),datasets:[{data:barVals,backgroundColor:COLORS,borderRadius:7,borderSkipped:false}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.parsed.x}% del total · ${_m(barItems[ctx.dataIndex][1])}`}}},scales:{x:{ticks:{callback:v=>v+'%'}},y:{grid:{display:false}}}}});
+  const bg={'pos':'positive-border','info':'info-border','warn':'warning-border','danger':'danger-border'};
+  const briefs=[];
+  if(pct!=null){
+    const benchPct=30,barW=Math.min(100,pct),barColor=pct<25?'#22C55E':pct<40?'#F59E0B':'#EF4444';
+    const progressBar=`<div style="height:6px;background:rgba(255,255,255,.07);border-radius:99px;overflow:hidden;margin-top:8px;"><div style="height:100%;width:${barW}%;background:${barColor};border-radius:99px;"></div></div><div style="font-size:10px;color:var(--muted);margin-top:4px;">Benchmark industria ~${benchPct}%</div>`;
+    if(pct<25) briefs.push({tipo:'pos',titulo:'Estructura de gastos eficiente',texto:`Gastos operativos en ${_pp(pct)} de ventas — ${(benchPct-pct).toFixed(1)}pp por debajo del benchmark.${progressBar}`});
+    else if(pct<40) briefs.push({tipo:'info',titulo:'Gastos en rango razonable',texto:`Gastos del ${_pp(pct)} sobre ventas. Revisar rubros con mayor peso.${progressBar}`});
+    else briefs.push({tipo:'warn',titulo:'Gastos elevados',texto:`Gastos del ${_pp(pct)} de ventas — ${(pct-benchPct).toFixed(1)}pp sobre benchmark. Priorizar optimización.${progressBar}`});
+  }
+  if(hasBreakdown&&barItems.length>0){const topItem=barItems[0];const topShare=gastoTotal>0?topItem[1]/gastoTotal*100:0;if(topShare>35) briefs.push({tipo:'warn',titulo:`${topItem[0]} domina el gasto`,texto:`Representa ${_pp(topShare)} del gasto total (${_m(topItem[1])}). Alta concentración en un rubro puede ser riesgo operativo.`});}
+  if(r.gfin>0&&gastoTotal>0&&r.gfin/gastoTotal>0.15) briefs.push({tipo:'warn',titulo:'Carga financiera relevante',texto:`G. Financieros de ${_m(r.gfin)} = ${_pp(r.gfin/gastoTotal*100)} del gasto total. Reducir deuda mejoraría margen neto.`});
+  if(r.yoy!=null&&r.yoy>0&&pct!=null&&pct>35) briefs.push({tipo:'warn',titulo:'Gastos creciendo con ventas',texto:`Con YoY de ${_pp(r.yoy)}, verificar que gastos no crezcan más rápido que ingresos para proteger el margen.`});
+  if(!hasBreakdown) briefs.push({tipo:'info',titulo:'Activa el análisis detallado',texto:'Captura el desglose opcional en Ingresar Datos para ver el análisis por rubro individual (sueldos, renta, publicidad, comisiones, etc.).'});
+  const grid=document.getElementById('gv-briefings');
+  if(grid) grid.innerHTML=briefs.slice(0,4).map(b=>`<div class="briefing-item ${bg[b.tipo]}"><div class="briefing-title">${b.titulo}</div><div class="briefing-text">${b.texto}</div></div>`).join('');
+}
+
 /* ─────────────────── DEBT VIEW ─────────────────── */
 function renderDebtView(r){
   const el=document.getElementById('debtView'); if(!el) return;
@@ -7801,7 +8009,6 @@ function renderFinancialCenterView(r){
   el.innerHTML=`
   <header class="topbar">
     <div><h2 class="page-title">📑 Centro Financiero</h2><p class="page-subtitle">Estados financieros · ${r.empresa||''} ${r.anio||''}</p></div>
-    <button id="themeToggle" onclick="toggleTheme()" style="padding:8px 12px;border-radius:9px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:15px;cursor:pointer;transition:.2s;line-height:1;" title="Modo claro/oscuro">🌙</button>
       <button onclick="generarReportePDF&&generarReportePDF()" style="padding:11px 20px;border-radius:11px;border:none;background:var(--primary);color:#fff;font-weight:700;font-size:13px;cursor:pointer;">📄 Exportar PDF</button>
   </header>
   <section class="kpi-grid">
@@ -8769,6 +8976,8 @@ function renderAllViews(r){
   else if(id==='cashflowView')    renderCashflowView(r);
   else if(id==='workingCapitalView') renderWorkingCapitalView(r);
   else if(id==='debtView')        renderDebtView(r);
+  else if(id==='costosView')      renderCostosView(r);
+  else if(id==='gastosView')      renderGastosView(r);
   else if(id==='taxView')         renderTaxView(r);
   else if(id==='financialCenterView') renderFinancialCenterView(r);
   else if(id==='forecastView')    renderForecastView(r);
@@ -10156,20 +10365,30 @@ window.closeSidebar=closeSidebar;
 </script>
 
 function toggleTheme(){
-  const light=document.body.classList.toggle('light');
-  const btn=document.getElementById('themeToggle');
-  if(btn) btn.textContent=light?'☀️':'🌙';
-  localStorage.setItem('obbio_theme',light?'light':'dark');
+  const html=document.documentElement;
+  const isLight=html.dataset.theme==='light';
+  if(isLight){ delete html.dataset.theme; localStorage.setItem('obbio-theme','dark'); }
+  else { html.dataset.theme='light'; localStorage.setItem('obbio-theme','light'); }
+  _updateThemeUI();
+  setTimeout(()=>{
+    const vId=window._activeViewId||'dashboardView';
+    const btn=document.querySelector('.nav button.active');
+    if(typeof showView==='function') showView(vId,btn);
+  },30);
+}
+function _updateThemeUI(){
+  const lt=document.documentElement.dataset.theme==='light';
+  const lbl=document.getElementById('themeLabel');
+  const dot=document.getElementById('themeToggleDot');
+  const row=document.getElementById('themeToggleRow');
+  if(lbl) lbl.textContent=lt?'☀️ Modo claro':'🌙 Modo oscuro';
+  if(dot) dot.style.left=lt?'19px':'3px';
+  if(row) row.style.background=lt?'rgba(0,0,0,.04)':'rgba(255,255,255,.03)';
 }
 (function(){
-  if(localStorage.getItem('obbio_theme')==='light'){
-    document.body.classList.add('light');
-    document.addEventListener('DOMContentLoaded',function(){
-      const btn=document.getElementById('themeToggle');
-      if(btn) btn.textContent='☀️';
-    });
-  }
+  const saved=localStorage.getItem('obbio-theme');
+  if(saved==='light') document.documentElement.dataset.theme='light';
+  document.addEventListener('DOMContentLoaded',_updateThemeUI);
 })();
-
 </body>
 </html>
