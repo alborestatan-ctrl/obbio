@@ -872,7 +872,7 @@ th[data-tip]:hover::before{opacity:1;}
         Cerrar sesión
       </button>
     </div>
-    <div id="sidebarFooterText" style="margin-top:8px;">Obbio · Datos al cierre de Dic 2024</div>
+    <div id="sidebarFooterText" style="margin-top:8px;">Obbio · Datos al cierre de —</div>
   </div>
 </aside>
 
@@ -883,7 +883,7 @@ th[data-tip]:hover::before{opacity:1;}
   <header class="topbar">
     <div>
       <h2 class="page-title" id="pageTitle">Centro de Mando Ejecutivo</h2>
-      <p class="page-subtitle" id="pageSubtitle">Transformando datos en decisiones estratégicas · Dic 2024</p>
+      <p class="page-subtitle" id="pageSubtitle">Transformando datos en decisiones estratégicas · —</p>
     </div>
     <div class="topbar-actions">
       <button onclick="generarReportePDF&&generarReportePDF()" style="padding:8px 16px;border-radius:9px;border:1px solid rgba(34,197,94,.35);background:var(--primary-dim);color:var(--primary);font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">📄 PDF</button>
@@ -1110,7 +1110,7 @@ th[data-tip]:hover::before{opacity:1;}
 <!-- ==================== FINANCE ==================== -->
 <div id="financeView" class="view" style="display:none;">
   <header class="topbar">
-    <div><h2 class="page-title">Financial Intelligence</h2><p class="page-subtitle">Estado de resultados y salud financiera · Dic 2024</p></div>
+    <div><h2 class="page-title">Financial Intelligence</h2><p class="page-subtitle">Estado de resultados y salud financiera · <span id="periodoFinanceSub">—</span></p></div>
   </header>
   <section class="kpi-grid">
     <div class="kpi-card accent-blue">
@@ -1136,7 +1136,7 @@ th[data-tip]:hover::before{opacity:1;}
   </section>
 
   <div class="card">
-    <div class="card-header"><div class="card-title">Estado de Resultados</div><span class="card-badge success">Dic 2024</span></div>
+    <div class="card-header"><div class="card-title">Estado de Resultados</div><span class="card-badge success" id="periodoFinanceBadge">—</span></div>
     <div class="financial-grid">
       <div>
         <div class="statement-card">
@@ -3131,7 +3131,7 @@ background:#10B981;
   </header>
   <div class="card">
     <div class="card-header"><div class="card-title">📋 Aviso de Privacidad</div><span class="card-badge">ARCO · LGPD / RGPD</span></div>
-    <p style="color:var(--muted);font-size:13px;line-height:1.8;margin-bottom:16px;"><strong style="color:var(--text);">Teralyx Finance</strong> recopila y procesa únicamente los datos financieros que el usuario introduce de forma voluntaria en el sistema. Estos datos se almacenan localmente en la sesión del navegador (<code>sessionStorage</code>) y <strong>nunca se transmiten a servidores externos</strong>.</p>
+    <p style="color:var(--muted);font-size:13px;line-height:1.8;margin-bottom:16px;"><strong style="color:var(--text);">Obbio Finance</strong> recopila y procesa únicamente los datos financieros que el usuario introduce de forma voluntaria en el sistema. Estos datos se almacenan localmente en la sesión del navegador (<code>sessionStorage</code>) y <strong>nunca se transmiten a servidores externos</strong>.</p>
     <p style="color:var(--muted);font-size:13px;line-height:1.8;margin-bottom:16px;">Los datos son eliminados automáticamente al cerrar la sesión o el navegador. El usuario es el único responsable de la veracidad e integridad de la información ingresada. Obbio no almacena datos en la nube ni comparte información con terceros.</p>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-top:16px;">
       <div style="padding:14px;border-radius:12px;background:var(--card2);border:1px solid var(--border2);"><div style="font-size:11px;font-weight:700;color:var(--success);text-transform:uppercase;margin-bottom:6px;">✅ Datos locales</div><div style="font-size:12px;color:var(--muted);">Todo en sessionStorage del navegador. Sin servidor. Sin cloud.</div></div>
@@ -3782,8 +3782,8 @@ function sparkline(id, data, color){
 
 /* ==================== TRADUCCIONES ==================== */
 const translations = {
-  es:{ title:'Centro de Mando Ejecutivo', subtitle:'Transformando datos en decisiones estratégicas · Dic 2024' },
-  en:{ title:'Executive Command Center', subtitle:'Transforming data into strategic decisions · Dec 2024' }
+  es:{ title:'Centro de Mando Ejecutivo', subtitle:'Transformando datos en decisiones estratégicas · —' },
+  en:{ title:'Executive Command Center', subtitle:'Transforming data into strategic decisions · —' }
 };
 function changeLanguage(lang, btn){
   document.getElementById('pageTitle').textContent = translations[lang].title;
@@ -3799,7 +3799,7 @@ function showView(viewId, button){
   if(el) el.style.display='block';
   document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
   if(button) button.classList.add('active');
-  const _hasCalc=!!window._teralyxCalc;
+  const _hasCalc=!!window._obbioCalc;
   const dcb=document.getElementById('dash-clear-btn');
   if(dcb) dcb.style.display=(viewId==='dashboardView'&&_hasCalc)?'':'none';
   const tsb=document.getElementById('topbar-save-btn');
@@ -4070,14 +4070,14 @@ function showFinancialTab(tabId){
 
 // Almacenamiento — caché local + Supabase async
 function saveData(data){
-  try{ sessionStorage.setItem('teralyx_data_'+(_sbUser?.id||'local'), JSON.stringify(data)); }catch(e){}
+  try{ sessionStorage.setItem('obbio_data_'+(_sbUser?.id||'local'), JSON.stringify(data)); }catch(e){}
   if(typeof sbUpsertEmpresa==='function' && window._sbUser) sbUpsertEmpresa(data);
 }
 
 function loadData(){
   // Con Supabase activo los datos llegan vía sbAfterLogin(); aquí solo fallback local
   if(window._sbUser) return null;
-  try{ const r=sessionStorage.getItem('teralyx_data_local'); return r?JSON.parse(r):null; }catch(e){return null;}
+  try{ const r=sessionStorage.getItem('obbio_data_local'); return r?JSON.parse(r):null; }catch(e){return null;}
 }
 
 // ── Tab Excel/Manual (vista Cargar Datos) ────────────────────────────────
@@ -4141,6 +4141,8 @@ function applyData(d){
     if(ft) ft.textContent = 'Obbio · ' + (d.empresa||'') + ' · ' + (d.periodo||'');
     const ps = document.getElementById('pageSubtitle');
     if(ps) ps.textContent = 'Datos financieros · ' + (d.empresa||'') + ' · ' + (d.periodo||'');
+    const pfSub=document.getElementById('periodoFinanceSub'); if(pfSub) pfSub.textContent=d.periodo||'—';
+    const pfBdg=document.getElementById('periodoFinanceBadge'); if(pfBdg) pfBdg.textContent=d.periodo||'—';
   }
 
   // Briefings — mostrar solo si tienen contenido real
@@ -4227,7 +4229,7 @@ function uwShow(id){
   });
   if(id==='uw0'){
     const cz=document.getElementById('uw0-clear-zone');
-    if(cz) cz.style.display=window._teralyxCalc?'flex':'none';
+    if(cz) cz.style.display=window._obbioCalc?'flex':'none';
   }
 }
 
@@ -4281,8 +4283,8 @@ function collectManualOptional(){
       if(r[3]&&v>0) regionMapM[r[3]]=(regionMapM[r[3]]||0)+v;
       if(m>=0&&m<12) mV[m]+=v;
     });
-    if(Object.keys(clienteMapM).length>0) window._teralyxClienteMap=clienteMapM;
-    if(Object.keys(regionMapM).length>0)  window._teralyxRegionMap=regionMapM;
+    if(Object.keys(clienteMapM).length>0) window._obbioClienteMap=clienteMapM;
+    if(Object.keys(regionMapM).length>0)  window._obbioRegionMap=regionMapM;
     if(sumV>0){
       if(mV.some(x=>x>0)){
         const pt=document.getElementById('ii_periodo_tipo'); if(pt) pt.value='mensual';
@@ -4294,7 +4296,7 @@ function collectManualOptional(){
       // Monthly by year
       const mByYr={};
       vRows.forEach(r=>{ const v=num(r[4]); const m=moStr(r[0]); const yrM=String(r[0]).match(/(\d{4})/); const yr=yrM?parseInt(yrM[1]):null; if(yr&&m>=0&&m<12&&v>0){ if(!mByYr[yr]) mByYr[yr]=new Array(12).fill(0); mByYr[yr][m]+=v; } });
-      if(Object.keys(mByYr).length>0) window._teralyxMonthlyByYear={...(window._teralyxMonthlyByYear||{}),...mByYr};
+      if(Object.keys(mByYr).length>0) window._obbioMonthlyByYear={...(window._obbioMonthlyByYear||{}),...mByYr};
     }
   }
 
@@ -4324,7 +4326,7 @@ function collectManualOptional(){
   });
   const hist=Object.values(histObj).filter(h=>h.ventas>0||h.caja>0).sort((a,b)=>a.anio-b.anio);
   if(hist.length){
-    window._teralyxHistorico=hist;
+    window._obbioHistorico=hist;
     const prevV=hist[hist.length-1].ventas;
     const curV=num((document.getElementById('ii_ventas')||{}).value);
     if(prevV>0&&curV>0){ const yEl=document.getElementById('ii_yoy'); if(yEl) yEl.value=((curV/prevV-1)*100).toFixed(1); }
@@ -4662,7 +4664,7 @@ function calcFinanciero(){
 
   // YoY — auto desde histórico, fallback a campo manual (BUG-11)
   let yoy=null;
-  const _hist=window._teralyxHistorico;
+  const _hist=window._obbioHistorico;
   if(_hist&&_hist.length>0&&er.ventas>0){
     const _hs=_hist.filter(h=>h.ventas>0).sort((a,b)=>a.anio-b.anio);
     if(_hs.length>0) yoy=+((er.ventas/_hs[_hs.length-1].ventas-1)*100).toFixed(1);
@@ -4729,10 +4731,10 @@ function calcFinanciero(){
     pais, fiscal,
     tasaIVA:fiscal.tasaIVA, ivaTrasladado:fiscal.ivaTrasladado,
     ivaAcreditable:fiscal.ivaAcreditable, ivaNeto:fiscal.ivaNeto,
-    historico:window._teralyxHistorico||null,
-    monthlyByYear:(()=>{ const yr=parseInt(($('ii_anio')||{}).value||new Date().getFullYear()); if(ingMensual.some(v=>v>0)){ if(!window._teralyxMonthlyByYear) window._teralyxMonthlyByYear={}; window._teralyxMonthlyByYear[yr]=ingMensual.map(v=>Math.round(v*1e6)); } return window._teralyxMonthlyByYear||{}; })(),
-    clienteMap:window._teralyxClienteMap||null,
-    regionMap:window._teralyxRegionMap||null,
+    historico:window._obbioHistorico||null,
+    monthlyByYear:(()=>{ const yr=parseInt(($('ii_anio')||{}).value||new Date().getFullYear()); if(ingMensual.some(v=>v>0)){ if(!window._obbioMonthlyByYear) window._obbioMonthlyByYear={}; window._obbioMonthlyByYear[yr]=ingMensual.map(v=>Math.round(v*1e6)); } return window._obbioMonthlyByYear||{}; })(),
+    clienteMap:window._obbioClienteMap||null,
+    regionMap:window._obbioRegionMap||null,
     modoSucursales:($('ii_modo_sucursales')||{}).value||'una',
     sucursales:(function(){
       if(($('ii_modo_sucursales')||{}).value!=='multiples') return null;
@@ -4886,8 +4888,8 @@ function calcularYAplicar(){
 
   // Notificación
   // Fuente única para Diagnóstico IA, CFO Insights y Reporte PDF
-  window._teralyxCalc = r;
-  try{ sessionStorage.setItem('teralyx_calc_v1', JSON.stringify(r)); }catch(e){}
+  window._obbioCalc = r;
+  try{ sessionStorage.setItem('obbio_calc_v1', JSON.stringify(r)); }catch(e){}
   if(typeof renderAIView==='function') renderAIView(r);
   if(typeof renderAllViews==='function') renderAllViews(r);
 
@@ -5006,10 +5008,10 @@ function mostrarResultados(r){
 
 /* ── NOTIFICACIONES ── */
 function showNotif(msg, type='success', ms=3000){
-  let cont=document.getElementById('teralyx_notif_container');
+  let cont=document.getElementById('obbio_notif_container');
   if(!cont){
     cont=document.createElement('div');
-    cont.id='teralyx_notif_container';
+    cont.id='obbio_notif_container';
     cont.style.cssText='position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none;';
     document.body.appendChild(cont);
   }
@@ -5113,7 +5115,7 @@ function parseExcelWorkbook(wb){
   const hasBal=sheetNames.some(n=>n.includes('balance'));
   const isStructured=hasER||hasBal;
   const isTransactional=!isStructured&&['ventas','gastos','bancos'].every(kw=>sheetNames.some(n=>n.includes(kw)));
-  const isLegacyKV=sheetNames.includes('epi')||sheetNames.includes('teralyx');
+  const isLegacyKV=sheetNames.includes('epi')||sheetNames.includes('obbio');
 
   // ── Shared helpers for both formats ──
   // Parse transactional sheet, auto-detect header row by keyword hints
@@ -5405,7 +5407,7 @@ function parseExcelWorkbook(wb){
 
   } else {
     // ── LEGACY KEY-VALUE format (single EPI sheet) ──
-    const sheetName=isLegacyKV?'Teralyx':wb.SheetNames[0];
+    const sheetName=isLegacyKV?'Obbio':wb.SheetNames[0];
     const ws=wb.Sheets[sheetName];
     const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
     const map={};
@@ -5608,12 +5610,12 @@ function applyExcelData(){
     setVal('ii_gfin',    parseNum(d.gfin));
   }
   // ── Datos mensuales por año ──
-  if(d.monthlyByYear) window._teralyxMonthlyByYear={...(window._teralyxMonthlyByYear||{}),...d.monthlyByYear};
-  if(d.clienteMap) window._teralyxClienteMap=d.clienteMap;
-  if(d.regionMap)  window._teralyxRegionMap=d.regionMap;
+  if(d.monthlyByYear) window._obbioMonthlyByYear={...(window._obbioMonthlyByYear||{}),...d.monthlyByYear};
+  if(d.clienteMap) window._obbioClienteMap=d.clienteMap;
+  if(d.regionMap)  window._obbioRegionMap=d.regionMap;
   // ── Histórico multi-año ──
   if(d.historico&&d.historico.length){
-    window._teralyxHistorico=d.historico;
+    window._obbioHistorico=d.historico;
     // Auto-compute YoY from most recent historico year vs current year ventas
     const prevV=d.historico[d.historico.length-1].ventas;
     const curV=parseNum(d.ventas);
@@ -5622,7 +5624,7 @@ function applyExcelData(){
   // ── Motor: deriva TODOS los indicadores y refresca dashboard + gráficas ──
   if(typeof calcularYAplicar==='function') calcularYAplicar();
   // Show data preview instead of jumping directly to dashboard
-  const r=window._teralyxCalc;
+  const r=window._obbioCalc;
   if(r&&typeof buildDataPreview==='function'){
     buildDataPreview(r);
     if(typeof uwShow==='function') uwShow('uwP');
@@ -5913,8 +5915,8 @@ function downloadTemplate(){
   const _esc = s => String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 
   function getCalc(){
-    if(window._teralyxCalc) return window._teralyxCalc;
-    try{ const raw=sessionStorage.getItem('teralyx_calc_v1'); if(raw){ window._teralyxCalc=JSON.parse(raw); return window._teralyxCalc; } }catch(e){}
+    if(window._obbioCalc) return window._obbioCalc;
+    try{ const raw=sessionStorage.getItem('obbio_calc_v1'); if(raw){ window._obbioCalc=JSON.parse(raw); return window._obbioCalc; } }catch(e){}
     return null;
   }
   window.getCalc = getCalc;
@@ -6823,8 +6825,8 @@ function downloadTemplate(){
     }
 
     // ── 11. GRÁFICAS ──
-    const chM=window._teralyxCharts&&window._teralyxCharts['mainChart'];
-    const chF=window._teralyxCharts&&window._teralyxCharts['forecastChart'];
+    const chM=window._obbioCharts&&window._obbioCharts['mainChart'];
+    const chF=window._obbioCharts&&window._obbioCharts['forecastChart'];
     if(chM){try{const imgM=chM.toBase64Image('image/jpeg',.92);PB(170);SEC('Ingresos y Ganancia Operativa','Tendencia mensual','11');
       ensure(140);sf(...C.card);doc.roundedRect(ML,y,CW,134,6,6,'F');ss(...C.border);doc.setLineWidth(.4);doc.roundedRect(ML,y,CW,134,6,6,'S');doc.addImage(imgM,'JPEG',ML+5,y+5,CW-10,124);y+=140;}catch(e){}}
     if(chF){try{const imgF=chF.toBase64Image('image/jpeg',.92);PB(150);SEC('Proyeccion Forecast - 3 Escenarios','','');
@@ -6975,7 +6977,7 @@ function noDataHtml(icon,msg,detail){
 
 /* ── Destructor/re-creador de Chart ── */
 const _charts={};
-window._teralyxCharts=_charts;
+window._obbioCharts=_charts;
 function mkChart(id,cfg){
   if(_charts[id]){ try{_charts[id].destroy();}catch(e){} delete _charts[id]; }
   const el=document.getElementById(id); if(!el) return null;
@@ -7089,7 +7091,7 @@ function renderDashboardView(r){
   mkChart('categoryChart',{type:'doughnut',data:{labels:qL,datasets:[{data:qV,backgroundColor:['#22C55E','#8B5CF6','#10B981','#F59E0B'],borderColor:'#18181B',borderWidth:3,hoverOffset:6}]},options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{display:false},tooltip:{backgroundColor:'#1E1E22',callbacks:{label:ctx=>` ${ctx.label}: $${ctx.parsed.toFixed(1)}M`}}}}});
   mkChart('regionChart',{type:'bar',data:{labels:qL,datasets:[{data:qV,backgroundColor:['#22C55E','#8B5CF6','#10B981','#F59E0B'],borderColor:'transparent',borderRadius:8,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1E1E22',callbacks:{label:ctx=>` $${ctx.parsed.y.toFixed(1)}M`}}},scales:{x:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA'}},y:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',callback:v=>'$'+v+'M'}}}}});
   // paretoChart — clientes reales si existen, sino estructura de costos
-  const clienteMap=r.clienteMap||window._teralyxClienteMap||null;
+  const clienteMap=r.clienteMap||window._obbioClienteMap||null;
   const ptitle=document.getElementById('paretoTitle');
   const pbadge=document.getElementById('paretoBadge');
   const pleg1=document.getElementById('paretoLeg1');
@@ -7180,8 +7182,8 @@ function renderAnalyticsView(r){
   document.getElementById('anlKpiC2')&&(document.getElementById('anlKpiC2').className='kpi-change '+(r.margenEbitda>=15?'positive':'negative'));
 
   const suc=r.sucursales;
-  const clienteMap=r.clienteMap||window._teralyxClienteMap||null;
-  const regionMap=r.regionMap||window._teralyxRegionMap||null;
+  const clienteMap=r.clienteMap||window._obbioClienteMap||null;
+  const regionMap=r.regionMap||window._obbioRegionMap||null;
   const hasSuc=suc&&suc.length>=2;
   const hasCli=clienteMap&&Object.keys(clienteMap).length>0;
   const hasReg=regionMap&&Object.keys(regionMap).length>0;
@@ -8542,7 +8544,7 @@ function _buildCFOSystemPrompt(r){
   const sucStr=r.sucursales&&r.sucursales.length
     ?r.sucursales.slice(0,3).map(s=>`${s.nombre}:${f(s.ventas)}`).join(', '):'—';
   // Clientes top 5
-  const cliMap=r.clienteMap||window._teralyxClienteMap||null;
+  const cliMap=r.clienteMap||window._obbioClienteMap||null;
   const cliStr=cliMap?Object.entries(cliMap).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([k,v])=>`${k}:${f(v)}`).join(', '):'—';
   // Ingresos mensual top 3
   const ingStr=r.ingMensual?r.ingMensual.map((v,i)=>v>0?`M${i+1}:${f(v)}`:null).filter(Boolean).slice(0,6).join(' '):'—';
@@ -8789,14 +8791,14 @@ function switchTaxPais(pais){
   const sel=document.getElementById('ii_pais');
   if(sel){ sel.value=pais; }
   if(typeof calcularYAplicar==='function') calcularYAplicar();
-  else { const r=getCalc(); if(r){ r.pais=pais; r.fiscal=motorFiscal(pais,r.uai,r.ventas,r.cogs); window._teralyxCalc=r; renderTaxView(r); } }
+  else { const r=getCalc(); if(r){ r.pais=pais; r.fiscal=motorFiscal(pais,r.uai,r.ventas,r.cogs); window._obbioCalc=r; renderTaxView(r); } }
 }
 window.switchTaxPais=switchTaxPais;
 
 /* ─────────────────── Data Preview Panel ─────────────────── */
 function calcularYMostrarPreview(){
   if(typeof calcularYAplicar==='function') calcularYAplicar();
-  const r=window._teralyxCalc;
+  const r=window._obbioCalc;
   if(r){ buildDataPreview(r); uwShow('uwP'); }
 }
 window.calcularYMostrarPreview=calcularYMostrarPreview;
@@ -8819,8 +8821,8 @@ function buildDataPreview(r){
   const hasHist = r.historico&&r.historico.length>=1;
   const histYears= hasHist?r.historico.map(h=>h.anio):[];
   const hasSuc  = r.sucursales&&r.sucursales.length>=2;
-  const clienteMap=r.clienteMap||window._teralyxClienteMap||null;
-  const regionMap =r.regionMap ||window._teralyxRegionMap ||null;
+  const clienteMap=r.clienteMap||window._obbioClienteMap||null;
+  const regionMap =r.regionMap ||window._obbioRegionMap ||null;
   const hasCli  = !!(clienteMap&&Object.keys(clienteMap).length>0);
   const hasReg  = !!(regionMap &&Object.keys(regionMap).length>0);
   const hasFiscal=!!(window._manualIvaTras||(r.fiscal&&r.fiscal.ivaTrasladado>0));
@@ -8962,16 +8964,16 @@ async function limpiarSistema(){
   // Borrar datos en Supabase (vaciar campo data, mantener el registro)
   if(typeof window.sbLimpiarDatos==='function') await window.sbLimpiarDatos();
   // Estado global
-  window._teralyxCalc       = null;
-  window._teralyxHistorico  = null;
+  window._obbioCalc       = null;
+  window._obbioHistorico  = null;
   window._pendingExcelData  = null;
-  window._teralyxClienteMap = null;
-  window._teralyxRegionMap  = null;
+  window._obbioClienteMap = null;
+  window._obbioRegionMap  = null;
   window._prodData          = null;
   // sessionStorage / localStorage
-  try{ sessionStorage.removeItem('teralyx_calc_v1'); }catch(e){}
-  try{ localStorage.removeItem('teralyx_prod_v1'); }catch(e){}
-  try{ sessionStorage.removeItem('teralyx_prod_v1'); }catch(e){}
+  try{ sessionStorage.removeItem('obbio_calc_v1'); }catch(e){}
+  try{ localStorage.removeItem('obbio_prod_v1'); }catch(e){}
+  try{ sessionStorage.removeItem('obbio_prod_v1'); }catch(e){}
   // Reset productos
   if(typeof window.prodReset==='function') window.prodReset();
   // Reset file input
@@ -8993,16 +8995,16 @@ window.limpiarSistema=limpiarSistema;
 
 async function guardarCambios(){
   if(!window._sbUser){ showNotif('Inicia sesión primero','error'); return; }
-  if(!window._teralyxCalc){ showNotif('Primero ingresa y calcula los datos','warning'); return; }
+  if(!window._obbioCalc){ showNotif('Primero ingresa y calcula los datos','warning'); return; }
   const btn=document.getElementById('topbar-save-btn');
   if(btn){ btn.disabled=true; btn.textContent='Guardando...'; }
   try{
     // Leer el último dashData completo de sessionStorage
-    const key='teralyx_data_'+(window._sbUser?.id||'local');
+    const key='obbio_data_'+(window._sbUser?.id||'local');
     let data;
     try{ data=JSON.parse(sessionStorage.getItem(key)); }catch(e){}
     // Si no hay nada en sessionStorage, construir mínimo con _calc
-    if(!data) data={_calc:window._teralyxCalc};
+    if(!data) data={_calc:window._obbioCalc};
     if(typeof window.sbUpsertEmpresa==='function'){
       await window.sbUpsertEmpresa(data);
       showNotif('Datos guardados correctamente','success');
@@ -9010,7 +9012,7 @@ async function guardarCambios(){
       showNotif('Error: función de guardado no disponible','error');
     }
   } catch(e){
-    console.error('[Teralyx] guardarCambios:',e);
+    console.error('[Obbio] guardarCambios:',e);
     showNotif('Error al guardar. Intenta de nuevo.','error');
   } finally {
     if(btn){ btn.disabled=false; btn.textContent='💾 Guardar cambios'; }
@@ -9022,15 +9024,15 @@ window.guardarCambios=guardarCambios;
 function updateAnalyticsNav(r){
   const btn=document.getElementById('navAnalyticsBtn'); if(!btn) return;
   const hasSuc=r&&r.sucursales&&r.sucursales.length>=2;
-  const hasCli=!!(r&&r.clienteMap&&Object.keys(r.clienteMap).length>0)||(!!window._teralyxClienteMap&&Object.keys(window._teralyxClienteMap).length>0);
-  const hasReg=!!(r&&r.regionMap&&Object.keys(r.regionMap).length>0)||(!!window._teralyxRegionMap&&Object.keys(window._teralyxRegionMap).length>0);
+  const hasCli=!!(r&&r.clienteMap&&Object.keys(r.clienteMap).length>0)||(!!window._obbioClienteMap&&Object.keys(window._obbioClienteMap).length>0);
+  const hasReg=!!(r&&r.regionMap&&Object.keys(r.regionMap).length>0)||(!!window._obbioRegionMap&&Object.keys(window._obbioRegionMap).length>0);
   btn.style.display=(hasSuc||hasCli||hasReg)?'':'none';
 }
 window.updateAnalyticsNav=updateAnalyticsNav;
 
 /* ─────────────────── renderAllViews: llamado tras calcularYAplicar ─────────────────── */
 function renderAllViews(r){
-  if(r) window._teralyxCalc=r;
+  if(r) window._obbioCalc=r;
   updateAnalyticsNav(r);
   // Solo renderizar la vista activa en este momento
   const active=document.querySelector('.view[style*="block"]');
@@ -9476,7 +9478,7 @@ function renderComparativosView(r){
   if(!r){ body.innerHTML=hint('⚡ Ingresa datos para ver comparativos. Ve a <strong>Ingresar Datos</strong> para cargar tu Excel o llenar el formulario.'); return; }
 
   const ds=buildYearDatasets(r);
-  const mby={...(r.monthlyByYear||{}), ...(window._teralyxMonthlyByYear||{})};
+  const mby={...(r.monthlyByYear||{}), ...(window._obbioMonthlyByYear||{})};
 
   /* ──────────── TENDENCIA ──────────── */
   if(_compMode==='tendencia'){
@@ -9639,7 +9641,7 @@ function sbInit(){
 }
 
 /* ── Login / Logout ───────────────────────────────────────────── */
-const _SB_REM='teralyx_remember';
+const _SB_REM='obbio_remember';
 function _sbGetSaved(){try{return JSON.parse(localStorage.getItem(_SB_REM));}catch(e){return null;}}
 function _sbSaveCreds(e,p){try{localStorage.setItem(_SB_REM,JSON.stringify({email:e,pass:p}));}catch(ex){}}
 function _sbClearSaved(){try{localStorage.removeItem(_SB_REM);}catch(e){}}
@@ -9686,7 +9688,7 @@ async function sbRefrescarSesion(btn){
   try{
     const load=_sbIsAdmin ? sbRenderAdminSelector() : sbLoadUserEmpresa();
     await Promise.race([load, timeout]);
-    const hasData=!!(window._teralyxCalc);
+    const hasData=!!(window._obbioCalc);
     if(hasData){
       showNotif('✅ Datos actualizados','success');
     } else {
@@ -9694,7 +9696,7 @@ async function sbRefrescarSesion(btn){
       if(typeof showViewFromBanner==='function') showViewFromBanner('ingresodatosView');
     }
   }catch(e){
-    console.error('[Teralyx] sbRefrescarSesion:', e);
+    console.error('[Obbio] sbRefrescarSesion:', e);
     showNotif(e.message==='timeout'?'⏱ Sin respuesta · Intenta de nuevo':'❌ '+e.message.slice(0,60),'error');
   } finally {
     if(btn){ btn.textContent='↻ Refrescar'; btn.disabled=false; }
@@ -9723,7 +9725,7 @@ async function sbLoadUserEmpresa(){
     .order('updated_at',{ascending:false})
     .limit(1)
     .maybeSingle();
-  if(error){console.error('[Teralyx] load:',error); return;}
+  if(error){console.error('[Obbio] load:',error); return;}
   if(!data){
     _sbEmpresaId=null;
     sbMostrarNombreModal();
@@ -9793,7 +9795,7 @@ async function sbUpsertEmpresa(dashData){
     const updatePayload={data:fullData, updated_at:new Date().toISOString()};
     if(nombre) updatePayload.nombre=nombre;
     const {error}=await _sb.from('empresas').update(updatePayload).eq('id',_sbEmpresaId);
-    if(error) console.error('[Teralyx] update:',error);
+    if(error) console.error('[Obbio] update:',error);
     if(nombre){
       const opt=document.querySelector(`#sbEmpresaSelect option[value="${_sbEmpresaId}"]`);
       if(opt) opt.textContent=nombre;
@@ -9803,7 +9805,7 @@ async function sbUpsertEmpresa(dashData){
     const {data,error}=await _sb.from('empresas')
       .insert({user_id:_sbUser.id, nombre:nombre||'Sin nombre', data:fullData, updated_at:new Date().toISOString()})
       .select('id').maybeSingle();
-    if(error) console.error('[Teralyx] insert:',error);
+    if(error) console.error('[Obbio] insert:',error);
     else if(data) _sbEmpresaId=data.id;
   }
 }
@@ -9817,7 +9819,7 @@ async function sbSaveProdRows(rows, files){
     if(error||!cur) return;
     const updated={...(cur.data||{}), _prodRows:rows, _prodFiles:files};
     await _sb.from('empresas').update({data:updated, updated_at:new Date().toISOString()}).eq('id',_sbEmpresaId);
-  }catch(e){ console.error('[Teralyx] sbSaveProdRows:',e); }
+  }catch(e){ console.error('[Obbio] sbSaveProdRows:',e); }
 }
 window.sbSaveProdRows=sbSaveProdRows;
 
@@ -9829,7 +9831,7 @@ async function sbRenderAdminSelector(){
     .from('empresas')
     .select('id,nombre,updated_at')
     .order('updated_at',{ascending:false});
-  if(error){console.error('[Teralyx] admin list:',error); return;}
+  if(error){console.error('[Obbio] admin list:',error); return;}
   sel.style.display='block';
   const btnStyle='flex-shrink:0;padding:6px 8px;background:var(--card2);border:1px solid var(--border);border-radius:8px;color:var(--muted);cursor:pointer;font-size:13px;';
   sel.innerHTML=`
@@ -9944,7 +9946,7 @@ async function sbEditarNombreEmpresa(){
   const {error}=await _sb.from('empresas')
     .update({nombre, updated_at:new Date().toISOString()})
     .eq('id',_sbEmpresaId);
-  if(error){console.error('[Teralyx] rename:',error); return;}
+  if(error){console.error('[Obbio] rename:',error); return;}
   // Actualizar el select
   if(sel?.options[sel.selectedIndex]) sel.options[sel.selectedIndex].textContent=nombre;
   // Actualizar ii_empresa si está visible
@@ -9961,8 +9963,8 @@ async function sbSelectEmpresa(id){
   const tieneData=data.data&&Object.keys(data.data).length>0;
   if(!tieneData){
     // Empresa sin datos — limpiar UI sin tocar Supabase
-    window._teralyxCalc=null;
-    window._teralyxHistorico=null;
+    window._obbioCalc=null;
+    window._obbioHistorico=null;
     window._pendingExcelData=null;
     if(typeof window.prodReset==='function') window.prodReset();
     ['dash-clear-btn','topbar-clear-btn','topbar-save-btn'].forEach(id=>{
@@ -10004,8 +10006,8 @@ function sbSubscribeRealtime(empresaId){
       }
     })
     .subscribe((status,err)=>{
-      if(status==='SUBSCRIBED') console.log('[Teralyx] Realtime conectado ✓');
-      else if(status==='CHANNEL_ERROR') console.warn('[Teralyx] Realtime error:',err);
+      if(status==='SUBSCRIBED') console.log('[Obbio] Realtime conectado ✓');
+      else if(status==='CHANNEL_ERROR') console.warn('[Obbio] Realtime error:',err);
     });
   // Polling de respaldo cada 30 s — funciona aunque Realtime falle
   if(_sbPollTimer) clearInterval(_sbPollTimer);
@@ -10043,7 +10045,7 @@ function sbApplyEmpresaData(d){
   if(typeof populateForm==='function') populateForm(d);
   const calc=d._calc;
   if(calc){
-    window._teralyxCalc=calc;
+    window._obbioCalc=calc;
     if(!document.querySelector('.view[style*="block"]')){
       // On reload no view has an inline style yet — activate dashboard explicitly
       const dashEl=document.getElementById('dashboardView');
@@ -10088,7 +10090,7 @@ window.sbLimpiarDatos = async function(){
     await _sb.from('empresas')
       .update({ data:{}, updated_at: new Date().toISOString() })
       .eq('id', _sbEmpresaId);
-  }catch(e){ console.error('[Teralyx] limpiar Supabase:', e); }
+  }catch(e){ console.error('[Obbio] limpiar Supabase:', e); }
 };
 
 document.addEventListener('DOMContentLoaded', sbInit);
@@ -10119,7 +10121,7 @@ window.closeSidebar=closeSidebar;
 ══════════════════════════════════════════════════════════════ */
 (function(){
   let _rows=[],_files=[],_fRows=[],_prodChart=null;
-  const _PROD_KEY='teralyx_prod_v1';
+  const _PROD_KEY='obbio_prod_v1';
   function _prodPersist(){try{localStorage.setItem(_PROD_KEY,JSON.stringify({rows:_rows,files:_files}));}catch(e){try{sessionStorage.setItem(_PROD_KEY,JSON.stringify({rows:_rows,files:_files}));}catch(e2){}}}
   (function _prodRestore(){
     try{
