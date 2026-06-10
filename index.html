@@ -10038,25 +10038,28 @@ function renderComparativosView(r){
   const ds=buildYearDatasets(r);
   const mby={...(r.monthlyByYear||{}), ...(window._obbioMonthlyByYear||{})};
 
-  /* Deshabilitar pill mensual si no hay datos mensuales reales */
+  /* ── Estado de cada pill según datos disponibles ── */
   const _hasMensual=r._meta?.mensual?.granularidad==='mensual'||Object.keys(mby).length>0;
-  const _mensualPill=document.querySelector('.comp-pill[data-mode="mensual"]');
-  if(_mensualPill){
-    if(!_hasMensual){
-      _mensualPill.style.opacity='0.4';
-      _mensualPill.style.cursor='not-allowed';
-      _mensualPill.style.pointerEvents='none';
-      _mensualPill.title='Sin datos mensuales disponibles';
-      if(_compMode==='mensual'){
-        _compMode='tendencia';
-        document.querySelectorAll('.comp-pill').forEach(p=>p.classList.toggle('active',p.dataset.mode===_compMode));
-      }
+  const _hasMultiYear=ds.length>=2;
+
+  function _setPill(selector, enabled, disabledTitle){
+    const p=document.querySelector(selector); if(!p) return;
+    if(!enabled){
+      p.style.opacity='0.4'; p.style.cursor='not-allowed'; p.style.pointerEvents='none'; p.title=disabledTitle;
     } else {
-      _mensualPill.style.opacity='';
-      _mensualPill.style.cursor='';
-      _mensualPill.style.pointerEvents='';
-      _mensualPill.title='';
+      p.style.opacity=''; p.style.cursor=''; p.style.pointerEvents=''; p.title='';
     }
+  }
+
+  _setPill('.comp-pill[data-mode="mensual"]',  _hasMensual,   'Sin datos mensuales — sube Excel con columna Fecha');
+  _setPill('.comp-pill[data-mode="rolling"]',  _hasMensual,   'Sin datos mensuales — se necesitan ≥12 meses');
+  _setPill('.comp-pill[data-mode="aniovsanio"]',_hasMultiYear,'Sin histórico multi-año — agrega ≥2 años en Ingresar Datos');
+
+  // Auto-switch si el modo activo quedó deshabilitado
+  const _modeDisabled=(_compMode==='mensual'&&!_hasMensual)||(_compMode==='rolling'&&!_hasMensual)||(_compMode==='aniovsanio'&&!_hasMultiYear);
+  if(_modeDisabled){
+    _compMode='tendencia';
+    document.querySelectorAll('.comp-pill').forEach(p=>p.classList.toggle('active',p.dataset.mode===_compMode));
   }
 
   /* ──────────── TENDENCIA ──────────── */
