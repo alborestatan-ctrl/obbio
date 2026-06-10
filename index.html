@@ -5284,9 +5284,12 @@ function handleExcelFiles(fileList){
         try{
           const wb=XLSX.read(ev.target.result,{type:'array'});
           let data=parseExcelWorkbook(wb);
-          // Si el parser local no detectó ventas, intentar mapeo IA
-          const ventasFound=data.ventas&&parseFloat(String(data.ventas).replace(/[$,\s]/g,''))>0;
-          if(!ventasFound){
+          // Llamar IA si ventas no encontrado O si ventas sí pero cogs+gastos vacíos (parser parcial)
+          const _pn=v=>parseFloat(String(v||'').replace(/[$,\s]/g,''))||0;
+          const ventasFound=_pn(data.ventas)>0;
+          const cogsFound=_pn(data.cogs)>0;
+          const gastosFound=_pn(data.gadmin)>0||_pn(data.gventas)>0;
+          if(!ventasFound||(ventasFound&&!cogsFound&&!gastosFound)){
             showNotif('🤖 Formato libre detectado — analizando con IA...','info',6000);
             try{
               const aiData=await _aiMapExcel(wb);
