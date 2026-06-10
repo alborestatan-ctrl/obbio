@@ -1904,7 +1904,7 @@ th[data-tip]{cursor:default;}
 
     <div style="margin-bottom:20px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-        <span style="font-size:13px;font-weight:600;color:var(--muted);">🏛️ Tasa ISR</span>
+        <span id="modelIsrLabel" style="font-size:13px;font-weight:600;color:var(--muted);">🏛️ Tasa ISR</span>
         <span style="font-size:14px;font-weight:800;color:var(--primary);background:var(--primary-dim);padding:2px 10px;border-radius:6px;" id="inflationValue">30%</span>
       </div>
       <input type="range" id="inflationSlider" min="0" max="40" value="30" oninput="updateModel()" style="width:100%;height:4px;border-radius:2px;background:var(--border);outline:none;cursor:pointer;-webkit-appearance:none;">
@@ -3731,17 +3731,17 @@ background:#10B981;
         </div>
         <div class="uw-field">
           <label class="uw-label">País y régimen fiscal</label>
-          <select class="uw-input" id="ii_pais" onchange="previewCalc()">
+          <select class="uw-input" id="ii_pais" onchange="previewCalc();_updateIsrLabel();">
             <option value="MX">🇲🇽 México · IVA 16% / ISR 30%</option>
             <option value="ES">🇪🇸 España · IVA 21% / IS 25%</option>
           </select>
         </div>
         <div class="uw-field">
-          <label class="uw-label">Moneda</label>
-          <select class="uw-input" id="ii_moneda">
-            <option value="MXN">🇲🇽 MXN · Pesos</option>
-            <option value="USD">🇺🇸 USD · Dólares</option>
+          <label class="uw-label">Moneda <span id="fxBadge" style="font-size:10px;font-weight:700;background:rgba(34,197,94,.15);color:var(--primary);border:1px solid rgba(34,197,94,.3);border-radius:5px;padding:1px 7px;margin-left:6px;cursor:pointer;" onclick="fetchFXRate()" title="Clic para actualizar tipo de cambio"></span></label>
+          <select class="uw-input" id="ii_moneda" onchange="previewCalc();_updateCurrencySymbols();">
+            <option value="MXN">🇲🇽 MXN · Pesos mexicanos</option>
             <option value="EUR">🇪🇺 EUR · Euros</option>
+            <option value="USD">🇺🇸 USD · Dólares</option>
           </select>
         </div>
         <div class="uw-field">
@@ -7182,7 +7182,7 @@ function downloadTemplate(){
 /* ==================== RENDER DINÁMICO DE VISTAS ==================== */
 
 /* ── Helpers de formato (disponibles globalmente) ── */
-const _m  = n=>{ if(n==null||isNaN(n))return'—'; const s=n<0?'-':''; const a=Math.abs(n); if(a>=1e9)return s+'$'+(a/1e9).toFixed(1)+'B'; if(a>=1e6)return s+'$'+(a/1e6).toFixed(1)+'M'; if(a>=1e3)return s+'$'+(a/1e3).toFixed(0)+'K'; return s+'$'+a.toFixed(0); };
+const _m  = n=>{ if(n==null||isNaN(n))return'—'; const sym=window._currSym||'$'; const s=n<0?'-':''; const a=Math.abs(n); if(a>=1e9)return s+sym+(a/1e9).toFixed(1)+'B'; if(a>=1e6)return s+sym+(a/1e6).toFixed(1)+'M'; if(a>=1e3)return s+sym+(a/1e3).toFixed(0)+'K'; return s+sym+a.toFixed(0); };
 const _pp = n=>(n==null||isNaN(n))?'—':n.toFixed(1)+'%';
 const _x  = n=>(n==null||isNaN(n))?'—':n.toFixed(2)+'x';
 const _d  = n=>(n==null||isNaN(n))?'—':Math.round(n)+' días';
@@ -7210,11 +7210,11 @@ function mkChart(id,cfg){
   const nItems=cfg.data?.labels?.length||0;
   // For horizontal bar charts: dynamic canvas height + scrollable container
   if(isHBar&&nItems>0){
-    const minH=Math.max(180, nItems*52);
+    const minH=Math.max(180, nItems*62);
     el.style.height=minH+'px';
     el.style.minHeight=minH+'px';
     const wrap=el.closest('.chart-container');
-    if(wrap){wrap.classList.add('scrollable');wrap.style.height='auto';}
+    if(wrap){ wrap.style.height=minH+'px'; wrap.style.minHeight=''; wrap.style.maxHeight=minH+'px'; }
     cfg.options.layout.padding.right=(cfg.options.layout.padding.right||0)||72;
   } else {
     // Vertical bars: add top padding so datalabels don't clip
@@ -7302,7 +7302,7 @@ function renderDashboardView(r){
     else if(_gran==='anual'&&_histD.length>=2) _mainTitle.textContent=`Ingresos vs EBITDA · ${_histD[0].anio}–${_histD[_histD.length-1].anio}`;
     else _mainTitle.textContent=`Ingresos vs EBITDA · ${r.anio||new Date().getFullYear()}`;
   }
-  const _spkO={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{enabled:false}},scales:{x:{display:false},y:{display:false}}};
+  const _spkO={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{enabled:false},datalabels:{display:false}},scales:{x:{display:false},y:{display:false}}};
   if(_gran==='mensual'){
     mkChart('spark1',{type:'line',data:{labels,datasets:[{data:r.ingMensual,borderColor:'#22C55E',borderWidth:2,pointRadius:0,tension:.4,fill:true,backgroundColor:'#22C55E22'}]},options:_spkO});
     mkChart('spark2',{type:'line',data:{labels,datasets:[{data:r.ebitdaMensual,borderColor:'#10B981',borderWidth:2,pointRadius:0,tension:.4,fill:true,backgroundColor:'#10B98122'}]},options:_spkO});
@@ -7821,7 +7821,18 @@ function renderCashflowView(r){
   if(_cfGran==='mensual'){
     const labels=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
     if(_cfWrap) _cfWrap.querySelectorAll('[data-nodata]').forEach(n=>n.remove());
-    mkChart('cashFlowChart',{type:'bar',data:{labels,datasets:[{label:'Flujo Neto',data:r.cfMensual,backgroundColor:r.cfMensual.map(v=>v>=0?'#14B8A6':'#EF4444'),borderRadius:8,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1E1E22',callbacks:{label:ctx=>` Flujo: ${_m(ctx.parsed.y*1e6)}`}}},scales:{x:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',font:{size:12}}},y:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',callback:v=>'$'+v+'M'}}}}});
+    mkChart('cashFlowChart',{type:'bar',data:{labels,datasets:[{label:'Flujo Neto',data:r.cfMensual,backgroundColor:r.cfMensual.map(v=>v>=0?'#14B8A6':'#EF4444'),borderRadius:8,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},datalabels:{display:false},tooltip:{backgroundColor:'#1E1E22',callbacks:{label:ctx=>` Flujo: ${_m(ctx.parsed.y*1e6)}`}}},scales:{x:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',font:{size:12}}},y:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',callback:v=>'$'+v+'M'}}}}});
+  } else if(r.flujoOp||r.flujoInv||r.flujoFin){
+    // Sin datos mensuales pero hay cifras anuales — mostrar desglose anual
+    if(_cfWrap) _cfWrap.querySelectorAll('[data-nodata]').forEach(n=>n.remove());
+    const _cfLabels=['Flujo Operativo','Flujo Inversión','Flujo Financiero','Flujo Neto'];
+    const _cfVals=[r.flujoOp,r.flujoInv,r.flujoFin,r.flujoNeto].map(v=>(v||0)/1e6);
+    const _cfColors=_cfVals.map(v=>v>=0?'rgba(20,184,166,.7)':'rgba(239,68,68,.7)');
+    const _cfTitle=document.querySelector('#cashflowView .card-title');
+    if(_cfTitle) _cfTitle.textContent='Flujo de Caja Anual';
+    const _cfBadge=document.querySelector('#cashflowView .card-badge.success');
+    if(_cfBadge) _cfBadge.textContent=r.anio||'Anual';
+    mkChart('cashFlowChart',{type:'bar',data:{labels:_cfLabels,datasets:[{data:_cfVals,backgroundColor:_cfColors,borderRadius:8,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},datalabels:{display:false},tooltip:{backgroundColor:'#1E1E22',callbacks:{label:ctx=>` ${_cfLabels[ctx.dataIndex]}: ${_m(ctx.parsed.y*1e6)}`}}},scales:{x:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',font:{size:12}}},y:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',callback:v=>(v>=0?'$':'-$')+Math.abs(v).toFixed(1)+'M'}}}}});
   } else {
     if(_charts['cashFlowChart']){try{_charts['cashFlowChart'].destroy();}catch(e){}delete _charts['cashFlowChart'];}
     if(_cfWrap&&!_cfWrap.querySelector('[data-nodata]')) _cfWrap.insertAdjacentHTML('afterbegin',`<div data-nodata="1" style="text-align:center;padding:32px 16px;font-size:12px;color:var(--muted);">📅 Sin detalle mensual — sube un Excel con flujos por mes para activar esta gráfica.</div>`);
@@ -9489,6 +9500,56 @@ async function guardarCambios(){
   }
 }
 window.guardarCambios=guardarCambios;
+
+/* ─────────────────── Moneda + Tipo de Cambio ─────────────────── */
+let _fxRates={EUR:0.05,USD:0.05};  // fallback
+let _fxLastFetch=0;
+
+function fetchFXRate(){
+  fetch('https://open.er-api.com/v6/latest/MXN')
+    .then(r=>r.json())
+    .then(d=>{
+      if(d&&d.rates){
+        _fxRates={EUR:d.rates.EUR||0.05, USD:d.rates.USD||0.05};
+        _fxLastFetch=Date.now();
+        _updateFxBadge();
+      }
+    }).catch(()=>{});
+}
+
+function _updateFxBadge(){
+  const badge=document.getElementById('fxBadge'); if(!badge) return;
+  const moneda=(document.getElementById('ii_moneda')||{}).value||'MXN';
+  if(moneda==='MXN'){ badge.style.display='none'; return; }
+  const rate=_fxRates[moneda]; if(!rate){ badge.style.display='none'; return; }
+  const inv=(1/rate).toFixed(2);
+  badge.style.display='';
+  badge.textContent=`1 ${moneda} = $${inv} MXN`;
+}
+
+function _updateCurrencySymbols(){
+  const moneda=(document.getElementById('ii_moneda')||{}).value||'MXN';
+  const sym=moneda==='EUR'?'€':moneda==='USD'?'US$':'$';
+  window._currSym=sym;
+  document.querySelectorAll('.uw-currency').forEach(el=>{ el.textContent=sym; });
+  _updateFxBadge();
+  if(!_fxLastFetch) fetchFXRate();
+  // Re-render active view so all monetary values update
+  const calc=window._obbioCalc||(typeof getCalc==='function'&&getCalc());
+  if(calc&&typeof renderAllViews==='function') renderAllViews(calc);
+}
+
+// Auto-refresh tipo de cambio cada 10 minutos
+setInterval(fetchFXRate, 600000);
+document.addEventListener('DOMContentLoaded',()=>{ fetchFXRate(); setTimeout(_updateCurrencySymbols, 200); });
+
+/* ─────────────────── ISR vs IS label (España) ─────────────────── */
+function _updateIsrLabel(){
+  const lbl=document.getElementById('modelIsrLabel'); if(!lbl) return;
+  const pais=(document.getElementById('ii_pais')||{}).value||'MX';
+  lbl.textContent=pais==='ES'?'🏛️ Tasa IS (Impuesto Sociedades)':'🏛️ Tasa ISR';
+}
+document.addEventListener('DOMContentLoaded',_updateIsrLabel);
 
 /* ─────────────────── Analytics nav visibility ─────────────────── */
 function updateAnalyticsNav(r){
