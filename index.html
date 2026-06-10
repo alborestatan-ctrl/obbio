@@ -1263,15 +1263,15 @@ th[data-tip]{cursor:default;}
     <div><h2 class="page-title">Pronóstico y Planeación</h2><p class="page-subtitle">Proyecciones y escenarios para 2025</p></div>
   </header>
   <div class="forecast-grid">
-    <div class="scenario-card optimistic">
-      <div class="scenario-title">Escenario Optimista</div>
-      <div class="scenario-value">—</div>
-      <div class="scenario-change" style="color:var(--success);">+20% crecimiento esperado</div>
-    </div>
     <div class="scenario-card base">
       <div class="scenario-title">Escenario Base</div>
       <div class="scenario-value">—</div>
       <div class="scenario-change" style="color:var(--primary);">+8% crecimiento esperado</div>
+    </div>
+    <div class="scenario-card optimistic">
+      <div class="scenario-title">Escenario Optimista</div>
+      <div class="scenario-value">—</div>
+      <div class="scenario-change" style="color:var(--success);">+20% crecimiento esperado</div>
     </div>
     <div class="scenario-card pessimistic">
       <div class="scenario-title">Escenario Conservador</div>
@@ -8655,12 +8655,12 @@ function _applyForecast(r){
   const gOpt=gBase+dOpt, gCons=gBase-dCons;
   const opt=r.ventas*(1+gOpt), base=r.ventas*(1+gBase), cons=r.ventas*(1+gCons);
   const cards=el.querySelectorAll('.scenario-value');
-  if(cards[0]) cards[0].innerHTML=_m(opt);
-  if(cards[1]) cards[1].innerHTML=_m(base);
+  if(cards[0]) cards[0].innerHTML=_m(base);
+  if(cards[1]) cards[1].innerHTML=_m(opt);
   if(cards[2]) cards[2].innerHTML=_m(cons);
   const chg=el.querySelectorAll('.scenario-change');
-  if(chg[0]){chg[0].style.color='var(--success)';chg[0].innerHTML=`▲ +${Math.round(gOpt*100)}% vs año anterior`;}
-  if(chg[1]){chg[1].style.color='var(--primary)';chg[1].innerHTML=(gBase>=0?`▲ +${Math.round(gBase*100)}`:`▼ ${Math.round(gBase*100)}`)+'% crecimiento base';}
+  if(chg[0]){chg[0].style.color='var(--primary)';chg[0].innerHTML=(gBase>=0?`▲ +${Math.round(gBase*100)}`:`▼ ${Math.round(Math.abs(gBase*100))}`)+'% crecimiento base';}
+  if(chg[1]){chg[1].style.color='var(--success)';chg[1].innerHTML=`▲ +${Math.round(gOpt*100)}% vs año anterior`;}
   if(chg[2]){chg[2].style.color='var(--danger)';chg[2].innerHTML=(gCons>=0?`▲ +${Math.round(gCons*100)}`:`▼ ${Math.round(Math.abs(gCons)*100)}`)+'% escenario adverso';}
   const yrBase=r.anio?+r.anio:new Date().getFullYear();
   const years=[yrBase+1,yrBase+2,yrBase+3,yrBase+4,yrBase+5];
