@@ -173,7 +173,7 @@ body{background:var(--bg);color:var(--text);overflow-x:hidden;}
 
 /* ===== KPI CARDS MEJORADAS ===== */
 .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px;}
-.kpi-card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:20px 22px;position:relative;overflow:hidden;transition:.2s;cursor:default;}
+.kpi-card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:20px 22px;position:relative;overflow:visible;transition:.2s;cursor:default;}
 .kpi-card:hover{border-color:rgba(255,255,255,.15);transform:translateY(-1px);}
 .kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:18px 18px 0 0;}
 .kpi-card.accent-blue::before{background:linear-gradient(90deg,var(--primary),var(--indigo));}
@@ -195,12 +195,12 @@ body{background:var(--bg);color:var(--text);overflow-x:hidden;}
 
 .kpi-value{font-size:28px;font-weight:800;letter-spacing:-1px;line-height:1;margin-bottom:4px;}
 .kpi-sub{font-size:11px;color:var(--muted2);margin-bottom:8px;line-height:1.3;}
-.kpi-bottom{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.kpi-bottom{display:flex;flex-direction:column;align-items:flex-start;gap:5px;}
 .kpi-change{font-size:12px;font-weight:600;display:flex;align-items:center;gap:4px;}
 .kpi-change.positive{color:var(--success);}
 .kpi-change.negative{color:var(--danger);}
 .kpi-change.neutral{color:var(--muted);}
-.kpi-sparkline{height:32px;width:80px;}
+.kpi-sparkline{height:36px;width:100%;}
 
 /* Progress bar en KPI */
 .kpi-progress{margin-top:10px;}
@@ -942,15 +942,20 @@ th[data-tip]{cursor:default;}
     </div>
   </header>
 
-  <!-- Barra de contexto: País · Moneda · Tipo de cambio -->
-  <div id="dashContextBar" style="display:flex;align-items:center;gap:10px;margin-bottom:18px;padding:10px 16px;background:var(--card2);border:1px solid var(--border);border-radius:12px;font-size:12px;font-weight:600;flex-wrap:wrap;">
-    <span style="color:var(--muted);">Contexto:</span>
-    <span id="dashCtxPais" style="color:var(--text);">🇲🇽 México · IVA 16% / ISR 30%</span>
-    <span style="color:var(--border2);">·</span>
-    <span id="dashCtxMoneda" style="color:var(--text);">💵 MXN · Pesos</span>
-    <span id="dashCtxFx" style="display:none;color:var(--primary);background:var(--primary-dim);border-radius:6px;padding:2px 8px;"></span>
-    <span style="flex:1;"></span>
-    <button onclick="showView('ingresodatosView',document.querySelector('[onclick*=\"ingresodatosView\"]'))" style="font-size:11px;padding:4px 12px;border-radius:7px;border:1px solid rgba(34,197,94,.3);background:var(--primary-dim);color:var(--primary);cursor:pointer;font-weight:700;">⚙️ Cambiar</button>
+  <!-- Barra de contexto: País · Moneda · Tipo de cambio — editable inline -->
+  <div id="dashContextBar" style="display:flex;align-items:center;gap:10px;margin-bottom:18px;padding:8px 14px;background:var(--card2);border:1px solid var(--border);border-radius:12px;font-size:12px;font-weight:600;flex-wrap:wrap;">
+    <span style="color:var(--muted);flex-shrink:0;">Contexto:</span>
+    <select id="dashSelPais" onchange="_onDashCtxChange()" style="background:transparent;border:none;color:var(--text);font-size:12px;font-weight:700;cursor:pointer;outline:none;padding:2px 4px;border-radius:6px;appearance:auto;">
+      <option value="MX">🇲🇽 México · IVA 16% / ISR 30%</option>
+      <option value="ES">🇪🇸 España · IVA 21% / IS 25%</option>
+    </select>
+    <span style="color:var(--border2);flex-shrink:0;">·</span>
+    <select id="dashSelMoneda" onchange="_onDashCtxChange()" style="background:transparent;border:none;color:var(--text);font-size:12px;font-weight:700;cursor:pointer;outline:none;padding:2px 4px;border-radius:6px;appearance:auto;">
+      <option value="MXN">💵 MXN · Pesos</option>
+      <option value="EUR">💶 EUR · Euros</option>
+      <option value="USD">🇺🇸 USD · Dólares</option>
+    </select>
+    <span id="dashCtxFx" style="display:none;color:var(--primary);background:var(--primary-dim);border-radius:6px;padding:2px 8px;font-size:11px;cursor:pointer;" onclick="fetchFXRate()" title="Clic para actualizar"></span>
   </div>
 
   <!-- KPI GRID MEJORADO -->
@@ -7221,12 +7226,19 @@ function mkChart(id,cfg){
   const nItems=cfg.data?.labels?.length||0;
   // For horizontal bar charts: dynamic canvas height + scrollable container
   if(isHBar&&nItems>0){
-    const minH=Math.max(180, nItems*62);
+    const minH=Math.max(160, nItems*58);
     el.style.height=minH+'px';
-    el.style.minHeight=minH+'px';
     const wrap=el.closest('.chart-container');
-    if(wrap){ wrap.style.height=minH+'px'; wrap.style.minHeight=''; wrap.style.maxHeight=minH+'px'; }
+    if(wrap){
+      wrap.style.setProperty('height', minH+'px','important');
+      wrap.style.setProperty('max-height', minH+'px','important');
+      wrap.style.removeProperty('min-height');
+    }
     cfg.options.layout.padding.right=(cfg.options.layout.padding.right||0)||72;
+    if(!cfg.options.scales) cfg.options.scales={};
+    if(!cfg.options.scales.y) cfg.options.scales.y={};
+    cfg.options.scales.y.ticks=cfg.options.scales.y.ticks||{};
+    // barThickness ensures bars stay compact regardless of canvas height
   } else {
     // Vertical bars: add top padding so datalabels don't clip
     if(cfg.type==='bar'){
@@ -7276,6 +7288,7 @@ function mkChart(id,cfg){
 
 /* ─────────────────── DASHBOARD VIEW ─────────────────── */
 function renderDashboardView(r){
+  _syncDashSelects();
   if(!r||!r.ventas){
     ['fcSales','fcEbitda'].forEach(id=>{const e=document.getElementById(id);if(e)e.innerHTML='—';});
     document.querySelectorAll('#dashboardView .kpi-value').forEach(e=>e.innerHTML='—');
@@ -7397,13 +7410,9 @@ function renderDashboardView(r){
     const ft=document.getElementById('sidebarFooterText'); if(ft) ft.textContent='Obbio · '+r.empresa+' · '+r.anio;
     const ps=document.getElementById('pageSubtitle'); if(ps) ps.textContent='Datos financieros · '+r.empresa+' · '+r.anio;
   }
-  // Barra de contexto País · Moneda
+  // Barra de contexto País · Moneda — actualizar FX badge
   {
-    const _pais=r.pais||'MX', _mon=r.moneda||'MXN';
-    const _paisTxt=_pais==='ES'?'🇪🇸 España · IVA 21% / IS 25%':'🇲🇽 México · IVA 16% / ISR 30%';
-    const _monTxt=_mon==='EUR'?'💶 EUR · Euros':_mon==='USD'?'💵 USD · Dólares':'💵 MXN · Pesos';
-    const cp=document.getElementById('dashCtxPais'); if(cp) cp.textContent=_paisTxt;
-    const cm=document.getElementById('dashCtxMoneda'); if(cm) cm.textContent=_monTxt;
+    const _mon=r.moneda||'MXN';
     const cf=document.getElementById('dashCtxFx');
     if(cf&&_mon!=='MXN'&&_fxRates&&_fxRates[_mon]){
       const inv=(1/_fxRates[_mon]).toFixed(2);
@@ -7940,10 +7949,10 @@ function renderCostosView(r){
   if(hasBreakdown){
     const items=[['Materia prima',bd.materia||0],['Mano de obra',bd.mod||0],['Maquila',bd.maquila||0],['Otros costos',bd.otros||0]].filter(x=>x[1]>0);
     mkChart('costosDonutChart',{type:'doughnut',data:{labels:items.map(x=>x[0]),datasets:[{data:items.map(x=>+(x[1]/1e6).toFixed(2)),backgroundColor:COLORS,hoverOffset:12}]},plugins:cogsCtr,options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{position:'bottom'},tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${_m(ctx.parsed*1e6)}`}}}}});
-    mkChart('costosBarChart',{type:'bar',data:{labels:items.map(x=>x[0]),datasets:[{data:items.map(x=>r.cogs>0?+(x[1]/r.cogs*100).toFixed(1):0),backgroundColor:COLORS,borderRadius:7,borderSkipped:false}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.parsed.x}% del COGS · ${_m(items[ctx.dataIndex][1])}`}}},scales:{x:{ticks:{callback:v=>v+'%'},max:Math.ceil((items[0]?r.cogs>0?items[0][1]/r.cogs*100:0:60)/10)*10+10},y:{grid:{display:false}}}}});
+    mkChart('costosBarChart',{type:'bar',data:{labels:items.map(x=>x[0]),datasets:[{data:items.map(x=>r.cogs>0?+(x[1]/r.cogs*100).toFixed(1):0),backgroundColor:COLORS,borderRadius:7,borderSkipped:false,barThickness:28}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.parsed.x}% del COGS · ${_m(items[ctx.dataIndex][1])}`}}},scales:{x:{ticks:{callback:v=>v+'%'},max:Math.ceil((items[0]?r.cogs>0?items[0][1]/r.cogs*100:0:60)/10)*10+10},y:{grid:{display:false}}}}});
   } else {
     mkChart('costosDonutChart',{type:'doughnut',data:{labels:['COGS','Utilidad bruta'],datasets:[{data:[+(r.cogs/1e6).toFixed(2),+(Math.max(0,r.utilBruta)/1e6).toFixed(2)],backgroundColor:['#EF4444','#22C55E'],hoverOffset:12}]},plugins:cogsCtr,options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{position:'bottom'},tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${_m(ctx.parsed*1e6)}`}}}}});
-    mkChart('costosBarChart',{type:'bar',data:{labels:['COGS','G. Admin','G. Ventas','G. Financieros'],datasets:[{data:[r.cogs,r.gadmin,r.gventas,r.gfin].map(v=>r.ventas>0?+(v/r.ventas*100).toFixed(1):0),backgroundColor:['#EF4444','#F59E0B','#8B5CF6','#06B6D4'],borderRadius:7,borderSkipped:false}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.parsed.x}% de ventas`}}},scales:{x:{ticks:{callback:v=>v+'%'}},y:{grid:{display:false}}}}});
+    mkChart('costosBarChart',{type:'bar',data:{labels:['COGS','G. Admin','G. Ventas','G. Financieros'],datasets:[{data:[r.cogs,r.gadmin,r.gventas,r.gfin].map(v=>r.ventas>0?+(v/r.ventas*100).toFixed(1):0),backgroundColor:['#EF4444','#F59E0B','#8B5CF6','#06B6D4'],borderRadius:7,borderSkipped:false,barThickness:28}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.parsed.x}% de ventas`}}},scales:{x:{ticks:{callback:v=>v+'%'}},y:{grid:{display:false}}}}});
   }
   const sb=document.getElementById('cv-sens-body');
   if(sb){
@@ -7999,7 +8008,7 @@ function renderGastosView(r){
     barItems=[['G. Admin',r.gadmin||0],['G. Ventas',r.gventas||0],['G. Financieros',r.gfin||0]];
   }
   const barVals=barItems.map(x=>gastoTotal>0?+(x[1]/gastoTotal*100).toFixed(1):0);
-  mkChart('gastosBarChart',{type:'bar',data:{labels:barItems.map(x=>x[0]),datasets:[{data:barVals,backgroundColor:COLORS,borderRadius:7,borderSkipped:false}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.parsed.x}% del total · ${_m(barItems[ctx.dataIndex][1])}`}}},scales:{x:{ticks:{callback:v=>v+'%'}},y:{grid:{display:false}}}}});
+  mkChart('gastosBarChart',{type:'bar',data:{labels:barItems.map(x=>x[0]),datasets:[{data:barVals,backgroundColor:COLORS,borderRadius:7,borderSkipped:false,barThickness:28}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.parsed.x}% del total · ${_m(barItems[ctx.dataIndex][1])}`}}},scales:{x:{ticks:{callback:v=>v+'%'}},y:{grid:{display:false}}}}});
   const bg={'pos':'positive-border','info':'info-border','warn':'warning-border','danger':'danger-border'};
   const briefs=[];
   if(pct!=null){
@@ -9524,6 +9533,29 @@ async function guardarCambios(){
   }
 }
 window.guardarCambios=guardarCambios;
+
+/* ─────────────────── Sincronización selectores dashboard ↔ formulario ─────────────────── */
+function _onDashCtxChange(){
+  const dp=document.getElementById('dashSelPais');
+  const dm=document.getElementById('dashSelMoneda');
+  const fp=document.getElementById('ii_pais');
+  const fm=document.getElementById('ii_moneda');
+  if(dp&&fp){ fp.value=dp.value; }
+  if(dm&&fm){ fm.value=dm.value; }
+  _updateIsrLabel();
+  _updateCurrencySymbols();
+  if(typeof calcularYAplicar==='function') calcularYAplicar();
+}
+
+// Mantener selects del dashboard sincronizados cuando se vuelve al dashboard
+function _syncDashSelects(){
+  const fp=document.getElementById('ii_pais');
+  const fm=document.getElementById('ii_moneda');
+  const dp=document.getElementById('dashSelPais');
+  const dm=document.getElementById('dashSelMoneda');
+  if(dp&&fp) dp.value=fp.value||'MX';
+  if(dm&&fm) dm.value=fm.value||'MXN';
+}
 
 /* ─────────────────── Moneda + Tipo de Cambio ─────────────────── */
 let _fxRates={EUR:0.05,USD:0.05};  // fallback
