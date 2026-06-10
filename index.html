@@ -7346,16 +7346,32 @@ function renderDashboardView(r){
     qV=_catEntries.map(([,v])=>+(v/1e6).toFixed(2));
     _catBgColors=_catPalette.slice(0,qL.length);
   } else {
-    // Usar los 12 meses; filtrar meses sin datos
+    const _allColors=_catPalette.concat(['#F97316','#14B8A6','#EAB308','#6366F1','#EC4899','#84CC16']);
     const _mV=r.ingMensual.map(v=>+(v/1e6).toFixed(2));
-    const _mPairs=_meses.map((m,i)=>([m,_mV[i]])).filter(([,v])=>v>0);
-    qL=_mPairs.map(([m])=>m);
-    qV=_mPairs.map(([,v])=>v);
-    _catBgColors=_catPalette.concat(['#F97316','#14B8A6','#EAB308','#6366F1','#EC4899','#84CC16']).slice(0,qL.length);
+    const _mHasData=_mV.some(v=>v>0);
+    if(_mHasData){
+      // Datos mensuales reales
+      const _mPairs=_meses.map((m,i)=>([m,_mV[i]])).filter(([,v])=>v>0);
+      qL=_mPairs.map(([m])=>m);
+      qV=_mPairs.map(([,v])=>v);
+      _catBgColors=_allColors.slice(0,qL.length);
+    } else {
+      // Fallback: datos anuales de historico
+      const _hist=r.historico||window._obbioHistorico||[];
+      if(_hist.length>=1){
+        qL=_hist.map(h=>String(h.anio));
+        qV=_hist.map(h=>+(h.ventas/1e6).toFixed(2));
+        _catBgColors=_allColors.slice(0,qL.length);
+      } else {
+        qL=[]; qV=[]; _catBgColors=[];
+      }
+    }
   }
   // Actualiza badge y leyenda dinámica del donut
   const _catBadgeEl=document.querySelector('#dashboardView .card:has(#categoryChart) .card-badge');
-  if(_catBadgeEl) _catBadgeEl.textContent=_catEntries?'Por segmento':'Por mes';
+  const _mHasDataCheck=r.ingMensual.some(v=>v>0);
+  const _histCheck=r.historico||window._obbioHistorico||[];
+  if(_catBadgeEl) _catBadgeEl.textContent=_catEntries?'Por segmento':_mHasDataCheck?'Por mes':'Por año';
   const _catLeg=document.getElementById('categoryLegend');
   if(_catLeg){
     const _catTotal=qV.reduce((a,b)=>a+b,0)||1;
@@ -7369,16 +7385,24 @@ function renderDashboardView(r){
     _regLabels=_regEntries.map(([k])=>k.length>14?k.slice(0,13)+'…':k);
     _regVals=_regEntries.map(([,v])=>+(v/1e6).toFixed(2));
   } else {
-    // Meses reales (solo los que tienen datos)
     const _mV2=r.ingMensual.map(v=>+(v/1e6).toFixed(2));
-    const _mPairs2=_meses.map((m,i)=>([m,_mV2[i]])).filter(([,v])=>v>0);
-    _regLabels=_mPairs2.map(([m])=>m);
-    _regVals=_mPairs2.map(([,v])=>v);
+    const _mHasData2=_mV2.some(v=>v>0);
+    if(_mHasData2){
+      const _mPairs2=_meses.map((m,i)=>([m,_mV2[i]])).filter(([,v])=>v>0);
+      _regLabels=_mPairs2.map(([m])=>m);
+      _regVals=_mPairs2.map(([,v])=>v);
+    } else {
+      // Fallback anual desde historico
+      const _hist2=r.historico||window._obbioHistorico||[];
+      _regLabels=_hist2.map(h=>String(h.anio));
+      _regVals=_hist2.map(h=>+(h.ventas/1e6).toFixed(2));
+    }
   }
   const _regBadge=document.querySelector('#dashboardView .card:has(#regionChart) .card-badge');
-  if(_regBadge) _regBadge.textContent=_regEntries?'Por sucursal/región':'Por mes';
+  const _mHasDataReg=r.ingMensual.some(v=>v>0);
+  if(_regBadge) _regBadge.textContent=_regEntries?'Por sucursal/región':_mHasDataReg?'Por mes':'Por año';
   const _regTitle=document.querySelector('#dashboardView .card:has(#regionChart) .card-title');
-  if(_regTitle&&!_regEntries) _regTitle.textContent='Ingresos Mensuales';
+  if(_regTitle&&!_regEntries) _regTitle.textContent=_mHasDataReg?'Ingresos Mensuales':'Ingresos por Año';
   mkChart('regionChart',{type:'bar',data:{labels:_regLabels,datasets:[{data:_regVals,backgroundColor:_regColors.slice(0,_regLabels.length),borderColor:'transparent',borderRadius:8,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1E1E22',callbacks:{label:ctx=>` ${ctx.label}: ${_m(ctx.parsed.y*1e6)}`}}},scales:{x:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',font:{size:10},maxRotation:30}},y:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',callback:v=>'$'+v+'M'}}}}});
   // paretoChart — clientes reales si existen, sino estructura de costos
   const clienteMap=r.clienteMap||window._obbioClienteMap||null;
@@ -10698,6 +10722,8 @@ window.toggleSidebarDesktop=toggleSidebarDesktop;
       else{const m=r.fecha.match(/(\d{4})/);if(m) periods.add(m[1]);}
     });
     sel.innerHTML='<option value="">Todos los períodos</option>'+[...periods].sort().reverse().map(p=>`<option value="${p}">${p}</option>`).join('');
+    // Solo mostrar si hay períodos reales
+    if(periods.size===0) sel.style.display='none';
   };
   window.prodApplyFilter=function(){
     const val=document.getElementById('prod-filter-period').value;
