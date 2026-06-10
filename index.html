@@ -109,8 +109,6 @@
 [data-theme="light"] #chatInputRow{border-top-color:rgba(0,0,0,.08);}
 [data-theme="light"] #chatInput{background:#F8FAFC;color:var(--text);border-color:rgba(34,197,94,.3);}
 [data-theme="light"] #chatInput::placeholder{color:var(--muted2);}
-/* ── Data-tip tooltips ── */
-[data-theme="light"] th[data-tip]::before{background:#fff;border-color:rgba(0,0,0,.12);color:var(--text);box-shadow:0 6px 20px rgba(0,0,0,.1);}
 /* ── Table row hover ── */
 [data-theme="light"] .enterprise-table tbody tr:hover td,
 [data-theme="light"] .comp-tbl tbody tr:hover td{background:rgba(0,0,0,.025);}
@@ -377,18 +375,7 @@ th.sortable:hover{color:var(--primary) !important;}
 th.sortable::after{content:' ⇅';opacity:.3;font-size:9px;}
 th.sortable.asc::after{content:' ↑';opacity:1;color:var(--primary);}
 th.sortable.desc::after{content:' ↓';opacity:1;color:var(--primary);}
-th[data-tip]{position:relative;cursor:help;}
-th[data-tip]::before{
-  content:attr(data-tip);
-  position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);
-  background:#13131e;border:1px solid rgba(34,197,94,.3);
-  color:#c8cfe8;font-size:11.5px;font-weight:400;line-height:1.55;
-  padding:9px 13px;border-radius:10px;white-space:pre-wrap;max-width:230px;min-width:130px;
-  box-shadow:0 6px 24px rgba(0,0,0,.6);z-index:9999;
-  opacity:0;pointer-events:none;transition:opacity .18s;
-  text-transform:none;letter-spacing:0;font-family:inherit;
-}
-th[data-tip]:hover::before{opacity:1;}
+th[data-tip]{cursor:default;}
 .enterprise-table tbody tr:hover td,.comp-tbl tbody tr:hover td{background:rgba(255,255,255,.022);transition:background .1s;}
 
 /* ── Scrollbar global ── */
@@ -1082,7 +1069,7 @@ th[data-tip]:hover::before{opacity:1;}
         <div class="card-title">Distribución de Ingresos</div>
         <span class="card-badge">Por segmento</span>
       </div>
-      <p style="font-size:11.5px;color:var(--muted);margin:-4px 0 10px;">Cómo se reparten tus ingresos entre segmentos o líneas de negocio. Identifica qué segmento aporta más valor.</p>
+      <p id="catChartDesc" style="font-size:11.5px;color:var(--muted);margin:-4px 0 10px;">Cómo se reparten tus ingresos entre segmentos o líneas de negocio. Identifica qué segmento aporta más valor.</p>
       <div class="chart-legend" id="categoryLegend">
         <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#22C55E;"></div><span>—</span></div>
       </div>
@@ -1095,7 +1082,7 @@ th[data-tip]:hover::before{opacity:1;}
         <div class="card-title">Desempeño Regional</div>
         <span class="card-badge">Ingresos MXN M</span>
       </div>
-      <p style="font-size:11.5px;color:var(--muted);margin:-4px 0 10px;">Compara el ingreso generado por zona geográfica o sucursal. Detecta dónde concentrar recursos comerciales.</p>
+      <p id="regChartDesc" style="font-size:11.5px;color:var(--muted);margin:-4px 0 10px;">Compara el ingreso generado por zona geográfica o sucursal. Detecta dónde concentrar recursos comerciales.</p>
       <div class="chart-container small">
         <canvas id="regionChart" role="img" aria-label="Barras: ingresos por región"></canvas>
       </div>
@@ -7402,7 +7389,19 @@ function renderDashboardView(r){
   const _mHasDataReg=r.ingMensual.some(v=>v>0);
   if(_regBadge) _regBadge.textContent=_regEntries?'Por sucursal/región':_mHasDataReg?'Por mes':'Por año';
   const _regTitle=document.querySelector('#dashboardView .card:has(#regionChart) .card-title');
-  if(_regTitle&&!_regEntries) _regTitle.textContent=_mHasDataReg?'Ingresos Mensuales':'Ingresos por Año';
+  if(_regTitle) _regTitle.textContent=_regEntries?'Desempeño Regional':_mHasDataReg?'Ingresos Mensuales':'Tendencia Anual de Ingresos';
+  const _catDescEl=document.getElementById('catChartDesc');
+  const _regDescEl=document.getElementById('regChartDesc');
+  if(_catDescEl){
+    if(_catEntries) _catDescEl.textContent='Cómo se reparten tus ingresos entre segmentos o líneas de negocio. Identifica qué segmento aporta más valor.';
+    else if(_mHasDataCheck) _catDescEl.textContent='Distribución de tus ingresos a lo largo del año, mes por mes. Los meses más altos son tus períodos de mayor venta.';
+    else _catDescEl.textContent='Tu Excel no tiene desglose por segmento ni por mes. Se muestra la distribución por año.';
+  }
+  if(_regDescEl){
+    if(_regEntries) _regDescEl.textContent='Compara el ingreso generado por zona geográfica o sucursal. Detecta dónde concentrar recursos comerciales.';
+    else if(_mHasDataReg) _regDescEl.textContent='Evolución de tus ingresos mes a mes durante el año. Identifica los meses de mayor y menor rendimiento.';
+    else _regDescEl.textContent='Tu Excel no tiene datos de sucursales. Se muestra la tendencia anual de ingresos. Agrega una columna de sucursal/región para ver el análisis geográfico.';
+  }
   mkChart('regionChart',{type:'bar',data:{labels:_regLabels,datasets:[{data:_regVals,backgroundColor:_regColors.slice(0,_regLabels.length),borderColor:'transparent',borderRadius:8,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1E1E22',callbacks:{label:ctx=>` ${ctx.label}: ${_m(ctx.parsed.y*1e6)}`}}},scales:{x:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',font:{size:10},maxRotation:30}},y:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',callback:v=>'$'+v+'M'}}}}});
   // paretoChart — clientes reales si existen, sino estructura de costos
   const clienteMap=r.clienteMap||window._obbioClienteMap||null;
@@ -10784,7 +10783,7 @@ window.toggleSidebarDesktop=toggleSidebarDesktop;
     if(!_fRows.length) return;
     const zone=document.getElementById('prod-upload-zone'); if(zone) zone.style.display='none';
     const resetBtn=document.getElementById('prod-reset-btn'); if(resetBtn) resetBtn.style.display='';
-    const filterSel=document.getElementById('prod-filter-period'); if(filterSel) filterSel.style.display='';
+    const filterSel=document.getElementById('prod-filter-period'); if(filterSel&&filterSel.querySelectorAll('option').length>1) filterSel.style.display='';
     const {lista,totalIngreso,totalTx,topIng,topVol,ticketProm}=calcProductos(_fRows);
     document.getElementById('prod-kpi-grid').style.display='';
     document.getElementById('prod-analysis').style.display='';
