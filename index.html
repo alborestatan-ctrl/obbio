@@ -5393,11 +5393,13 @@ function parseExcelWorkbook(wb){
       // Detect year columns — scan first 8 rows
       let yearCols=[], hdrRowIdx=0;
       outer: for(let i=0;i<Math.min(raw.length,8);i++){
+        const rowYears=[];
         for(let c=0;c<raw[i].length;c++){
           const n=typeof raw[i][c]==='number'?raw[i][c]:parseInt(String(raw[i][c]||'').trim());
-          if(n>=2010&&n<=2040){ yearCols.push({col:c,year:n}); }
+          if(n>=2010&&n<=2040){ rowYears.push({col:c,year:n}); }
         }
-        if(yearCols.length>0){ hdrRowIdx=i; break outer; }
+        // Require ≥2 year columns in the same row — a single year is just a period label in a title row
+        if(rowYears.length>=2){ yearCols=rowYears; hdrRowIdx=i; break outer; }
       }
       const map={}, byYear={};
       yearCols.forEach(({year})=>byYear[year]={});
@@ -5459,7 +5461,8 @@ function parseExcelWorkbook(wb){
       const er=erResult.byYear[yr]||{}, bal=balResult.byYear[yr]||{};
       const v=kvN(er,'ventas netas','ventas totales','ingresos');
       if(v>0||Object.keys(bal).length>0){
-        histMap[yr]={anio:yr,ventas:v,cogs:kvN(er,'costo de ventas','cogs'),gadmin:kvN(er,'gastos de administraci'),gventas:kvN(er,'gastos de ventas'),dep:kvN(er,'depreci'),gfin:kvN(er,'gastos financiero','intereses'),caja:kvN(bal,'caja','efectivo'),cxc:kvN(bal,'cuentas por cobrar'),inventario:kvN(bal,'inventario'),activo_fijo:kvN(bal,'activo fijo'),cxp:kvN(bal,'cuentas por pagar'),pasivo_cp:kvN(bal,'pasivo corto'),pasivo_lp:kvN(bal,'pasivo largo'),capital:kvN(bal,'capital')};
+        const _hcg=kvN(er,'costo de ventas','cogs'),_hga=kvN(er,'gastos de administraci'),_hgv=kvN(er,'gastos de ventas'),_hdep=kvN(er,'depreci');
+        histMap[yr]={anio:yr,ventas:v,ebitda:v>0?v-_hcg-_hga-_hgv:0,cogs:_hcg,gadmin:_hga,gventas:_hgv,dep:_hdep,gfin:kvN(er,'gastos financiero','intereses'),caja:kvN(bal,'caja','efectivo'),cxc:kvN(bal,'cuentas por cobrar'),inventario:kvN(bal,'inventario'),activo_fijo:kvN(bal,'activo fijo'),cxp:kvN(bal,'cuentas por pagar'),pasivo_cp:kvN(bal,'pasivo corto'),pasivo_lp:kvN(bal,'pasivo largo'),capital:kvN(bal,'capital')};
       }
     });
 
@@ -5526,12 +5529,16 @@ function parseExcelWorkbook(wb){
     rH.forEach(r=>{
       const anio=parseInt(colStr(r,'año','anio','year','periodo'))||0;
       const v=col(r,'ventas','venta','ingreso'); if(anio<=1990) return;
-      if(!histMap[anio]) histMap[anio]={anio,ventas:0,cogs:0,gadmin:0,gventas:0,dep:0,gfin:0,caja:0,cxc:0,inventario:0,activo_fijo:0,cxp:0,pasivo_cp:0,pasivo_lp:0,capital:0};
+      if(!histMap[anio]) histMap[anio]={anio,ventas:0,ebitda:0,util_neta:0,cogs:0,gadmin:0,gventas:0,dep:0,gfin:0,caja:0,cxc:0,inventario:0,activo_fijo:0,cxp:0,pasivo_cp:0,pasivo_lp:0,capital:0};
       const h=histMap[anio];
       if(v>0) h.ventas=v;
+      h.ebitda=col(r,'ebitda','ebit')||h.ebitda;
+      h.util_neta=col(r,'utilidad neta','utilidad','net income','net profit','net profit')||h.util_neta;
       h.cogs=col(r,'costo','cogs')||h.cogs; h.gadmin=col(r,'admin','g admin')||h.gadmin; h.gventas=col(r,'g ventas','gventas')||h.gventas; h.dep=col(r,'dep','depreci')||h.dep; h.gfin=col(r,'financiero','gfin')||h.gfin;
       h.caja=col(r,'caja','efectivo')||h.caja; h.cxc=col(r,'cobrar','cxc')||h.cxc; h.inventario=col(r,'invent')||h.inventario; h.activo_fijo=col(r,'fijo','af')||h.activo_fijo;
       h.cxp=col(r,'pagar','cxp')||h.cxp; h.pasivo_cp=col(r,'pasivo c','pcp')||h.pasivo_cp; h.pasivo_lp=col(r,'pasivo l','plp')||h.pasivo_lp; h.capital=col(r,'capital')||h.capital;
+      // Derive EBITDA from P&L components when not directly available
+      if(!h.ebitda&&h.ventas>0) h.ebitda=h.ventas-h.cogs-h.gadmin-h.gventas;
     });
     const hist=Object.values(histMap).filter(h=>h.ventas>0||h.caja>0).sort((a,b)=>a.anio-b.anio);
     if(hist.length) data.historico=hist;
@@ -7288,6 +7295,13 @@ function renderDashboardView(r){
   const labels=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
   const _gran=r._meta?.mensual?.granularidad||'sin_dato';
   const _histD=(r.historico||[]).filter(h=>h.ventas>0).sort((a,b)=>a.anio-b.anio);
+  // Update chart title dynamically
+  const _mainTitle=document.querySelector('#dashboardView .card-title');
+  if(_mainTitle){
+    if(_gran==='mensual') _mainTitle.textContent=`Ingresos vs EBITDA · ${r.anio||new Date().getFullYear()}`;
+    else if(_gran==='anual'&&_histD.length>=2) _mainTitle.textContent=`Ingresos vs EBITDA · ${_histD[0].anio}–${_histD[_histD.length-1].anio}`;
+    else _mainTitle.textContent=`Ingresos vs EBITDA · ${r.anio||new Date().getFullYear()}`;
+  }
   const _spkO={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{enabled:false}},scales:{x:{display:false},y:{display:false}}};
   if(_gran==='mensual'){
     mkChart('spark1',{type:'line',data:{labels,datasets:[{data:r.ingMensual,borderColor:'#22C55E',borderWidth:2,pointRadius:0,tension:.4,fill:true,backgroundColor:'#22C55E22'}]},options:_spkO});
@@ -9484,10 +9498,29 @@ function updateAnalyticsNav(r){
 }
 window.updateAnalyticsNav=updateAnalyticsNav;
 
+/* ─────────────────── Nav items disabled when no data ─────────────────── */
+function updateNavStates(r){
+  const hasData=r&&r.ventas>0;
+  const ALWAYS_ON=['dashboardView','ingresodatosView','privacyView'];
+  document.querySelectorAll('.nav-group-items button').forEach(btn=>{
+    if(btn.id==='navAnalyticsBtn') return;
+    const oc=btn.getAttribute('onclick')||'';
+    if(ALWAYS_ON.some(v=>oc.includes(v))) return;
+    if(!hasData){
+      btn.style.opacity='0.4'; btn.style.cursor='not-allowed'; btn.style.pointerEvents='none';
+      btn.title='Ingresa datos financieros primero';
+    } else {
+      btn.style.opacity=''; btn.style.cursor=''; btn.style.pointerEvents=''; btn.title='';
+    }
+  });
+}
+window.updateNavStates=updateNavStates;
+
 /* ─────────────────── renderAllViews: llamado tras calcularYAplicar ─────────────────── */
 function renderAllViews(r){
   if(r) window._obbioCalc=r;
   updateAnalyticsNav(r);
+  updateNavStates(r);
   // Solo renderizar la vista activa en este momento
   const active=document.querySelector('.view[style*="block"]');
   if(!active) return;
