@@ -11,6 +11,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -7122,6 +7123,34 @@ window._obbioCharts=_charts;
 function mkChart(id,cfg){
   if(_charts[id]){ try{_charts[id].destroy();}catch(e){} delete _charts[id]; }
   const el=document.getElementById(id); if(!el) return null;
+  // Auto data-labels via chartjs-plugin-datalabels
+  if(window.ChartDataLabels){
+    if(!cfg.plugins) cfg.plugins=[];
+    if(!Array.isArray(cfg.plugins)) cfg.plugins=[cfg.plugins];
+    if(!cfg.plugins.includes(ChartDataLabels)) cfg.plugins.push(ChartDataLabels);
+    if(!cfg.options) cfg.options={};
+    if(!cfg.options.plugins) cfg.options.plugins={};
+    if(cfg.options.plugins.datalabels===undefined){
+      const t=cfg.type;
+      if(t==='doughnut'||t==='pie'){
+        cfg.options.plugins.datalabels={
+          display:(ctx)=>{ const total=ctx.dataset.data.reduce((a,b)=>a+(+b||0),0)||1; return (ctx.dataset.data[ctx.dataIndex]/total*100)>=5; },
+          formatter:(v,ctx)=>{ const total=ctx.dataset.data.reduce((a,b)=>a+(+b||0),0)||1; return ((v/total)*100).toFixed(1)+'%'; },
+          color:'#fff',font:{weight:'700',size:10},
+          textShadowBlur:4,textShadowColor:'rgba(0,0,0,.6)'
+        };
+      } else if(t==='bar'){
+        cfg.options.plugins.datalabels={
+          display:(ctx)=>{ const v=ctx.dataset.data[ctx.dataIndex]; return v!=null&&Math.abs(v)>0; },
+          anchor:'end',align:'end',
+          formatter:(v)=>{ if(v==null||isNaN(v)) return ''; const a=Math.abs(+v); if(a>=1000) return '$'+(a/1e6>=1?(a/1e6).toFixed(1)+'M':(a/1e3).toFixed(0)+'K'); return '$'+a.toFixed(1)+'M'; },
+          color:'#A1A1AA',font:{weight:'600',size:9},padding:{bottom:2},clamp:true
+        };
+      } else {
+        cfg.options.plugins.datalabels={display:false};
+      }
+    }
+  }
   _charts[id]=new Chart(el,cfg); return _charts[id];
 }
 
@@ -7282,6 +7311,12 @@ function renderFinanceView(r){
   if(kpis[1]) kpis[1].innerHTML=_m(r.utilNeta);
   if(kpis[2]) kpis[2].innerHTML=_m(r.ebitda);
   if(kpis[3]) kpis[3].innerHTML=_pp(r.roe);
+  // KPI changes (limpiar "Sin datos" y poner datos reales)
+  const kpiCh=el.querySelectorAll('#financeView .kpi-change');
+  if(kpiCh[0]){const s=r.yoy!=null&&r.yoy>=0?'positive':r.yoy!=null?'negative':'neutral';kpiCh[0].className='kpi-change '+s;kpiCh[0].innerHTML=r.yoy!=null?(r.yoy>=0?'▲ +':'▼ ')+Math.abs(r.yoy).toFixed(1)+'% vs año ant.':'Ventas totales del período';}
+  if(kpiCh[1]){const s=r.margenNeto>=10?'positive':r.margenNeto>=5?'neutral':'negative';kpiCh[1].className='kpi-change '+s;kpiCh[1].innerHTML='Margen neto '+_pp(r.margenNeto);}
+  if(kpiCh[2]){const s=r.margenEbitda>=20?'positive':r.margenEbitda>=10?'neutral':'negative';kpiCh[2].className='kpi-change '+s;kpiCh[2].innerHTML='Margen EBITDA '+_pp(r.margenEbitda);}
+  if(kpiCh[3]){const s=r.roe>=15?'positive':r.roe>=8?'neutral':'negative';kpiCh[3].className='kpi-change '+s;kpiCh[3].innerHTML='ROE '+_pp(r.roe);}
   // Estado de resultados (tabla estática dentro de card)
   const rows=el.querySelectorAll('.statement-value');
   if(rows[0]) rows[0].innerHTML=_m(r.ventas);
@@ -9585,7 +9620,7 @@ window.fetchBenchmark=async function(){
     if(!wrap || wrap._built) return;
     wrap._built = true;
     wrap.innerHTML = QUICK_QS.map(q =>
-      `<button onclick="chatAsk(${JSON.stringify(q)})">${q}</button>`
+      `<button data-q="${q.replace(/"/g,'&quot;')}" onclick="chatAsk(this.dataset.q)">${q}</button>`
     ).join('');
   }
 
@@ -9894,7 +9929,10 @@ function sbInit(){
       _sbUser = session.user;
       window._sbUser = _sbUser;
       _sbIsAdmin = (session.user.user_metadata?.role==='admin');
-      await sbAfterLogin();
+      // Solo cargar UI en login real o sesión inicial; TOKEN_REFRESHED no recarga el selector
+      if(event==='SIGNED_IN'||event==='INITIAL_SESSION'){
+        await sbAfterLogin();
+      }
     } else if(event==='SIGNED_OUT'||event==='USER_DELETED'||event==='INITIAL_SESSION'){
       _sbUser = null; window._sbUser = null;
       _sbIsAdmin = false; _sbEmpresaId = null;
@@ -10125,8 +10163,10 @@ async function sbRenderAdminSelector(){
         onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--muted)'">🗑️</button>
     </div>`;
   if(empresas?.length){
-    document.getElementById('sbEmpresaSelect').value=empresas[0].id;
-    await sbSelectEmpresa(empresas[0].id);
+    // Mantener la selección actual si todavía existe; si no, usar la primera
+    const keepId=_sbEmpresaId&&empresas.some(e=>e.id===_sbEmpresaId)?_sbEmpresaId:empresas[0].id;
+    document.getElementById('sbEmpresaSelect').value=keepId;
+    await sbSelectEmpresa(keepId);
   }
 }
 
