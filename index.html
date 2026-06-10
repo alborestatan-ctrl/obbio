@@ -7310,7 +7310,7 @@ function renderDashboardView(r){
     const _catTotal=qV.reduce((a,b)=>a+b,0)||1;
     _catLeg.innerHTML=qL.map((l,i)=>`<div class="chart-legend-item"><div class="chart-legend-dot" style="background:${_catColors[i]};"></div>${l} · ${(_catTotal>0?(qV[i]/_catTotal*100).toFixed(0):0)}%</div>`).join('');
   }
-  mkChart('categoryChart',{type:'doughnut',data:{labels:qL,datasets:[{data:qV,backgroundColor:['#22C55E','#8B5CF6','#10B981','#F59E0B'],borderColor:'#18181B',borderWidth:3,hoverOffset:6}]},options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{display:false},tooltip:{backgroundColor:'#1E1E22',callbacks:{label:ctx=>` ${ctx.label}: ${_m(ctx.parsed*1e6)}`}}}}}});
+  mkChart('categoryChart',{type:'doughnut',data:{labels:qL,datasets:[{data:qV,backgroundColor:['#22C55E','#8B5CF6','#10B981','#F59E0B'],borderColor:'#18181B',borderWidth:3,hoverOffset:6}]},options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{display:false},tooltip:{backgroundColor:'#1E1E22',callbacks:{label:ctx=>` ${ctx.label}: ${_m(ctx.parsed*1e6)}`}}}}});
   // regionChart — usa nombres reales de sucursal/región si los hay, sino trimestral
   const _regMap=r.regionMap||window._obbioRegionMap||null;
   const _regEntries=_regMap&&Object.keys(_regMap).length>=2?Object.entries(_regMap).sort((a,b)=>b[1]-a[1]).slice(0,8):null;
