@@ -9955,7 +9955,7 @@ function renderComparativosView(r){
         ${cols.map(c=>`<td>${c.pct?_pct(d[c.k]):_m(d[c.k])}</td>`).join('')}
         <td class="${dc(crec)}">${_pp(crec)||'—'}</td></tr>`; }).join('');
     body.innerHTML=`<div class="comp-kpi-strip">${kpiCards}</div>
-      <div class="card" style="margin-bottom:16px;"><div class="card-header"><div class="card-title">Tendencia multi-año · Ventas · EBITDA · Util. Neta</div></div><div style="height:260px;"><canvas id="compChart"></canvas></div></div>
+      <div class="card" style="margin-bottom:16px;"><div class="card-header"><div class="card-title">Tendencia multi-año · Ventas · EBITDA · Util. Neta</div></div><div style="height:400px;"><canvas id="compChart"></canvas></div></div>
       <div class="card"><div class="card-header"><div class="card-title">Detalle por año</div></div><div style="overflow-x:auto;"><table class="comp-tbl"><thead><tr><th>Año</th>${cols.map(c=>`<th>${c.l}</th>`).join('')}<th>Crec. Ventas</th></tr></thead><tbody>${tableRows}</tbody></table></div></div>`;
     setTimeout(()=>mkChart('compChart',{type:'bar',data:{labels:ds.map(d=>d.anio),datasets:[
       {label:'Ventas',data:ds.map(d=>+(d.ventas/1e6).toFixed(2)),backgroundColor:'rgba(34,197,94,.7)',borderRadius:4},
@@ -9989,7 +9989,7 @@ function renderComparativosView(r){
       <select class="comp-year-sel" id="compYB" onchange="compSetYears(document.getElementById('compYA').value,this.value)">${yOpts(_compYB)}</select>
     </div>
     <div class="comp-kpi-strip">${kpiCards}</div>
-    <div class="card" style="margin-bottom:16px;"><div class="card-header"><div class="card-title">${dA.anio} vs ${dB.anio} · KPIs principales</div></div><div style="height:240px;"><canvas id="compChart"></canvas></div></div>
+    <div class="card" style="margin-bottom:16px;"><div class="card-header"><div class="card-title">${dA.anio} vs ${dB.anio} · KPIs principales</div></div><div style="height:400px;"><canvas id="compChart"></canvas></div></div>
     <div class="card"><div class="card-header"><div class="card-title">Detalle completo</div></div><div style="overflow-x:auto;"><table class="comp-tbl"><thead><tr><th>Métrica</th><th>${dA.anio}</th><th>${dB.anio}</th><th>Δ</th></tr></thead><tbody>${tableRows}</tbody></table></div></div>`;
     setTimeout(()=>mkChart('compChart',{type:'bar',data:{labels:['Ventas','Margen Bruto','EBITDA','Util. Neta'],datasets:[
       {label:String(dA.anio),data:[dA.ventas,dA.utilBruta,dA.ebitda,dA.utilNeta].map(v=>+(v/1e6).toFixed(2)),backgroundColor:'rgba(34,197,94,.6)',borderRadius:4},
@@ -10020,12 +10020,13 @@ function renderComparativosView(r){
       <div class="comp-kpi"><div class="comp-kpi-label">Total ${_compYB}</div><div class="comp-kpi-val">${_m(totB)}</div><div class="comp-delta ${dc(_d(totA,totB))}">${_pp(_d(totA,totB))}</div></div>
       <div class="comp-kpi"><div class="comp-kpi-label">Prom. mensual ${_compYB}</div><div class="comp-kpi-val">${_m(totB/12)}</div></div>
     </div>
-    <div class="card" style="margin-bottom:16px;"><div class="card-header"><div class="card-title">Ingresos mes a mes · ${_compYA} vs ${_compYB}</div></div><div style="height:250px;"><canvas id="compChart"></canvas></div></div>
-    <div class="card"><div class="card-header"><div class="card-title">Mismo mes · año a año</div></div><div style="overflow-x:auto;"><table class="comp-tbl"><thead><tr><th>Mes</th><th>${_compYA}</th><th>${_compYB}</th><th>Δ YoY</th></tr></thead><tbody>${tableRows}<tr style="font-weight:800;border-top:2px solid var(--border2);"><td>TOTAL</td><td>${_m(totA)}</td><td>${_m(totB)}</td><td class="${dc(_d(totA,totB))}">${_pp(_d(totA,totB))}</td></tr></tbody></table></div></div>`;
-    setTimeout(()=>mkChart('compChart',{type:'bar',data:{labels:MTHS,datasets:[
-      {label:String(_compYA),data:mA.map(v=>+(v/1e6).toFixed(2)),backgroundColor:'rgba(34,197,94,.55)',borderRadius:3},
-      {label:String(_compYB),data:mB.map(v=>+(v/1e6).toFixed(2)),backgroundColor:'rgba(34,211,160,.55)',borderRadius:3},
-    ]},options:{...baseOpts,plugins:{...baseOpts.plugins,legend:{display:true,labels:{color:'#A1A1AA',boxWidth:10,font:{size:11}}}},scales:{x:{...baseOpts.scales.x},y:{...baseOpts.scales.y,ticks:{...baseOpts.scales.y.ticks,callback:v=>v+'M'}}}}}),60);
+    <div class="card" style="margin-bottom:16px;"><div class="card-header"><div class="card-title">${_compYA===_compYB?'Ingresos mes a mes · '+_compYB:'Ingresos mes a mes · '+_compYA+' vs '+_compYB}</div></div><div style="height:400px;"><canvas id="compChart"></canvas></div></div>
+    <div class="card"><div class="card-header"><div class="card-title">${_compYA===_compYB?'Detalle mensual · '+_compYB:'Mismo mes · año a año'}</div></div><div style="overflow-x:auto;"><table class="comp-tbl"><thead><tr><th>Mes</th><th>${_compYA}</th>${_compYA!==_compYB?`<th>${_compYB}</th><th>Δ YoY</th>`:''}</tr></thead><tbody>${_compYA===_compYB?MTHS.map((mes,i)=>`<tr><td>${mes}</td><td>${_m(mA[i]||0)}</td></tr>`).join('')+'<tr style="font-weight:800;border-top:2px solid var(--border2);"><td>TOTAL</td><td>'+_m(totA)+'</td></tr>':tableRows+'<tr style="font-weight:800;border-top:2px solid var(--border2);"><td>TOTAL</td><td>'+_m(totA)+'</td><td>'+_m(totB)+'</td><td class="'+dc(_d(totA,totB))+'">'+_pp(_d(totA,totB))+'</td></tr>'}</tbody></table></div></div>`;
+    const _mDatasets=_compYA===_compYB
+      ?[{label:String(_compYA),data:mA.map(v=>+(v/1e6).toFixed(2)),backgroundColor:'rgba(34,197,94,.65)',borderRadius:3}]
+      :[{label:String(_compYA),data:mA.map(v=>+(v/1e6).toFixed(2)),backgroundColor:'rgba(34,197,94,.55)',borderRadius:3},
+        {label:String(_compYB),data:mB.map(v=>+(v/1e6).toFixed(2)),backgroundColor:'rgba(34,211,160,.55)',borderRadius:3}];
+    setTimeout(()=>mkChart('compChart',{type:'bar',data:{labels:MTHS,datasets:_mDatasets},options:{...baseOpts,plugins:{...baseOpts.plugins,legend:{display:_compYA!==_compYB,labels:{color:'#A1A1AA',boxWidth:10,font:{size:11}}}},scales:{x:{...baseOpts.scales.x},y:{...baseOpts.scales.y,ticks:{...baseOpts.scales.y.ticks,callback:v=>v+'M'}}}}}),60);
 
   /* ──────────── ROLLING 12M ──────────── */
   } else if(_compMode==='rolling'){
