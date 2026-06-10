@@ -4801,7 +4801,9 @@ function calcFinanciero(){
   let yoy=null;
   const _hist=window._obbioHistorico;
   if(_hist&&_hist.length>0&&er.ventas>0){
-    const _hs=_hist.filter(h=>h.ventas>0).sort((a,b)=>a.anio-b.anio);
+    const _curAnio=parseInt(($('ii_anio')||{}).value)||new Date().getFullYear();
+    // Exclude the current year from historico so we compare against the prior year
+    const _hs=_hist.filter(h=>h.ventas>0&&h.anio<_curAnio).sort((a,b)=>a.anio-b.anio);
     if(_hs.length>0) yoy=+((er.ventas/_hs[_hs.length-1].ventas-1)*100).toFixed(1);
   }
   if(yoy===null) yoy=parseFloat(($('ii_yoy')||{}).value)||null;
@@ -5854,10 +5856,13 @@ function applyExcelData(){
   // ── Histórico multi-año ──
   if(d.historico&&d.historico.length){
     window._obbioHistorico=d.historico;
-    // Auto-compute YoY from most recent historico year vs current year ventas
-    const prevV=d.historico[d.historico.length-1].ventas;
+    // Auto-compute YoY: compare current ventas against the most recent PRIOR year in historico
+    const _curYrStr=(String(d.periodo||'').match(/\d{4}/)||[])[0];
+    const _curYr=_curYrStr?parseInt(_curYrStr):null;
+    const _sortedH=[...d.historico].filter(h=>h.ventas>0&&(_curYr===null||h.anio<_curYr)).sort((a,b)=>b.anio-a.anio);
+    const prevEntry=_sortedH[0];
     const curV=parseNum(d.ventas);
-    if(prevV>0&&curV>0) setVal('ii_yoy', ((curV/prevV-1)*100).toFixed(1));
+    if(prevEntry&&prevEntry.ventas>0&&curV>0) setVal('ii_yoy', ((curV/prevEntry.ventas-1)*100).toFixed(1));
   }
   // ── Motor: deriva TODOS los indicadores y refresca dashboard + gráficas ──
   if(typeof calcularYAplicar==='function') calcularYAplicar();
@@ -7226,20 +7231,12 @@ function mkChart(id,cfg){
   const nItems=cfg.data?.labels?.length||0;
   // For horizontal bar charts: dynamic canvas height + scrollable container
   if(isHBar&&nItems>0){
-    const minH=Math.max(160, nItems*58);
-    const wrap=el.closest('.chart-container');
-    const cw=(wrap?wrap.offsetWidth:0)||600;
-    // Use fixed dimensions so Chart.js doesn't expand to fill extra container space
-    cfg.options.responsive=false;
-    cfg.options.maintainAspectRatio=false;
-    cfg.width=cw;
-    cfg.height=minH;
-    el.style.width=cw+'px';
+    const minH=Math.max(160, nItems*48);
     el.style.height=minH+'px';
+    const wrap=el.closest('.chart-container');
     if(wrap){
-      wrap.style.setProperty('height', minH+'px','important');
-      wrap.style.setProperty('max-height', minH+'px','important');
-      wrap.style.removeProperty('min-height');
+      wrap.style.height=minH+'px';
+      wrap.style.maxHeight=minH+'px';
     }
     cfg.options.layout.padding.right=(cfg.options.layout.padding.right||0)||72;
     if(!cfg.options.scales) cfg.options.scales={};
@@ -7334,6 +7331,7 @@ function renderDashboardView(r){
   }
   const _spkO={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{enabled:false},datalabels:{display:false}},scales:{x:{display:false},y:{display:false}}};
   if(_gran==='mensual'){
+    document.querySelectorAll('#dashboardView [data-nodata]').forEach(e=>e.remove());
     mkChart('spark1',{type:'line',data:{labels,datasets:[{data:r.ingMensual,borderColor:'#22C55E',borderWidth:2,pointRadius:0,tension:.4,fill:true,backgroundColor:'#22C55E22'}]},options:_spkO});
     mkChart('spark2',{type:'line',data:{labels,datasets:[{data:r.ebitdaMensual,borderColor:'#10B981',borderWidth:2,pointRadius:0,tension:.4,fill:true,backgroundColor:'#10B98122'}]},options:_spkO});
     mkChart('spark3',{type:'line',data:{labels,datasets:[{data:r.cfMensual,borderColor:'#14B8A6',borderWidth:2,pointRadius:0,tension:.4,fill:true,backgroundColor:'#14B8A622'}]},options:_spkO});
@@ -7341,7 +7339,8 @@ function renderDashboardView(r){
       {label:'Ingresos',data:r.ingMensual,borderColor:'#22C55E',borderWidth:2.5,tension:.4,pointRadius:4,pointBackgroundColor:'#22C55E',fill:true,backgroundColor:'rgba(34,197,94,.08)'},
       {label:'EBITDA',data:r.ebitdaMensual,borderColor:'#10B981',borderWidth:2.5,tension:.4,pointRadius:4,pointBackgroundColor:'#10B981',fill:true,backgroundColor:'rgba(16,185,129,.08)'}
     ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1E1E22',borderColor:'rgba(255,255,255,.1)',borderWidth:1,titleColor:'#fff',bodyColor:'#A1A1AA',padding:12,cornerRadius:10,callbacks:{label:ctx=>` ${ctx.dataset.label}: ${_m(ctx.parsed.y*1e6)}`}}},scales:{x:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',font:{size:12}}},y:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',font:{size:12},callback:v=>'$'+v+'M'}}}}});
-  } else if(_gran==='anual'&&_histD.length>=2){
+  } else if(_histD.length>=2){
+    document.querySelectorAll('#dashboardView [data-nodata]').forEach(e=>e.remove());
     const _hL=_histD.map(h=>String(h.anio));
     mkChart('spark1',{type:'bar',data:{labels:_hL,datasets:[{data:_histD.map(h=>+(h.ventas/1e6).toFixed(2)),backgroundColor:'rgba(34,197,94,.6)',borderRadius:2}]},options:_spkO});
     mkChart('spark2',{type:'bar',data:{labels:_hL,datasets:[{data:_histD.map(h=>+((h.ebitda||0)/1e6).toFixed(2)),backgroundColor:'rgba(16,185,129,.6)',borderRadius:2}]},options:_spkO});
@@ -7366,7 +7365,8 @@ function renderDashboardView(r){
   }
   // Badge YoY en gráfica
   const mainBadge=document.querySelector('#dashboardView .card-badge.success');
-  if(mainBadge && r.yoy!=null) mainBadge.textContent=(r.yoy>=0?'+':'')+r.yoy.toFixed(1)+'% YoY';
+  if(mainBadge && r.yoy!=null){ mainBadge.textContent=(r.yoy>=0?'+':'')+r.yoy.toFixed(1)+'% YoY'; mainBadge.style.display=''; }
+  else if(mainBadge) mainBadge.style.display='none';
   // Progress bars dinámicas (benchmark = 100% del umbral saludable)
   const fills=document.querySelectorAll('#dashboardView .kpi-progress-fill');
   const clamp=(v,min=0,max=100)=>Math.max(min,Math.min(max,v));
@@ -7955,10 +7955,10 @@ function renderCostosView(r){
   if(hasBreakdown){
     const items=[['Materia prima',bd.materia||0],['Mano de obra',bd.mod||0],['Maquila',bd.maquila||0],['Otros costos',bd.otros||0]].filter(x=>x[1]>0);
     mkChart('costosDonutChart',{type:'doughnut',data:{labels:items.map(x=>x[0]),datasets:[{data:items.map(x=>+(x[1]/1e6).toFixed(2)),backgroundColor:COLORS,hoverOffset:12}]},plugins:cogsCtr,options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{position:'bottom'},tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${_m(ctx.parsed*1e6)}`}}}}});
-    mkChart('costosBarChart',{type:'bar',data:{labels:items.map(x=>x[0]),datasets:[{data:items.map(x=>r.cogs>0?+(x[1]/r.cogs*100).toFixed(1):0),backgroundColor:COLORS,borderRadius:7,borderSkipped:false,barThickness:28}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.parsed.x}% del COGS · ${_m(items[ctx.dataIndex][1])}`}}},scales:{x:{ticks:{callback:v=>v+'%'},max:Math.ceil((items[0]?r.cogs>0?items[0][1]/r.cogs*100:0:60)/10)*10+10},y:{grid:{display:false}}}}});
+    mkChart('costosBarChart',{type:'bar',data:{labels:items.map(x=>x[0]),datasets:[{data:items.map(x=>r.cogs>0?+(x[1]/r.cogs*100).toFixed(1):0),backgroundColor:COLORS,borderRadius:7,borderSkipped:false,barThickness:36}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.parsed.x}% del COGS · ${_m(items[ctx.dataIndex][1])}`}}},scales:{x:{ticks:{callback:v=>v+'%'},max:Math.ceil((items[0]?r.cogs>0?items[0][1]/r.cogs*100:0:60)/10)*10+10},y:{grid:{display:false}}}}});
   } else {
     mkChart('costosDonutChart',{type:'doughnut',data:{labels:['COGS','Utilidad bruta'],datasets:[{data:[+(r.cogs/1e6).toFixed(2),+(Math.max(0,r.utilBruta)/1e6).toFixed(2)],backgroundColor:['#EF4444','#22C55E'],hoverOffset:12}]},plugins:cogsCtr,options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{position:'bottom'},tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${_m(ctx.parsed*1e6)}`}}}}});
-    mkChart('costosBarChart',{type:'bar',data:{labels:['COGS','G. Admin','G. Ventas','G. Financieros'],datasets:[{data:[r.cogs,r.gadmin,r.gventas,r.gfin].map(v=>r.ventas>0?+(v/r.ventas*100).toFixed(1):0),backgroundColor:['#EF4444','#F59E0B','#8B5CF6','#06B6D4'],borderRadius:7,borderSkipped:false,barThickness:28}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.parsed.x}% de ventas`}}},scales:{x:{ticks:{callback:v=>v+'%'}},y:{grid:{display:false}}}}});
+    mkChart('costosBarChart',{type:'bar',data:{labels:['COGS','G. Admin','G. Ventas','G. Financieros'],datasets:[{data:[r.cogs,r.gadmin,r.gventas,r.gfin].map(v=>r.ventas>0?+(v/r.ventas*100).toFixed(1):0),backgroundColor:['#EF4444','#F59E0B','#8B5CF6','#06B6D4'],borderRadius:7,borderSkipped:false,barThickness:36}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.parsed.x}% de ventas`}}},scales:{x:{ticks:{callback:v=>v+'%'}},y:{grid:{display:false}}}}});
   }
   const sb=document.getElementById('cv-sens-body');
   if(sb){
@@ -8014,7 +8014,7 @@ function renderGastosView(r){
     barItems=[['G. Admin',r.gadmin||0],['G. Ventas',r.gventas||0],['G. Financieros',r.gfin||0]];
   }
   const barVals=barItems.map(x=>gastoTotal>0?+(x[1]/gastoTotal*100).toFixed(1):0);
-  mkChart('gastosBarChart',{type:'bar',data:{labels:barItems.map(x=>x[0]),datasets:[{data:barVals,backgroundColor:COLORS,borderRadius:7,borderSkipped:false,barThickness:28}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.parsed.x}% del total · ${_m(barItems[ctx.dataIndex][1])}`}}},scales:{x:{ticks:{callback:v=>v+'%'}},y:{grid:{display:false}}}}});
+  mkChart('gastosBarChart',{type:'bar',data:{labels:barItems.map(x=>x[0]),datasets:[{data:barVals,backgroundColor:COLORS,borderRadius:7,borderSkipped:false,barThickness:36}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.parsed.x}% del total · ${_m(barItems[ctx.dataIndex][1])}`}}},scales:{x:{ticks:{callback:v=>v+'%'}},y:{grid:{display:false}}}}});
   const bg={'pos':'positive-border','info':'info-border','warn':'warning-border','danger':'danger-border'};
   const briefs=[];
   if(pct!=null){
