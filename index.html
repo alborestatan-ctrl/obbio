@@ -7229,8 +7229,14 @@ function mkChart(id,cfg){
   if(!cfg.options.layout.padding) cfg.options.layout.padding={};
   const isHBar=cfg.type==='bar'&&cfg.options.indexAxis==='y';
   const nItems=cfg.data?.labels?.length||0;
-  // For horizontal bar charts: dynamic canvas height + scrollable container
-  if(isHBar&&nItems>0){
+  const isSparkline=el.classList.contains('kpi-sparkline');
+  if(isSparkline){
+    // Sparklines must be fixed-size — responsive:true in a flex container causes infinite height expansion
+    el.setAttribute('width','80'); el.setAttribute('height','36');
+    el.style.width='80px'; el.style.height='36px';
+    cfg.options.responsive=false; cfg.options.maintainAspectRatio=false;
+  } else if(isHBar&&nItems>0){
+    // For horizontal bar charts: dynamic canvas height + scrollable container
     const minH=Math.max(160, nItems*48);
     el.style.height=minH+'px';
     const wrap=el.closest('.chart-container');
