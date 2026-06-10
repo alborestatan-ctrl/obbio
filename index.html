@@ -214,7 +214,7 @@ body{background:var(--bg);color:var(--text);overflow-x:hidden;}
 .kpi-info-btn{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:rgba(34,197,94,.15);color:var(--primary);font-size:9px;font-weight:800;cursor:pointer;border:1px solid rgba(34,197,94,.3);vertical-align:middle;margin-left:5px;flex-shrink:0;line-height:1;transition:background .2s, transform .15s;text-transform:none;letter-spacing:0;font-style:italic;font-family:Georgia,serif;}
 .kpi-info-btn:hover{background:rgba(34,197,94,.35);transform:scale(1.15);}
 /* ── KPI INFO POPOVER ── */
-#kpiInfoPopover{position:fixed;z-index:99990;background:#13162A;border:1px solid rgba(34,197,94,.4);border-radius:14px;padding:16px 18px;max-width:270px;width:270px;box-shadow:0 16px 48px rgba(0,0,0,.7);display:none;animation:popIn .15s ease;}
+#kpiInfoPopover{position:fixed;z-index:99990;background:#13162A;border:1px solid rgba(34,197,94,.4);border-radius:14px;padding:16px 18px;max-width:300px;width:300px;box-shadow:0 16px 48px rgba(0,0,0,.7);display:none;animation:popIn .15s ease;}
 #kpiInfoPopover.visible{display:block;}
 @keyframes popIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
 #kpiInfoPopover .kpi-pop-title{font-size:11px;font-weight:700;color:var(--primary);margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px;}
@@ -359,7 +359,9 @@ textarea.data-input{width:100%;resize:vertical;}
 .enterprise-table td{padding:11px 14px;color:var(--muted);}
 .enterprise-table td:last-child{font-weight:600;color:var(--text);}
 /* ── DYNAMIC TABLE ENGINE ─────────────────────────────────── */
-.tbl-wrap{position:relative;overflow-x:auto;}
+.tbl-wrap{position:relative;overflow-x:auto;overflow-y:auto;max-height:360px;}
+.card-info-btn{display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:50%;background:rgba(34,197,94,.12);color:var(--primary);font-size:9px;font-weight:800;cursor:pointer;border:1px solid rgba(34,197,94,.25);flex-shrink:0;line-height:1;transition:background .2s,transform .15s;text-transform:none;letter-spacing:0;font-style:italic;font-family:Georgia,serif;margin-left:6px;}
+.card-info-btn:hover{background:rgba(34,197,94,.3);transform:scale(1.15);}
 .tbl-toolbar{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;}
 .tbl-col-btn{display:flex;align-items:center;gap:5px;padding:4px 12px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);border-radius:7px;color:var(--primary);font-size:11px;font-weight:700;cursor:pointer;transition:background .15s;}
 .tbl-col-btn:hover{background:rgba(34,197,94,.2);}
@@ -1079,11 +1081,8 @@ th[data-tip]:hover::before{opacity:1;}
         <span class="card-badge">Por segmento</span>
       </div>
       <p style="font-size:11.5px;color:var(--muted);margin:-4px 0 10px;">Cómo se reparten tus ingresos entre segmentos o líneas de negocio. Identifica qué segmento aporta más valor.</p>
-      <div class="chart-legend">
-        <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#22C55E;"></div>Enterprise 42%</div>
-        <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#8B5CF6;"></div>Premium 28%</div>
-        <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#10B981;"></div>SMB 19%</div>
-        <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#71717A;"></div>Otros 11%</div>
+      <div class="chart-legend" id="categoryLegend">
+        <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#22C55E;"></div><span>—</span></div>
       </div>
       <div class="chart-container small">
         <canvas id="categoryChart" role="img" aria-label="Donut: distribución de ingresos por segmento"></canvas>
@@ -7302,9 +7301,16 @@ function renderDashboardView(r){
   const margMens=r.ingMensual.map((v,i)=>r.ebitdaMensual[i]&&v?+(r.ebitdaMensual[i]/v*100).toFixed(1):r.margenEbitda);
   mkChart('spark4',{type:'line',data:{labels,datasets:[{data:margMens,borderColor:'#F5A623',borderWidth:2,pointRadius:0,tension:.4,fill:true,backgroundColor:'#F5A62322'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{enabled:false}},scales:{x:{display:false},y:{display:false}}}});
   // Distribución trimestral para categoryChart (donut) y regionChart (barras)
-  const qL=['Q1','Q2','Q3','Q4'];
+  const qL=['Trim. 1','Trim. 2','Trim. 3','Trim. 4'];
   const qV=[r.ingMensual.slice(0,3),r.ingMensual.slice(3,6),r.ingMensual.slice(6,9),r.ingMensual.slice(9,12)].map(g=>+g.reduce((a,b)=>a+b,0).toFixed(2));
-  mkChart('categoryChart',{type:'doughnut',data:{labels:qL,datasets:[{data:qV,backgroundColor:['#22C55E','#8B5CF6','#10B981','#F59E0B'],borderColor:'#18181B',borderWidth:3,hoverOffset:6}]},options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{display:false},tooltip:{backgroundColor:'#1E1E22',callbacks:{label:ctx=>` ${ctx.label}: $${ctx.parsed.toFixed(1)}M`}}}}});
+  // Actualiza leyenda dinámica del donut
+  const _catLeg=document.getElementById('categoryLegend');
+  if(_catLeg){
+    const _catColors=['#22C55E','#8B5CF6','#10B981','#F59E0B'];
+    const _catTotal=qV.reduce((a,b)=>a+b,0)||1;
+    _catLeg.innerHTML=qL.map((l,i)=>`<div class="chart-legend-item"><div class="chart-legend-dot" style="background:${_catColors[i]};"></div>${l} · ${(_catTotal>0?(qV[i]/_catTotal*100).toFixed(0):0)}%</div>`).join('');
+  }
+  mkChart('categoryChart',{type:'doughnut',data:{labels:qL,datasets:[{data:qV,backgroundColor:['#22C55E','#8B5CF6','#10B981','#F59E0B'],borderColor:'#18181B',borderWidth:3,hoverOffset:6}]},options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{display:false},tooltip:{backgroundColor:'#1E1E22',callbacks:{label:ctx=>` ${ctx.label}: ${_m(ctx.parsed*1e6)}`}}}}}});
   // regionChart — usa nombres reales de sucursal/región si los hay, sino trimestral
   const _regMap=r.regionMap||window._obbioRegionMap||null;
   const _regEntries=_regMap&&Object.keys(_regMap).length>=2?Object.entries(_regMap).sort((a,b)=>b[1]-a[1]).slice(0,8):null;
@@ -8475,7 +8481,7 @@ function renderForecastView(r){
       </div>`
     );
     fg.insertAdjacentHTML('afterend',
-      `<div id="fc-base-preview" style="padding:14px 18px;background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.18);border-radius:10px;font-size:12px;margin-top:16px;"></div>`
+      `<div id="fc-base-preview" style="padding:14px 18px;background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.18);border-radius:10px;font-size:12px;margin-top:16px;overflow-y:auto;max-height:240px;"></div>`
     );
   }
   _applyForecast(r);
@@ -8499,7 +8505,7 @@ function _applyForecast(r){
   if(chg[1]){chg[1].style.color='var(--primary)';chg[1].innerHTML=(gBase>=0?`▲ +${Math.round(gBase*100)}`:`▼ ${Math.round(gBase*100)}`)+'% crecimiento base';}
   if(chg[2]){chg[2].style.color='var(--danger)';chg[2].innerHTML=(gCons>=0?`▲ +${Math.round(gCons*100)}`:`▼ ${Math.round(Math.abs(gCons)*100)}`)+'% escenario adverso';}
   const yrBase=r.anio?+r.anio:new Date().getFullYear();
-  const years=[yrBase+1,yrBase+2,yrBase+3,yrBase+4];
+  const years=[yrBase+1,yrBase+2,yrBase+3,yrBase+4,yrBase+5];
   const cardTitle=el.querySelector('.card .card-title');
   if(cardTitle) cardTitle.textContent=`Proyección Anual · ${years[0]}–${years[years.length-1]}`;
   const cardBadge=el.querySelector('.card .card-badge');
@@ -9487,6 +9493,32 @@ window.fetchBenchmark=async function(){
     'Ticket Promedio':    'Ingreso promedio por línea de venta registrada en el dataset. Fórmula: Ingresos Totales ÷ Número de líneas. Si cada fila representa una factura completa, equivale al valor medio por factura; si cada fila es un ítem, refleja el precio promedio por ítem.',
   };
 
+  /* ── Definiciones de gráficos para botón ℹ ── */
+  const CHART_INFO = {
+    'mainChart':        {title:'Ingresos vs EBITDA', body:'Compara mes a mes cuánto vendiste (barras verdes) y cuánto ganaste antes de impuestos (línea azul). Si ambas líneas suben juntas, tu negocio crece de forma saludable. Un EBITDA que cae mientras los ingresos suben indica que los costos están creciendo más rápido que las ventas.'},
+    'categoryChart':    {title:'Distribución de Ingresos', body:'Muestra qué porcentaje de tus ingresos anuales se generó en cada trimestre. Útil para detectar estacionalidad: si el Trim. 4 concentra el 50%, tu negocio es muy estacional. Planifica caja y personal en consecuencia.'},
+    'regionChart':      {title:'Desempeño por Sucursal/Región', body:'Compara los ingresos generados por cada sucursal, zona o punto de venta. Las barras más altas son tus regiones más rentables. Úsala para decidir dónde abrir nuevas sucursales o dónde reforzar el equipo comercial.'},
+    'paretoChart':      {title:'Pareto 80/20', body:'El principio de Pareto dice que el 20% de tus clientes o productos genera el 80% de tus ingresos. La barra muestra el valor por cliente; la línea naranja el porcentaje acumulado. Si un cliente supera el 30%, tienes riesgo de concentración.'},
+    'spark1':           {title:'Tendencia de Ingresos', body:'Mini gráfica que muestra la dirección de tus ventas en los últimos meses. Línea ascendente = crecimiento sostenido. Línea descendente = necesitas revisar por qué caen las ventas.'},
+    'spark2':           {title:'Tendencia de Utilidad Neta', body:'Muestra si tu ganancia neta está subiendo o bajando a lo largo del período. Si los ingresos crecen pero la utilidad baja, significa que los costos o gastos están comiendo tu margen.'},
+    'spark3':           {title:'Tendencia de Flujo de Caja', body:'El flujo de caja es el efectivo real que entra y sale. Puedes tener utilidad contable y quedarte sin dinero. Esta línea te alerta si tu liquidez se está deteriorando.'},
+    'spark4':           {title:'Tendencia de Margen EBITDA', body:'Muestra si tu eficiencia operativa mejora o empeora con el tiempo. Un margen EBITDA que sube indica que controlas bien tus costos. Un margen que cae es señal de alerta temprana.'},
+    'cashflowChart':    {title:'Flujo de Caja Mensual', body:'Tres tipos de flujos: Operativo (dinero de tu operación diaria), de Inversión (compra/venta de activos) y de Financiamiento (préstamos y pagos de deuda). El flujo operativo positivo significa que tu negocio se autofinancia.'},
+    'cfPieChart':       {title:'Composición del Flujo', body:'Divide el flujo total entre las tres categorías: operativo, inversión y financiamiento. Un negocio sano genera la mayor parte de su caja desde la operación, no desde préstamos.'},
+    'wkChart':          {title:'Capital de Trabajo', body:'Muestra la diferencia entre lo que tienes disponible a corto plazo (activos circulantes) y lo que debes pagar pronto (pasivos circulantes). Si es positivo, puedes pagar tus deudas inmediatas sin problemas.'},
+    'debtChart':        {title:'Estructura de Deuda', body:'Compara cuánto de tu deuda vence a corto plazo (menos de 1 año) vs largo plazo (más de 1 año). Mucha deuda de corto plazo puede generar problemas de liquidez si no tienes suficiente caja.'},
+    'debtEvChart':      {title:'Evolución de la Deuda', body:'Muestra cómo ha cambiado el nivel de endeudamiento a lo largo del tiempo. Lo ideal es ver la deuda bajar o mantenerse estable mientras los ingresos crecen.'},
+    'costosBarChart':   {title:'Estructura de Costos', body:'Desglosa cada peso que gastas en categorías: COGS (lo que cuesta producir), gastos administrativos, gastos de ventas y gastos financieros. Identifica dónde están tus mayores oportunidades de reducción.'},
+    'costosDonutChart': {title:'Composición del COGS', body:'Muestra cómo se distribuye el costo directo de lo que produces o compras. Si el COGS supera el 60% de tus ingresos en servicios, o 70% en manufactura, debes revisar tu estructura de precios o proveedores.'},
+    'gastosChart':      {title:'Análisis de Gastos', body:'Compara tus gastos operativos mes a mes. Los picos de gasto deben coincidir con picos de ingreso; si no es así, hay ineficiencias. Identifica meses donde gastas más de lo que ganas operativamente.'},
+    'forecastChart':    {title:'Proyección de Ingresos', body:'Muestra tres escenarios de crecimiento para los próximos años. Verde = optimista (mejor caso), verde claro = base (escenario realista), naranja = conservador (peor caso). Ajusta los sliders de arriba para explorar distintos supuestos.'},
+    'modelChart':       {title:'Modelo Financiero', body:'Simula cómo cambian tus métricas clave (ingresos, EBITDA, flujo libre) según los supuestos que ajustes. Útil para evaluar si una decisión de inversión o expansión es financieramente viable.'},
+    'strategyChart':    {title:'Análisis Estratégico', body:'Visualiza tu posición competitiva en términos de rentabilidad, crecimiento y solidez financiera. Las áreas más alejadas del centro representan fortalezas; las cercanas al centro, áreas de mejora.'},
+    'riskChart':        {title:'Mapa de Riesgos', body:'Muestra tus principales riesgos financieros ordenados por probabilidad e impacto. Los riesgos en la esquina superior derecha (alta probabilidad + alto impacto) son los que debes atender primero.'},
+    'analyticsChart':   {title:'Comparativo de Sucursales', body:'Compara el desempeño de tus diferentes sucursales o unidades de negocio. Identifica cuáles superan la media y cuáles necesitan atención inmediata.'},
+    'benchmarkChart':   {title:'Benchmarks del Sector', body:'Compara tus indicadores financieros contra el promedio de empresas similares en tu sector. Barras verdes = estás por encima del promedio del sector. Barras rojas = estás por debajo y debes mejorar.'},
+  };
+
   /* ── Crear el popover flotante ── */
   const pop = document.createElement('div');
   pop.id = 'kpiInfoPopover';
@@ -9512,7 +9544,7 @@ window.fetchBenchmark=async function(){
     pop.querySelector('.kpi-pop-body').textContent  = body;
     pop.classList.add('visible');
     const r = btn.getBoundingClientRect();
-    const pw = 270, ph = pop.offsetHeight || 120;
+    const pw = 300, ph = pop.offsetHeight || 140;
     let top  = r.top - ph - 12;
     let left = r.left + r.width/2 - pw/2;
     if(top < 10)                    top  = r.bottom + 10;
@@ -9537,9 +9569,9 @@ window.fetchBenchmark=async function(){
 
   /* ── Inyectar botones ⓘ ── */
   function injectBtns(){
+    // ── ℹ en KPI labels ──
     document.querySelectorAll('.kpi-label, .fin-kpi-title, .res-kpi-label').forEach(function(el){
       if(el.querySelector('.kpi-info-btn')) return;
-      // Texto limpio sin el botón
       const rawText = Array.from(el.childNodes)
         .filter(n => n.nodeType === 3)
         .map(n => n.textContent)
@@ -9554,6 +9586,24 @@ window.fetchBenchmark=async function(){
       btn.addEventListener('mouseleave', function(){ _popHide = setTimeout(function(){ pop.classList.remove('visible'); }, 200); });
       btn.addEventListener('click', function(e){ e.stopPropagation(); showPop(btn, rawText, match.def); });
       el.appendChild(btn);
+    });
+    // ── ℹ en gráficos — uno por card-header ──
+    document.querySelectorAll('canvas[id]').forEach(function(canvas){
+      const info = CHART_INFO[canvas.id];
+      if(!info) return;
+      const card = canvas.closest('.card');
+      if(!card) return;
+      const hdr = card.querySelector('.card-header');
+      if(!hdr || hdr.querySelector('.card-info-btn')) return;
+      const btn = document.createElement('button');
+      btn.className = 'card-info-btn';
+      btn.type = 'button';
+      btn.textContent = 'i';
+      btn.setAttribute('aria-label', 'Información: ' + info.title);
+      btn.addEventListener('mouseenter', function(){ clearTimeout(_popHide); showPop(btn, info.title, info.body); });
+      btn.addEventListener('mouseleave', function(){ _popHide = setTimeout(function(){ pop.classList.remove('visible'); }, 200); });
+      btn.addEventListener('click', function(e){ e.stopPropagation(); showPop(btn, info.title, info.body); });
+      hdr.appendChild(btn);
     });
   }
 
