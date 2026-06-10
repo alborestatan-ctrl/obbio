@@ -195,12 +195,12 @@ body{background:var(--bg);color:var(--text);overflow-x:hidden;}
 
 .kpi-value{font-size:28px;font-weight:800;letter-spacing:-1px;line-height:1;margin-bottom:4px;}
 .kpi-sub{font-size:11px;color:var(--muted2);margin-bottom:8px;line-height:1.3;}
-.kpi-bottom{display:flex;flex-direction:column;align-items:flex-start;gap:5px;}
+.kpi-bottom{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;flex-wrap:wrap;}
 .kpi-change{font-size:12px;font-weight:600;display:flex;align-items:center;gap:4px;}
 .kpi-change.positive{color:var(--success);}
 .kpi-change.negative{color:var(--danger);}
 .kpi-change.neutral{color:var(--muted);}
-.kpi-sparkline{height:36px;width:100%;}
+.kpi-sparkline{height:36px;width:80px;flex-shrink:0;}
 
 /* Progress bar en KPI */
 .kpi-progress{margin-top:10px;}
@@ -7227,8 +7227,15 @@ function mkChart(id,cfg){
   // For horizontal bar charts: dynamic canvas height + scrollable container
   if(isHBar&&nItems>0){
     const minH=Math.max(160, nItems*58);
-    el.style.height=minH+'px';
     const wrap=el.closest('.chart-container');
+    const cw=(wrap?wrap.offsetWidth:0)||600;
+    // Use fixed dimensions so Chart.js doesn't expand to fill extra container space
+    cfg.options.responsive=false;
+    cfg.options.maintainAspectRatio=false;
+    cfg.width=cw;
+    cfg.height=minH;
+    el.style.width=cw+'px';
+    el.style.height=minH+'px';
     if(wrap){
       wrap.style.setProperty('height', minH+'px','important');
       wrap.style.setProperty('max-height', minH+'px','important');
@@ -7238,7 +7245,6 @@ function mkChart(id,cfg){
     if(!cfg.options.scales) cfg.options.scales={};
     if(!cfg.options.scales.y) cfg.options.scales.y={};
     cfg.options.scales.y.ticks=cfg.options.scales.y.ticks||{};
-    // barThickness ensures bars stay compact regardless of canvas height
   } else {
     // Vertical bars: add top padding so datalabels don't clip
     if(cfg.type==='bar'){
