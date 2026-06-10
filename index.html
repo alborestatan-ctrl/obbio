@@ -185,7 +185,8 @@ body{background:var(--bg);color:var(--text);overflow-x:hidden;}
 .kpi-icon.purple{background:var(--purple-dim);}
 .kpi-icon.teal{background:var(--teal-dim);}
 
-.kpi-value{font-size:28px;font-weight:800;letter-spacing:-1px;line-height:1;margin-bottom:10px;}
+.kpi-value{font-size:28px;font-weight:800;letter-spacing:-1px;line-height:1;margin-bottom:4px;}
+.kpi-sub{font-size:11px;color:var(--muted2);margin-bottom:8px;line-height:1.3;}
 .kpi-bottom{display:flex;align-items:center;justify-content:space-between;gap:8px;}
 .kpi-change{font-size:12px;font-weight:600;display:flex;align-items:center;gap:4px;}
 .kpi-change.positive{color:var(--success);}
@@ -375,6 +376,14 @@ th[data-tip]::before{
 }
 th[data-tip]:hover::before{opacity:1;}
 .enterprise-table tbody tr:hover td,.comp-tbl tbody tr:hover td{background:rgba(255,255,255,.022);transition:background .1s;}
+
+/* ── Scrollbar global ── */
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:rgba(255,255,255,.04);border-radius:4px;}
+::-webkit-scrollbar-thumb{background:rgba(34,197,94,.35);border-radius:4px;}
+::-webkit-scrollbar-thumb:hover{background:rgba(34,197,94,.65);}
+::-webkit-scrollbar-corner{background:transparent;}
+*{scrollbar-width:thin;scrollbar-color:rgba(34,197,94,.35) rgba(255,255,255,.04);}
 
 /* ══ RESPONSIVE MOBILE ══ */
 #menuToggle{display:none;}
@@ -914,6 +923,7 @@ th[data-tip]:hover::before{opacity:1;}
         <div class="kpi-icon blue">💵</div>
       </div>
       <div class="kpi-value" id="fcSales">—</div>
+      <div class="kpi-sub">Ventas totales del período sin IVA</div>
       <div class="kpi-bottom">
         <div class="kpi-change neutral">—</div>
         <canvas class="kpi-sparkline" id="spark1"></canvas>
@@ -930,6 +940,7 @@ th[data-tip]:hover::before{opacity:1;}
         <div class="kpi-icon green">📊</div>
       </div>
       <div class="kpi-value" id="fcEbitda">—</div>
+      <div class="kpi-sub">Ganancia operativa antes de intereses, impuestos y depreciación</div>
       <div class="kpi-bottom">
         <div class="kpi-change neutral">—</div>
         <canvas class="kpi-sparkline" id="spark2"></canvas>
@@ -946,6 +957,7 @@ th[data-tip]:hover::before{opacity:1;}
         <div class="kpi-icon teal">💧</div>
       </div>
       <div class="kpi-value">—</div>
+      <div class="kpi-sub">Efectivo generado o consumido por la operación</div>
       <div class="kpi-bottom">
         <div class="kpi-change neutral">—</div>
         <canvas class="kpi-sparkline" id="spark3"></canvas>
@@ -962,6 +974,7 @@ th[data-tip]:hover::before{opacity:1;}
         <div class="kpi-icon yellow">📉</div>
       </div>
       <div class="kpi-value">—</div>
+      <div class="kpi-sub">% de cada peso de ventas que se convierte en ganancia operativa</div>
       <div class="kpi-bottom">
         <div class="kpi-change neutral">—</div>
         <canvas class="kpi-sparkline" id="spark4"></canvas>
@@ -978,6 +991,7 @@ th[data-tip]:hover::before{opacity:1;}
         <div class="kpi-icon purple">👥</div>
       </div>
       <div class="kpi-value">—</div>
+      <div class="kpi-sub">Clientes únicos que generaron compras en el período</div>
       <div class="kpi-bottom">
         <div class="kpi-change neutral">—</div>
         <canvas class="kpi-sparkline" id="spark5"></canvas>
@@ -994,6 +1008,7 @@ th[data-tip]:hover::before{opacity:1;}
         <div class="kpi-icon green">⭐</div>
       </div>
       <div class="kpi-value">—</div>
+      <div class="kpi-sub">Salud financiera global 0–100: rentabilidad, liquidez, deuda y crecimiento</div>
       <div class="kpi-bottom">
         <div class="kpi-change neutral">Sin datos</div>
       </div>
@@ -1245,11 +1260,12 @@ th[data-tip]:hover::before{opacity:1;}
       <span class="card-badge">Proyección base</span>
     </div>
     <div class="chart-legend">
-      <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#22C55E;"></div>Forecast ingresos</div>
-      <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#10B981;"></div>EBITDA proyectado</div>
+      <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#10B981;"></div>Optimista</div>
+      <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#22C55E;"></div>Base</div>
+      <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#F59E0B;"></div>Conservador</div>
     </div>
     <div class="chart-container">
-      <canvas id="forecastChart" role="img" aria-label="Gráfica forecast mensual 2025"></canvas>
+      <canvas id="forecastChart" role="img" aria-label="Proyección anual por escenario"></canvas>
     </div>
   </div>
 </div>
@@ -1820,7 +1836,7 @@ th[data-tip]:hover::before{opacity:1;}
 <header class="topbar">
   <div>
     <h2 class="page-title">Modelo Financiero</h2>
-    <p class="page-subtitle">Mueve los sliders · La tabla y gráfica se actualizan en tiempo real</p>
+    <p class="page-subtitle">Simula escenarios de crecimiento y evalúa su impacto en P&amp;L, flujo libre y valor de empresa · Mueve los sliders para actualizar en tiempo real</p>
   </div>
   <div class="topbar-actions">
     <button onclick="applyScenario('opt')" style="padding:8px 14px;border-radius:9px;border:1px solid rgba(34,211,160,.3);background:rgba(34,211,160,.1);color:var(--success);font-size:12px;font-weight:700;cursor:pointer;">🟢 Optimista</button>
@@ -3265,7 +3281,7 @@ background:#10B981;
     <div class="kpi-card accent-purple">
       <div class="kpi-top"><div class="kpi-label">Ticket Promedio</div><div class="kpi-icon purple">🎫</div></div>
       <div class="kpi-value" id="prod-kpi-ticket">—</div>
-      <div class="kpi-bottom"><div class="kpi-change positive">por transacción</div></div>
+      <div class="kpi-bottom"><div class="kpi-change positive">ingreso por línea de venta</div></div>
     </div>
   </section>
 
@@ -7214,7 +7230,15 @@ function renderDashboardView(r){
   const qL=['Q1','Q2','Q3','Q4'];
   const qV=[r.ingMensual.slice(0,3),r.ingMensual.slice(3,6),r.ingMensual.slice(6,9),r.ingMensual.slice(9,12)].map(g=>+g.reduce((a,b)=>a+b,0).toFixed(2));
   mkChart('categoryChart',{type:'doughnut',data:{labels:qL,datasets:[{data:qV,backgroundColor:['#22C55E','#8B5CF6','#10B981','#F59E0B'],borderColor:'#18181B',borderWidth:3,hoverOffset:6}]},options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{display:false},tooltip:{backgroundColor:'#1E1E22',callbacks:{label:ctx=>` ${ctx.label}: $${ctx.parsed.toFixed(1)}M`}}}}});
-  mkChart('regionChart',{type:'bar',data:{labels:qL,datasets:[{data:qV,backgroundColor:['#22C55E','#8B5CF6','#10B981','#F59E0B'],borderColor:'transparent',borderRadius:8,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1E1E22',callbacks:{label:ctx=>` $${ctx.parsed.y.toFixed(1)}M`}}},scales:{x:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA'}},y:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',callback:v=>'$'+v+'M'}}}}});
+  // regionChart — usa nombres reales de sucursal/región si los hay, sino trimestral
+  const _regMap=r.regionMap||window._obbioRegionMap||null;
+  const _regEntries=_regMap&&Object.keys(_regMap).length>=2?Object.entries(_regMap).sort((a,b)=>b[1]-a[1]).slice(0,8):null;
+  const _regLabels=_regEntries?_regEntries.map(([k])=>k.length>14?k.slice(0,13)+'…':k):qL;
+  const _regVals=_regEntries?_regEntries.map(([,v])=>+(v/1e6).toFixed(2)):qV;
+  const _regColors=['#22C55E','#8B5CF6','#10B981','#F59E0B','#3B82F6','#EC4899','#14B8A6','#F97316'];
+  const _regBadge=document.querySelector('#dashboardView .card:has(#regionChart) .card-badge')||document.querySelector('#dashboardView .card-badge');
+  if(_regEntries&&_regBadge&&_regBadge.textContent==='Ingresos MXN M') _regBadge.textContent='Por sucursal/región';
+  mkChart('regionChart',{type:'bar',data:{labels:_regLabels,datasets:[{data:_regVals,backgroundColor:_regColors.slice(0,_regLabels.length),borderColor:'transparent',borderRadius:8,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1E1E22',callbacks:{label:ctx=>` ${ctx.label}: ${_m(ctx.parsed.y*1e6)}`}}},scales:{x:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',font:{size:10},maxRotation:30}},y:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',callback:v=>'$'+v+'M'}}}}});
   // paretoChart — clientes reales si existen, sino estructura de costos
   const clienteMap=r.clienteMap||window._obbioClienteMap||null;
   const ptitle=document.getElementById('paretoTitle');
@@ -8343,7 +8367,8 @@ function renderForecastView(r){
   window._fcastR=r;
   if(!el.querySelector('#forecastSliders')){
     const yoyPct=r.yoy!=null?Math.round(r.yoy):8;
-    el.querySelector('.forecast-grid').insertAdjacentHTML('beforebegin',
+    const fg=el.querySelector('.forecast-grid');
+    fg.insertAdjacentHTML('beforebegin',
       `<div id="forecastSliders" style="background:var(--card-bg);border:1px solid var(--border2);border-radius:10px;padding:18px;margin-bottom:18px;display:grid;grid-template-columns:repeat(3,1fr);gap:18px;">
         <div>
           <label style="font-size:11px;font-weight:700;color:var(--muted2);text-transform:uppercase;display:block;margin-bottom:6px;">📈 Crecimiento Base</label>
@@ -8366,9 +8391,10 @@ function renderForecastView(r){
             <span id="lblDeltaCons" style="font-size:13px;font-weight:700;min-width:36px;text-align:right;">-13%</span>
           </div>
         </div>
-      </div>
-      <div id="fc-base-preview" style="grid-column:1/-1;padding:10px 14px;background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.18);border-radius:8px;font-size:12px;"></div>
-    </div>`
+      </div>`
+    );
+    fg.insertAdjacentHTML('afterend',
+      `<div id="fc-base-preview" style="padding:14px 18px;background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.18);border-radius:10px;font-size:12px;margin-top:16px;"></div>`
     );
   }
   _applyForecast(r);
@@ -8391,44 +8417,40 @@ function _applyForecast(r){
   if(chg[0]){chg[0].style.color='var(--success)';chg[0].innerHTML=`▲ +${Math.round(gOpt*100)}% vs año anterior`;}
   if(chg[1]){chg[1].style.color='var(--primary)';chg[1].innerHTML=(gBase>=0?`▲ +${Math.round(gBase*100)}`:`▼ ${Math.round(gBase*100)}`)+'% crecimiento base';}
   if(chg[2]){chg[2].style.color='var(--danger)';chg[2].innerHTML=(gCons>=0?`▲ +${Math.round(gCons*100)}`:`▼ ${Math.round(Math.abs(gCons)*100)}`)+'% escenario adverso';}
-  const MESES=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-  const m0=new Date().getMonth();
-  const months=Array.from({length:12},(_,i)=>MESES[(m0+i+1)%12]);
-  const yrNext=r.anio?+r.anio+1:new Date().getFullYear()+1;
+  const yrBase=r.anio?+r.anio:new Date().getFullYear();
+  const years=[yrBase+1,yrBase+2,yrBase+3,yrBase+4];
   const cardTitle=el.querySelector('.card .card-title');
-  if(cardTitle) cardTitle.textContent=`Forecast Mensual · ${months[0]}–${months[11]} ${yrNext}`;
+  if(cardTitle) cardTitle.textContent=`Proyección Anual · ${years[0]}–${years[years.length-1]}`;
   const cardBadge=el.querySelector('.card .card-badge');
   if(cardBadge) cardBadge.textContent=`Base: ${Math.round(gBase*100)}% | Opt: +${Math.round(dOpt*100)}% | Cons: -${Math.round(dCons*100)}%`;
-  // Proyección año a año debajo del slider de crecimiento base
+  // Proyección año a año — debajo de las tarjetas de escenario
   const prev=el.querySelector('#fc-base-preview');
   if(prev&&r.ventas){
-    const yrBase=r.anio?+r.anio:new Date().getFullYear();
     const mrgn=r.ebitda!=null&&r.ventas>0?r.ebitda/r.ventas:null;
-    const rows=[1,2,3].map(n=>{
-      const v=r.ventas*Math.pow(1+gBase,n);
-      const acumVal=(Math.pow(1+gBase,n)-1)*100;
+    const rows=years.map((yr,n)=>{
+      const v=r.ventas*Math.pow(1+gBase,n+1);
+      const acumVal=(Math.pow(1+gBase,n+1)-1)*100;
       const acumStr=(acumVal>=0?'+':'')+acumVal.toFixed(1)+'%';
       const eb=mrgn!=null?`<span style="font-size:11px;color:var(--success);margin-left:auto;">EBITDA est. ${_m(v*mrgn)}</span>`:'';
-      return `<div style="display:flex;gap:16px;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.05);">
-        <span style="font-size:11px;font-weight:700;color:var(--muted2);min-width:42px;">${yrBase+n}</span>
+      return `<div style="display:flex;gap:16px;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05);">
+        <span style="font-size:11px;font-weight:700;color:var(--muted2);min-width:42px;">${yr}</span>
         <span style="font-size:14px;font-weight:700;color:var(--primary);">${_m(v)}</span>
         <span style="font-size:11px;color:var(--muted);">${gBase>=0?'+':''}${Math.round(gBase*100)}% anual · acum. ${acumStr}</span>
         ${eb}
       </div>`;
     }).join('');
-    prev.innerHTML=`<div style="font-size:10px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;">Proyección Escenario Base</div>${rows}`;
+    prev.innerHTML=`<div style="font-size:10px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;">Proyección Escenario Base · Año por Año</div>${rows}`;
   }
-  const lastM=r.ingMensual&&r.ingMensual.some(v=>v>0)?r.ingMensual.reduce((a,b)=>a+b,0)/12:r.ventas/12/1e6;
-  const proj=g=>months.map((_,i)=>+(lastM*(1+g)**((i+1)/12)).toFixed(3));
-  mkChart('forecastChart',{type:'line',data:{labels:months,datasets:[
-    {label:'Optimista', data:proj(gOpt), borderColor:'#10B981',borderWidth:1.5,tension:.4,pointRadius:3,fill:{target:2,above:'rgba(16,185,129,.12)'},backgroundColor:'rgba(16,185,129,.12)'},
-    {label:'Base',      data:proj(gBase),borderColor:'#22C55E',borderWidth:2.5,tension:.4,pointRadius:4,borderDash:[6,3],fill:false,backgroundColor:'transparent'},
-    {label:'Conservador',data:proj(gCons),borderColor:'#F59E0B',borderWidth:1.5,tension:.4,pointRadius:3,fill:false,backgroundColor:'transparent'}
+  const projAnn=g=>years.map((_,i)=>+(r.ventas*(1+g)**(i+1)/1e6).toFixed(2));
+  mkChart('forecastChart',{type:'line',data:{labels:years,datasets:[
+    {label:'Optimista',   data:projAnn(gOpt), borderColor:'#10B981',borderWidth:2,tension:.35,pointRadius:5,pointBackgroundColor:'#10B981',fill:false},
+    {label:'Base',        data:projAnn(gBase),borderColor:'#22C55E',borderWidth:2.5,tension:.35,pointRadius:5,pointBackgroundColor:'#22C55E',borderDash:[6,3],fill:false},
+    {label:'Conservador', data:projAnn(gCons),borderColor:'#F59E0B',borderWidth:2,tension:.35,pointRadius:5,pointBackgroundColor:'#F59E0B',fill:false}
   ]},options:{responsive:true,maintainAspectRatio:false,plugins:{
-    legend:{display:true,position:'top',labels:{color:'#A1A1AA',font:{size:11},boxWidth:12,padding:16}},
+    legend:{display:false},
     tooltip:{backgroundColor:'#1E1E22',callbacks:{label:c=>` ${c.dataset.label}: ${_m(c.parsed.y*1e6)}`}}
   },scales:{
-    x:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA'}},
+    x:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',font:{size:12}}},
     y:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',callback:v=>'$'+v+'M'}}
   }}});
 }
@@ -9381,7 +9403,7 @@ window.fetchBenchmark=async function(){
     // ── Comparativos ──
     'Utilidad Neta Proy': 'Estimación de la ganancia neta al cierre del período proyectado.',
     'Rating Interno':     'Calificación interna del sistema (A=score≥80, B=≥60, C=≥40, D=<40). Basada en rentabilidad, liquidez, deuda, cashflow y crecimiento. No es calificación oficial de buró de crédito ni agencia calificadora.',
-    'Ticket Promedio':    'Ingreso total del dataset dividido entre el número de transacciones. Representa el valor promedio de cada venta. Fórmula: Ingresos Totales ÷ Número de Transacciones.',
+    'Ticket Promedio':    'Ingreso promedio por línea de venta registrada en el dataset. Fórmula: Ingresos Totales ÷ Número de líneas. Si cada fila representa una factura completa, equivale al valor medio por factura; si cada fila es un ítem, refleja el precio promedio por ítem.',
   };
 
   /* ── Crear el popover flotante ── */
