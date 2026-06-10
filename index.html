@@ -231,9 +231,11 @@ body{background:var(--bg);color:var(--text);overflow-x:hidden;}
 .card-badge.warning{background:var(--warning-dim);color:var(--warning);}
 
 /* CHART CONTAINERS */
-.chart-container{height:380px;position:relative;}
-.chart-container.tall{height:420px;}
-.chart-container.small{height:260px;}
+.chart-container{height:380px;position:relative;overflow:hidden;}
+.chart-container.tall{height:420px;overflow:hidden;}
+.chart-container.small{height:260px;overflow:hidden;}
+.chart-container.scrollable{overflow-y:auto;overflow-x:hidden;height:auto;max-height:420px;}
+.chart-container.scrollable canvas{display:block;}
 .chart-legend{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:16px;}
 .chart-legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);}
 .chart-legend-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0;}
@@ -7168,12 +7170,30 @@ window._obbioCharts=_charts;
 function mkChart(id,cfg){
   if(_charts[id]){ try{_charts[id].destroy();}catch(e){} delete _charts[id]; }
   const el=document.getElementById(id); if(!el) return null;
+  if(!cfg.options) cfg.options={};
+  if(!cfg.options.layout) cfg.options.layout={};
+  if(!cfg.options.layout.padding) cfg.options.layout.padding={};
+  const isHBar=cfg.type==='bar'&&cfg.options.indexAxis==='y';
+  const nItems=cfg.data?.labels?.length||0;
+  // For horizontal bar charts: dynamic canvas height + scrollable container
+  if(isHBar&&nItems>0){
+    const minH=Math.max(180, nItems*52);
+    el.style.height=minH+'px';
+    el.style.minHeight=minH+'px';
+    const wrap=el.closest('.chart-container');
+    if(wrap){wrap.classList.add('scrollable');wrap.style.height='auto';}
+    cfg.options.layout.padding.right=(cfg.options.layout.padding.right||0)||72;
+  } else {
+    // Vertical bars: add top padding so datalabels don't clip
+    if(cfg.type==='bar'){
+      cfg.options.layout.padding.top=(cfg.options.layout.padding.top||0)||28;
+    }
+  }
   // Auto data-labels via chartjs-plugin-datalabels
   if(window.ChartDataLabels){
     if(!cfg.plugins) cfg.plugins=[];
     if(!Array.isArray(cfg.plugins)) cfg.plugins=[cfg.plugins];
     if(!cfg.plugins.includes(ChartDataLabels)) cfg.plugins.push(ChartDataLabels);
-    if(!cfg.options) cfg.options={};
     if(!cfg.options.plugins) cfg.options.plugins={};
     if(cfg.options.plugins.datalabels===undefined){
       const t=cfg.type;
@@ -7185,12 +7205,23 @@ function mkChart(id,cfg){
           textShadowBlur:4,textShadowColor:'rgba(0,0,0,.6)'
         };
       } else if(t==='bar'){
-        cfg.options.plugins.datalabels={
-          display:(ctx)=>{ const v=ctx.dataset.data[ctx.dataIndex]; return v!=null&&Math.abs(v)>0; },
-          anchor:'end',align:'end',
-          formatter:(v)=>{ if(v==null||isNaN(v)) return ''; const a=Math.abs(+v); if(a>=1000) return '$'+(a/1e6>=1?(a/1e6).toFixed(1)+'M':(a/1e3).toFixed(0)+'K'); return '$'+a.toFixed(1)+'M'; },
-          color:'#A1A1AA',font:{weight:'600',size:9},padding:{bottom:2},clamp:true
-        };
+        if(isHBar){
+          // Horizontal bars: label to the right of bar, shows dollar amount
+          cfg.options.plugins.datalabels={
+            display:(ctx)=>{ const v=ctx.dataset.data[ctx.dataIndex]; return v!=null&&Math.abs(v)>0; },
+            anchor:'end',align:'right',offset:4,
+            formatter:(v)=>{ if(v==null||isNaN(v)) return ''; const a=Math.abs(+v); return a>=1e6?(a/1e6).toFixed(1)+'M':a>=1000?(a/1e3).toFixed(0)+'K':a.toFixed(1); },
+            color:'#D4D4D8',font:{weight:'700',size:10},clamp:false
+          };
+        } else {
+          // Vertical bars: label on top
+          cfg.options.plugins.datalabels={
+            display:(ctx)=>{ const v=ctx.dataset.data[ctx.dataIndex]; return v!=null&&Math.abs(v)>0; },
+            anchor:'end',align:'top',offset:2,
+            formatter:(v)=>{ if(v==null||isNaN(v)) return ''; const a=Math.abs(+v); return '$'+(a>=1e6?(a/1e6).toFixed(1)+'M':a>=1000?(a/1e3).toFixed(0)+'K':a.toFixed(1)+'M'); },
+            color:'#A1A1AA',font:{weight:'600',size:9},clamp:false
+          };
+        }
       } else {
         cfg.options.plugins.datalabels={display:false};
       }
@@ -7300,25 +7331,54 @@ function renderDashboardView(r){
   // spark4: tendencia de margen EBITDA mensual
   const margMens=r.ingMensual.map((v,i)=>r.ebitdaMensual[i]&&v?+(r.ebitdaMensual[i]/v*100).toFixed(1):r.margenEbitda);
   mkChart('spark4',{type:'line',data:{labels,datasets:[{data:margMens,borderColor:'#F5A623',borderWidth:2,pointRadius:0,tension:.4,fill:true,backgroundColor:'#F5A62322'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{enabled:false}},scales:{x:{display:false},y:{display:false}}}});
-  // Distribución trimestral para categoryChart (donut) y regionChart (barras)
-  const qL=['Trim. 1','Trim. 2','Trim. 3','Trim. 4'];
-  const qV=[r.ingMensual.slice(0,3),r.ingMensual.slice(3,6),r.ingMensual.slice(6,9),r.ingMensual.slice(9,12)].map(g=>+g.reduce((a,b)=>a+b,0).toFixed(2));
-  // Actualiza leyenda dinámica del donut
-  const _catLeg=document.getElementById('categoryLegend');
-  if(_catLeg){
-    const _catColors=['#22C55E','#8B5CF6','#10B981','#F59E0B'];
-    const _catTotal=qV.reduce((a,b)=>a+b,0)||1;
-    _catLeg.innerHTML=qL.map((l,i)=>`<div class="chart-legend-item"><div class="chart-legend-dot" style="background:${_catColors[i]};"></div>${l} · ${(_catTotal>0?(qV[i]/_catTotal*100).toFixed(0):0)}%</div>`).join('');
-  }
-  mkChart('categoryChart',{type:'doughnut',data:{labels:qL,datasets:[{data:qV,backgroundColor:['#22C55E','#8B5CF6','#10B981','#F59E0B'],borderColor:'#18181B',borderWidth:3,hoverOffset:6}]},options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{display:false},tooltip:{backgroundColor:'#1E1E22',callbacks:{label:ctx=>` ${ctx.label}: ${_m(ctx.parsed*1e6)}`}}}}});
-  // regionChart — usa nombres reales de sucursal/región si los hay, sino trimestral
+  // Distribución mensual para categoryChart (donut) y regionChart (barras)
+  // Fallback: 12 meses reales — más útil y granular que trimestres
+  const _meses=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
   const _regMap=r.regionMap||window._obbioRegionMap||null;
   const _regEntries=_regMap&&Object.keys(_regMap).length>=2?Object.entries(_regMap).sort((a,b)=>b[1]-a[1]).slice(0,8):null;
-  const _regLabels=_regEntries?_regEntries.map(([k])=>k.length>14?k.slice(0,13)+'…':k):qL;
-  const _regVals=_regEntries?_regEntries.map(([,v])=>+(v/1e6).toFixed(2)):qV;
-  const _regColors=['#22C55E','#8B5CF6','#10B981','#F59E0B','#3B82F6','#EC4899','#14B8A6','#F97316'];
-  const _regBadge=document.querySelector('#dashboardView .card:has(#regionChart) .card-badge')||document.querySelector('#dashboardView .card-badge');
-  if(_regEntries&&_regBadge&&_regBadge.textContent==='Ingresos MXN M') _regBadge.textContent='Por sucursal/región';
+  // Donut: segmentos reales si existen; sino, top 6 meses por ingreso
+  const _catMapRaw=r.categoryMap||window._obbioCategoryMap||null;
+  const _catEntries=_catMapRaw&&Object.keys(_catMapRaw).length>=2?Object.entries(_catMapRaw).sort((a,b)=>b[1]-a[1]).slice(0,6):null;
+  const _catPalette=['#22C55E','#8B5CF6','#10B981','#F59E0B','#3B82F6','#EC4899'];
+  let qL, qV, _catBgColors;
+  if(_catEntries){
+    qL=_catEntries.map(([k])=>k.length>16?k.slice(0,14)+'…':k);
+    qV=_catEntries.map(([,v])=>+(v/1e6).toFixed(2));
+    _catBgColors=_catPalette.slice(0,qL.length);
+  } else {
+    // Usar los 12 meses; filtrar meses sin datos
+    const _mV=r.ingMensual.map(v=>+(v/1e6).toFixed(2));
+    const _mPairs=_meses.map((m,i)=>([m,_mV[i]])).filter(([,v])=>v>0);
+    qL=_mPairs.map(([m])=>m);
+    qV=_mPairs.map(([,v])=>v);
+    _catBgColors=_catPalette.concat(['#F97316','#14B8A6','#EAB308','#6366F1','#EC4899','#84CC16']).slice(0,qL.length);
+  }
+  // Actualiza badge y leyenda dinámica del donut
+  const _catBadgeEl=document.querySelector('#dashboardView .card:has(#categoryChart) .card-badge');
+  if(_catBadgeEl) _catBadgeEl.textContent=_catEntries?'Por segmento':'Por mes';
+  const _catLeg=document.getElementById('categoryLegend');
+  if(_catLeg){
+    const _catTotal=qV.reduce((a,b)=>a+b,0)||1;
+    _catLeg.innerHTML=qL.map((l,i)=>`<div class="chart-legend-item"><div class="chart-legend-dot" style="background:${_catBgColors[i]};"></div>${l} · ${(_catTotal>0?(qV[i]/_catTotal*100).toFixed(0):0)}%</div>`).join('');
+  }
+  mkChart('categoryChart',{type:'doughnut',data:{labels:qL,datasets:[{data:qV,backgroundColor:_catBgColors,borderColor:'#18181B',borderWidth:3,hoverOffset:6}]},options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{display:false},tooltip:{backgroundColor:'#1E1E22',callbacks:{label:ctx=>` ${ctx.label}: ${_m(ctx.parsed*1e6)}`}}}}});
+  // regionChart — usa nombres reales de sucursal/región si los hay; sino, meses reales
+  const _regColors=['#22C55E','#8B5CF6','#10B981','#F59E0B','#3B82F6','#EC4899','#14B8A6','#F97316','#EAB308','#6366F1','#84CC16','#F43F5E'];
+  let _regLabels, _regVals;
+  if(_regEntries){
+    _regLabels=_regEntries.map(([k])=>k.length>14?k.slice(0,13)+'…':k);
+    _regVals=_regEntries.map(([,v])=>+(v/1e6).toFixed(2));
+  } else {
+    // Meses reales (solo los que tienen datos)
+    const _mV2=r.ingMensual.map(v=>+(v/1e6).toFixed(2));
+    const _mPairs2=_meses.map((m,i)=>([m,_mV2[i]])).filter(([,v])=>v>0);
+    _regLabels=_mPairs2.map(([m])=>m);
+    _regVals=_mPairs2.map(([,v])=>v);
+  }
+  const _regBadge=document.querySelector('#dashboardView .card:has(#regionChart) .card-badge');
+  if(_regBadge) _regBadge.textContent=_regEntries?'Por sucursal/región':'Por mes';
+  const _regTitle=document.querySelector('#dashboardView .card:has(#regionChart) .card-title');
+  if(_regTitle&&!_regEntries) _regTitle.textContent='Ingresos Mensuales';
   mkChart('regionChart',{type:'bar',data:{labels:_regLabels,datasets:[{data:_regVals,backgroundColor:_regColors.slice(0,_regLabels.length),borderColor:'transparent',borderRadius:8,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1E1E22',callbacks:{label:ctx=>` ${ctx.label}: ${_m(ctx.parsed.y*1e6)}`}}},scales:{x:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',font:{size:10},maxRotation:30}},y:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',callback:v=>'$'+v+'M'}}}}});
   // paretoChart — clientes reales si existen, sino estructura de costos
   const clienteMap=r.clienteMap||window._obbioClienteMap||null;
@@ -10722,7 +10782,12 @@ window.toggleSidebarDesktop=toggleSidebarDesktop;
     if(_prodChart){_prodChart.destroy();_prodChart=null;}
     const ctx=document.getElementById('prod-bar-chart');
     if(ctx&&window.Chart){
-      _prodChart=new Chart(ctx,{type:'bar',data:{labels:top10.map(p=>p.nombre.length>18?p.nombre.slice(0,16)+'…':p.nombre),datasets:[{label:'Ingreso',data:top10.map(p=>p.ingreso),backgroundColor:top10.map(p=>p.abc==='A'?'rgba(16,185,129,.8)':p.abc==='B'?'rgba(245,158,11,.8)':'rgba(156,163,175,.6)'),borderRadius:6,borderSkipped:false}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1E1E22',callbacks:{label:c=>' '+_fm(c.parsed.x)}}},scales:{x:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#6B7280',callback:v=>_fm(v)}},y:{grid:{display:false},ticks:{color:'#9CA3AF',font:{size:11}}}}}});
+      const _nProd=top10.length;
+      const _prodH=Math.max(180,_nProd*52);
+      ctx.style.height=_prodH+'px'; ctx.style.minHeight=_prodH+'px';
+      const _prodWrap=ctx.closest('.chart-container');
+      if(_prodWrap){_prodWrap.classList.add('scrollable');_prodWrap.style.height='auto';}
+      _prodChart=new Chart(ctx,{type:'bar',data:{labels:top10.map(p=>p.nombre.length>18?p.nombre.slice(0,16)+'…':p.nombre),datasets:[{label:'Ingreso',data:top10.map(p=>p.ingreso),backgroundColor:top10.map(p=>p.abc==='A'?'rgba(16,185,129,.8)':p.abc==='B'?'rgba(245,158,11,.8)':'rgba(156,163,175,.6)'),borderRadius:6,borderSkipped:false}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,layout:{padding:{right:72}},plugins:{legend:{display:false},tooltip:{backgroundColor:'#1E1E22',callbacks:{label:c=>' '+_fm(c.parsed.x)}}},scales:{x:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#6B7280',callback:v=>_fm(v)}},y:{grid:{display:false},ticks:{color:'#9CA3AF',font:{size:11}}}}}});
     }
     window._prodData={lista,totalIngreso,totalTx,topIng,topVol,ticketProm};
     // ── Correlación producto × sucursal ──
