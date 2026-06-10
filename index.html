@@ -942,6 +942,17 @@ th[data-tip]{cursor:default;}
     </div>
   </header>
 
+  <!-- Barra de contexto: País · Moneda · Tipo de cambio -->
+  <div id="dashContextBar" style="display:flex;align-items:center;gap:10px;margin-bottom:18px;padding:10px 16px;background:var(--card2);border:1px solid var(--border);border-radius:12px;font-size:12px;font-weight:600;flex-wrap:wrap;">
+    <span style="color:var(--muted);">Contexto:</span>
+    <span id="dashCtxPais" style="color:var(--text);">🇲🇽 México · IVA 16% / ISR 30%</span>
+    <span style="color:var(--border2);">·</span>
+    <span id="dashCtxMoneda" style="color:var(--text);">💵 MXN · Pesos</span>
+    <span id="dashCtxFx" style="display:none;color:var(--primary);background:var(--primary-dim);border-radius:6px;padding:2px 8px;"></span>
+    <span style="flex:1;"></span>
+    <button onclick="showView('ingresodatosView',document.querySelector('[onclick*=\"ingresodatosView\"]'))" style="font-size:11px;padding:4px 12px;border-radius:7px;border:1px solid rgba(34,197,94,.3);background:var(--primary-dim);color:var(--primary);cursor:pointer;font-weight:700;">⚙️ Cambiar</button>
+  </div>
+
   <!-- KPI GRID MEJORADO -->
   <section class="kpi-grid">
 
@@ -1902,7 +1913,7 @@ th[data-tip]{cursor:default;}
       <input type="range" id="rateSlider" min="0" max="30" value="12" oninput="updateModel()" style="width:100%;height:4px;border-radius:2px;background:var(--border);outline:none;cursor:pointer;-webkit-appearance:none;">
     </div>
 
-    <div style="margin-bottom:20px;">
+    <div id="modelIsrRow" style="margin-bottom:20px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
         <span id="modelIsrLabel" style="font-size:13px;font-weight:600;color:var(--muted);">🏛️ Tasa ISR</span>
         <span style="font-size:14px;font-weight:800;color:var(--primary);background:var(--primary-dim);padding:2px 10px;border-radius:6px;" id="inflationValue">30%</span>
@@ -3225,7 +3236,7 @@ background:#10B981;
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-top:16px;">
       <div style="padding:14px;border-radius:12px;background:var(--card2);border:1px solid var(--border2);"><div style="font-size:11px;font-weight:700;color:var(--success);text-transform:uppercase;margin-bottom:6px;">✅ Datos locales</div><div style="font-size:12px;color:var(--muted);">Todo en sessionStorage del navegador. Sin servidor. Sin cloud.</div></div>
       <div style="padding:14px;border-radius:12px;background:var(--card2);border:1px solid var(--border2);"><div style="font-size:11px;font-weight:700;color:var(--primary);text-transform:uppercase;margin-bottom:6px;">🔐 Sin transmisión</div><div style="font-size:12px;color:var(--muted);">CSP activa. connect-src: none. Cero llamadas externas con tus datos.</div></div>
-      <div style="padding:14px;border-radius:12px;background:var(--card2);border:1px solid var(--border2);"><div style="font-size:11px;font-weight:700;color:var(--warning);text-transform:uppercase;margin-bottom:6px;">⚠️ Responsabilidad</div><div style="font-size:12px;color:var(--muted);">Los cálculos son orientativos. No sustituyen a un contador o asesor financiero certificado.</div></div>
+      <div style="padding:14px;border-radius:12px;background:var(--card2);border:1px solid var(--border2);"><div style="font-size:11px;font-weight:700;color:var(--warning);text-transform:uppercase;margin-bottom:6px;">⚠️ Responsabilidad</div><div style="font-size:12px;color:var(--muted);">Los cálculos son orientativos. No sustituyen asesoría profesional. <strong style="color:var(--warning);">Consúltanos.</strong></div></div>
     </div>
   </div>
   <div class="card">
@@ -7386,6 +7397,19 @@ function renderDashboardView(r){
     const ft=document.getElementById('sidebarFooterText'); if(ft) ft.textContent='Obbio · '+r.empresa+' · '+r.anio;
     const ps=document.getElementById('pageSubtitle'); if(ps) ps.textContent='Datos financieros · '+r.empresa+' · '+r.anio;
   }
+  // Barra de contexto País · Moneda
+  {
+    const _pais=r.pais||'MX', _mon=r.moneda||'MXN';
+    const _paisTxt=_pais==='ES'?'🇪🇸 España · IVA 21% / IS 25%':'🇲🇽 México · IVA 16% / ISR 30%';
+    const _monTxt=_mon==='EUR'?'💶 EUR · Euros':_mon==='USD'?'💵 USD · Dólares':'💵 MXN · Pesos';
+    const cp=document.getElementById('dashCtxPais'); if(cp) cp.textContent=_paisTxt;
+    const cm=document.getElementById('dashCtxMoneda'); if(cm) cm.textContent=_monTxt;
+    const cf=document.getElementById('dashCtxFx');
+    if(cf&&_mon!=='MXN'&&_fxRates&&_fxRates[_mon]){
+      const inv=(1/_fxRates[_mon]).toFixed(2);
+      cf.textContent=`1 ${_mon} = $${inv} MXN`; cf.style.display='';
+    } else if(cf){ cf.style.display='none'; }
+  }
   // spark4: margen EBITDA — mensual si hay datos, anual si hay historico, vacío si no
   if(_gran==='mensual'){
     const margMens=r.ingMensual.map((v,i)=>r.ebitdaMensual[i]&&v?+(r.ebitdaMensual[i]/v*100).toFixed(1):r.margenEbitda);
@@ -8278,7 +8302,7 @@ function renderTaxView(r){
   <!-- ── DISCLAIMER ESTIMACIÓN FISCAL ── -->
   <div style="padding:10px 16px;border-radius:10px;background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.2);margin-bottom:14px;display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted);">
     <span style="font-size:15px;flex-shrink:0;">ℹ️</span>
-    <span>Todos los cálculos son <strong style="color:var(--text);">estimaciones internas del sistema</strong> basadas en tus cifras y tasas configurables. <strong style="color:var(--text);">No constituyen declaración fiscal ni dato oficial del ${isMX?'SAT':'AEAT'}.</strong> Para declaraciones y cumplimiento formal, consulta a un contador certificado.</span>
+    <span>Todos los cálculos son <strong style="color:var(--text);">estimaciones internas del sistema</strong> basadas en tus cifras y tasas configurables. <strong style="color:var(--text);">No constituyen declaración fiscal ni dato oficial del ${isMX?'SAT':'AEAT'}.</strong> Para declaraciones y cumplimiento formal, consúltanos.</span>
   </div>
 
   <!-- ── SCORE + INSIGHTS ── -->
@@ -9545,9 +9569,11 @@ document.addEventListener('DOMContentLoaded',()=>{ fetchFXRate(); setTimeout(_up
 
 /* ─────────────────── ISR vs IS label (España) ─────────────────── */
 function _updateIsrLabel(){
-  const lbl=document.getElementById('modelIsrLabel'); if(!lbl) return;
   const pais=(document.getElementById('ii_pais')||{}).value||'MX';
-  lbl.textContent=pais==='ES'?'🏛️ Tasa IS (Impuesto Sociedades)':'🏛️ Tasa ISR';
+  const row=document.getElementById('modelIsrRow');
+  if(row) row.style.display=pais==='ES'?'none':'';
+  const lbl=document.getElementById('modelIsrLabel'); if(!lbl) return;
+  lbl.textContent='🏛️ Tasa ISR';
 }
 document.addEventListener('DOMContentLoaded',_updateIsrLabel);
 
