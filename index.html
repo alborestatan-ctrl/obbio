@@ -3463,7 +3463,7 @@ background:#10B981;
           <div class="card-title">Ingresos por Producto</div>
           <span class="card-badge success">Top 10</span>
         </div>
-        <div style="height:340px;position:relative;overflow:hidden;">
+        <div style="height:380px;position:relative;overflow-y:auto;overflow-x:hidden;">
           <canvas id="prod-bar-chart"></canvas>
         </div>
       </div>
@@ -5498,7 +5498,7 @@ function parseExcelWorkbook(wb){
   const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').trim();
   const sheetNames=wb.SheetNames.map(norm);
   const getSheet=kw=>{ const i=sheetNames.findIndex(n=>n.includes(kw)); return i>=0?wb.Sheets[wb.SheetNames[i]]:null; };
-  const toNum=v=>{ const n=parseFloat(String(v||'').replace(/[$,\s%]/g,'')); return isNaN(n)?0:n; };
+  const toNum=v=>{ let s=String(v||'').replace(/[$,\s%]/g,''); if(s.startsWith('(')&&s.endsWith(')')) s='-'+s.slice(1,-1); const n=parseFloat(s); return isNaN(n)?0:n; };
 
   // ── Detect format ──
   const hasER=sheetNames.some(n=>n.includes('estado')||n.includes('resultado'));
@@ -5743,8 +5743,12 @@ function parseExcelWorkbook(wb){
       const m=monthOf(fecStr); const rowYr=yearOf(fecStr);
       if(m>=0&&m<12&&(rowYr<0||!_trxMR||rowYr===_trxMR)){ mV[m]+=v; mC[m]+=c; }
     });
-    if(sumV>0){ data.ventas=String(Math.round(sumV)); if(mV.some(x=>x>0)) data.m_ventas=mV.map(Math.round).join(','); }
-    if(sumC>0){ data.cogs=String(Math.round(sumC));   if(mC.some(x=>x>0)) data.m_cogs=mC.map(Math.round).join(','); }
+    // El Estado de Resultados es la fuente autoritativa. Las transacciones solo llenan ventas/cogs
+    // si el ER no los trajo; el detalle mensual (m_ventas/m_cogs) sí se aprovecha siempre.
+    const _erVentas = parseFloat(data.ventas)||0;
+    const _erCogs   = parseFloat(data.cogs)||0;
+    if(sumV>0){ if(_erVentas===0) data.ventas=String(Math.round(sumV)); if(mV.some(x=>x>0)) data.m_ventas=mV.map(Math.round).join(','); }
+    if(sumC>0){ if(_erCogs===0)   data.cogs=String(Math.round(sumC));   if(mC.some(x=>x>0)) data.m_cogs=mC.map(Math.round).join(','); }
     if(clSet.size>0) data.clientes=String(clSet.size);
     if(Object.keys(clienteMapT).length>0) data.clienteMap=clienteMapT;
     if(Object.keys(regionMapT).length>0) data.regionMap=regionMapT;
@@ -11515,7 +11519,9 @@ window.toggleSidebarDesktop=toggleSidebarDesktop;
   }
   function toNum(v){
     if(v===null||v===undefined||v==='') return 0;
-    const n=parseFloat(v.toString().replace(/[$,\s]/g,'').replace(',','.'));
+    let s=v.toString().replace(/[$,\s]/g,'');
+    if(s.startsWith('(')&&s.endsWith(')')) s='-'+s.slice(1,-1);
+    const n=parseFloat(s);
     return isNaN(n)?0:n;
   }
   function normalizeRows(raw,filename){
