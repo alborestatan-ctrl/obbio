@@ -3463,7 +3463,7 @@ background:#10B981;
           <div class="card-title">Ingresos por Producto</div>
           <span class="card-badge success">Top 10</span>
         </div>
-        <div style="height:320px;position:relative;">
+        <div style="height:340px;position:relative;overflow:hidden;">
           <canvas id="prod-bar-chart"></canvas>
         </div>
       </div>
@@ -9113,7 +9113,7 @@ function _applyForecast(r){
   const years=[yrBase+1,yrBase+2,yrBase+3,yrBase+4,yrBase+5];
 
   // ── Método badge ──
-  const hasMensual=r.ingMensual&&r.ingMensual.length===12;
+  const hasMensual=r.ingMensual&&r.ingMensual.length===12&&r.ingMensual.some(v=>v>0);
   const metodoBadge=document.getElementById('fc-method-badge');
   if(metodoBadge) metodoBadge.textContent=hasMensual?`${cagrMethod} + Estacionalidad real`:`Método: ${cagrMethod}`;
 
@@ -11678,7 +11678,7 @@ window.toggleSidebarDesktop=toggleSidebarDesktop;
       // Belt-and-suspenders: destroy any Chart.js instance still attached to this canvas
       try{const _ex=Chart.getChart(ctx);if(_ex){_ex.destroy();}}catch(e){}
       const _nProd=top10.length;
-      const _prodH=Math.max(180,_nProd*52);
+      const _prodH=Math.max(180,_nProd*34);
       ctx.style.height=_prodH+'px'; ctx.style.minHeight=_prodH+'px';
       const _prodWrap=ctx.closest('.chart-container');
       if(_prodWrap){_prodWrap.classList.add('scrollable');_prodWrap.style.height='auto';}
