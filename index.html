@@ -6066,13 +6066,29 @@ function applyExcelData(){
   if(hasMonthly){
     if(pt) pt.value='mensual';
     if(typeof buildMensualTable==='function') buildMensualTable();
+    // ventasShape: proporciones de la serie transaccional de ventas (ratio es idéntico, escalada o no)
+    const ventasShape=String(d.m_ventas||'').split(',').map(parseNum);
+    const sumVentasShape=ventasShape.reduce((s,v)=>s+v,0);
     const fill=(key,erTotal)=>{
       const a=String(d[key]||'').split(',').map(parseNum);
       const sumTrx=a.reduce((s,v)=>s+v,0);
-      const factor=(erTotal>0&&sumTrx>0)?(erTotal/sumTrx):1;
-      for(let i=0;i<12;i++){ const el=$(`${key}_${i}`); if(el) el.value=(a[i]!==undefined&&!isNaN(a[i]))?Math.round(a[i]*factor):''; }
+      let vals;
+      if(sumTrx>0){
+        // Caso A: serie mensual real → escalar al total ER
+        const factor=(erTotal>0)?(erTotal/sumTrx):1;
+        vals=a.map(v=>Math.round(v*factor));
+      } else if(erTotal>0&&sumVentasShape>0){
+        // Caso B: sin serie propia pero ER existe → repartir total ER por forma de ventas
+        vals=ventasShape.map(v=>Math.round(erTotal*v/sumVentasShape));
+        window._obbioMeta=window._obbioMeta||{};
+        window._obbioMeta[key+'_origen']='derivado';
+      } else {
+        // Caso C: sin ER total o sin forma → cero honesto, no fabricar
+        vals=Array(12).fill(0);
+      }
+      for(let i=0;i<12;i++){const el=$(`${key}_${i}`);if(el) el.value=vals[i]||'';}
     };
-    fill('m_ventas',parseNum(d.ventas)); fill('m_cogs',parseNum(d.cogs)); fill('m_gadmin'); fill('m_gventas'); fill('m_gfin');
+    fill('m_ventas',parseNum(d.ventas)); fill('m_cogs',parseNum(d.cogs)); fill('m_gadmin',parseNum(d.gadmin)); fill('m_gventas',parseNum(d.gventas)); fill('m_gfin',parseNum(d.gfin));
   } else {
     if(pt) pt.value='anual';
     setVal('ii_ventas',  parseNum(d.ventas));
