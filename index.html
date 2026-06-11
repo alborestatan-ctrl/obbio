@@ -4569,7 +4569,8 @@ function collectManualOptional(){
         mV.forEach((v,i)=>{ const el=document.getElementById('m_ventas_'+i); if(el) el.value=Math.round(v)||''; });
       }
       const clEl=document.getElementById('ii_clientes'); if(clEl&&!clEl.value&&clSet.size>0) clEl.value=clSet.size;
-      const vEl=document.getElementById('ii_ventas'); if(vEl&&!vEl.value) vEl.value=Math.round(sumV);
+      // ii_ventas NO se llena desde transacciones: el total viene del Estado de Resultados / captura.
+      // Las transacciones solo alimentan el detalle mensual y los mapas (arriba). Ver BUG ventas pisadas.
       // Monthly by year
       const mByYr={};
       vRows.forEach(r=>{ const v=num(r[4]); const m=moStr(r[0]); const yrM=String(r[0]).match(/(\d{4})/); const yr=yrM?parseInt(yrM[1]):null; if(yr&&m>=0&&m<12&&v>0){ if(!mByYr[yr]) mByYr[yr]=new Array(12).fill(0); mByYr[yr][m]+=v; } });
@@ -6065,11 +6066,13 @@ function applyExcelData(){
   if(hasMonthly){
     if(pt) pt.value='mensual';
     if(typeof buildMensualTable==='function') buildMensualTable();
-    const fill=key=>{
+    const fill=(key,erTotal)=>{
       const a=String(d[key]||'').split(',').map(parseNum);
-      for(let i=0;i<12;i++){ const el=$(`${key}_${i}`); if(el) el.value=(a[i]!==undefined&&!isNaN(a[i]))?a[i]:''; }
+      const sumTrx=a.reduce((s,v)=>s+v,0);
+      const factor=(erTotal>0&&sumTrx>0)?(erTotal/sumTrx):1;
+      for(let i=0;i<12;i++){ const el=$(`${key}_${i}`); if(el) el.value=(a[i]!==undefined&&!isNaN(a[i]))?Math.round(a[i]*factor):''; }
     };
-    fill('m_ventas'); fill('m_cogs'); fill('m_gadmin'); fill('m_gventas'); fill('m_gfin');
+    fill('m_ventas',parseNum(d.ventas)); fill('m_cogs',parseNum(d.cogs)); fill('m_gadmin'); fill('m_gventas'); fill('m_gfin');
   } else {
     if(pt) pt.value='anual';
     setVal('ii_ventas',  parseNum(d.ventas));
