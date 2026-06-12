@@ -237,6 +237,11 @@ body{background:var(--bg);color:var(--text);overflow-x:hidden;}
 
 /* CHART CONTAINERS */
 .chart-container{height:380px;position:relative;overflow:hidden;}
+.chart-insight{font-size:12.5px;color:var(--text);background:rgba(34,197,94,.07);border-left:3px solid var(--primary);padding:8px 12px;border-radius:0 8px 8px 0;margin:0 0 12px;line-height:1.45;display:none;}
+.chart-insight.visible{display:block;}
+.obbio-resumen{background:linear-gradient(135deg,rgba(167,139,250,.07),rgba(34,197,94,.05));border:1px solid rgba(167,139,250,.2);border-radius:12px;padding:14px 16px;margin-bottom:16px;}
+.obbio-resumen-hdr{font-size:11px;font-weight:700;color:#a78bfa;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.obbio-resumen-body{font-size:13px;line-height:1.65;color:var(--text);}
 .chart-container.tall{height:420px;overflow:hidden;}
 .chart-container.small{height:260px;overflow:hidden;}
 .chart-container.scrollable{overflow-y:auto;overflow-x:hidden;height:auto;max-height:420px;}
@@ -1004,7 +1009,8 @@ th[data-tip]{cursor:default;}
     </div>
     <div class="topbar-actions">
       <button onclick="generarReportePDF&&generarReportePDF()" style="padding:8px 16px;border-radius:9px;border:1px solid rgba(34,197,94,.35);background:var(--primary-dim);color:var(--primary);font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">📄 PDF</button>
-      <button id="dash-clear-btn" onclick="limpiarSistema()" style="display:none;padding:8px 16px;border-radius:9px;border:1px solid rgba(244,92,92,.35);background:rgba(244,92,92,.08);color:var(--danger);font-size:12px;font-weight:700;cursor:pointer;transition:.15s;" onmouseover="this.style.background='rgba(244,92,92,.2)'" onmouseout="this.style.background='rgba(244,92,92,.08)'">🗑 Eliminar datos</button>
+      <button id="dash-clear-btn" onclick="limpiarSistema()" style="display:none;padding:8px 16px;border-radius:9px;border:1px solid rgba(244,92,92,.35);background:rgba(244,92,92,.08);color:var(--danger);font-size:12px;font-weight:700;cursor:pointer;transition:.15s;" onmouseover="this.style.background='rgba(244,92,94,.2)'" onmouseout="this.style.background='rgba(244,92,92,.08)'">🗑 Eliminar datos</button>
+      <button onclick="openCFOWith('¿Cómo está la salud general de mi empresa y qué debería mejorar primero?')" style="padding:8px 14px;border-radius:9px;border:1px solid rgba(167,139,250,.35);background:rgba(167,139,250,.08);color:#a78bfa;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:background .15s;" onmouseover="this.style.background='rgba(167,139,250,.18)'" onmouseout="this.style.background='rgba(167,139,250,.08)'">🤖 Preguntar al CFO</button>
     </div>
   </header>
 
@@ -1022,6 +1028,22 @@ th[data-tip]{cursor:default;}
       <option value="USD">🇺🇸 USD · Dólares</option>
     </select>
     <span id="dashCtxFx" style="display:none;color:var(--primary);background:var(--primary-dim);border-radius:6px;padding:2px 8px;font-size:11px;cursor:pointer;" onclick="fetchFXRate()" title="Clic para actualizar"></span>
+  </div>
+
+  <!-- RESUMEN OBBIO — Dashboard -->
+  <div id="resumen-dashboard" class="obbio-resumen" style="display:none;"></div>
+
+  <!-- DIAGNÓSTICO EJECUTIVO -->
+  <div id="diag-ejecutivo" style="display:none;margin-bottom:20px;padding:18px 20px;background:var(--card);border:1px solid var(--border);border-radius:16px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+      <span style="font-size:14px;font-weight:800;color:var(--text);">🔍 ¿Cómo está mi empresa?</span>
+      <div id="diag-score-chip" style="padding:5px 14px;border-radius:20px;font-size:12px;font-weight:800;"></div>
+    </div>
+    <div id="diag-hallazgos" style="display:flex;flex-direction:column;gap:7px;margin-bottom:14px;"></div>
+    <div id="diag-acciones" style="display:none;padding-top:12px;border-top:1px solid var(--border2);">
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Acciones recomendadas</div>
+      <div id="diag-acciones-list" style="display:flex;flex-direction:column;gap:6px;"></div>
+    </div>
   </div>
 
   <!-- KPI GRID MEJORADO -->
@@ -1140,6 +1162,7 @@ th[data-tip]{cursor:default;}
       <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#22C55E;"></div>Ingresos (MXN M)</div>
       <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#10B981;"></div>EBITDA (MXN M)</div>
     </div>
+    <div id="insight-mainChart" class="chart-insight"></div>
     <div class="chart-container">
       <canvas id="mainChart" role="img" aria-label="Gráfica de líneas: Ingresos y EBITDA mensual 2024"></canvas>
     </div>
@@ -1250,7 +1273,9 @@ th[data-tip]{cursor:default;}
 <div id="financeView" class="view" style="display:none;">
   <header class="topbar">
     <div><h2 class="page-title">Inteligencia Financiera</h2><p class="page-subtitle">Estado de resultados y salud financiera · <span id="periodoFinanceSub">—</span></p></div>
+    <div class="topbar-actions"><button onclick="openCFOWith('¿Qué me dice mi estado de resultados sobre la rentabilidad de mi empresa?')" style="padding:8px 14px;border-radius:9px;border:1px solid rgba(167,139,250,.35);background:rgba(167,139,250,.08);color:#a78bfa;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:background .15s;" onmouseover="this.style.background='rgba(167,139,250,.18)'" onmouseout="this.style.background='rgba(167,139,250,.08)'">🤖 Preguntar al CFO</button></div>
   </header>
+  <div id="resumen-financeView" class="obbio-resumen" style="display:none;"></div>
   <section class="kpi-grid">
     <div class="kpi-card accent-blue">
       <div class="kpi-top"><div class="kpi-label">Ingresos Totales</div><div class="kpi-icon blue">💵</div></div>
@@ -1343,7 +1368,9 @@ th[data-tip]{cursor:default;}
 <div id="forecastView" class="view" style="display:none;">
   <header class="topbar">
     <div><h2 class="page-title">Pronóstico y Planeación</h2><p class="page-subtitle">Proyecciones y escenarios para 2025</p></div>
+    <div class="topbar-actions"><button onclick="openCFOWith('¿Cómo interpreto esta proyección y qué escenario es más probable para mi negocio?')" style="padding:8px 14px;border-radius:9px;border:1px solid rgba(167,139,250,.35);background:rgba(167,139,250,.08);color:#a78bfa;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:background .15s;" onmouseover="this.style.background='rgba(167,139,250,.18)'" onmouseout="this.style.background='rgba(167,139,250,.08)'">🤖 Preguntar al CFO</button></div>
   </header>
+  <div id="resumen-forecastView" class="obbio-resumen" style="display:none;"></div>
   <div class="forecast-grid">
     <div class="scenario-card base">
       <div class="scenario-title">Escenario Base</div>
@@ -1371,6 +1398,7 @@ th[data-tip]{cursor:default;}
       <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#22C55E;"></div>Base</div>
       <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#F59E0B;"></div>Conservador</div>
     </div>
+    <div id="insight-forecastChart" class="chart-insight"></div>
     <div class="chart-container">
       <canvas id="forecastChart" role="img" aria-label="Proyección anual por escenario"></canvas>
     </div>
@@ -1400,7 +1428,9 @@ th[data-tip]{cursor:default;}
             Flujo de efectivo y posición de caja
         </p>
     </div>
+    <div class="topbar-actions"><button onclick="openCFOWith('¿Por qué mi flujo de caja está en este nivel y cómo puedo mejorarlo?')" style="padding:8px 14px;border-radius:9px;border:1px solid rgba(167,139,250,.35);background:rgba(167,139,250,.08);color:#a78bfa;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:background .15s;" onmouseover="this.style.background='rgba(167,139,250,.18)'" onmouseout="this.style.background='rgba(167,139,250,.08)'">🤖 Preguntar al CFO</button></div>
 </header>
+<div id="resumen-cashflowView" class="obbio-resumen" style="display:none;"></div>
 
 <section class="kpi-grid">
 
@@ -3015,6 +3045,7 @@ background:#10B981;
 <div id="riskView" class="view" style="display:none;">
   <header class="topbar">
     <div><h2 class="page-title">Centro de Riesgos</h2><p class="page-subtitle">Monitoreo de riesgos financieros y operativos</p></div>
+    <div class="topbar-actions"><button onclick="openCFOWith('¿Cuál es el riesgo más urgente que debo atender y por qué existe?')" style="padding:8px 14px;border-radius:9px;border:1px solid rgba(167,139,250,.35);background:rgba(167,139,250,.08);color:#a78bfa;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:background .15s;" onmouseover="this.style.background='rgba(167,139,250,.18)'" onmouseout="this.style.background='rgba(167,139,250,.08)'">🤖 Preguntar al CFO</button></div>
   </header>
   <section class="kpi-grid">
     <div class="kpi-card accent-green">
@@ -3402,8 +3433,10 @@ background:#10B981;
         <option value="">Todos los períodos</option>
       </select>
       <button onclick="prodReset()" id="prod-reset-btn" style="display:none;padding:9px 16px;border-radius:10px;border:1px solid rgba(244,92,92,.35);background:rgba(244,92,92,.08);color:var(--danger);font-size:12px;font-weight:700;cursor:pointer;">✕ Limpiar</button>
+      <button onclick="openCFOWith('¿Qué producto debería impulsar para maximizar mis ingresos?')" style="padding:8px 14px;border-radius:9px;border:1px solid rgba(167,139,250,.35);background:rgba(167,139,250,.08);color:#a78bfa;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:background .15s;" onmouseover="this.style.background='rgba(167,139,250,.18)'" onmouseout="this.style.background='rgba(167,139,250,.08)'">🤖 Preguntar al CFO</button>
     </div>
   </header>
+  <div id="resumen-productosView" class="obbio-resumen" style="display:none;"></div>
 
   <div id="prod-upload-zone" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:64px 24px;text-align:center;border:1.5px dashed var(--border2);border-radius:16px;margin-bottom:20px;">
     <div style="font-size:44px;margin-bottom:16px;opacity:.35;">📦</div>
@@ -3463,6 +3496,7 @@ background:#10B981;
           <div class="card-title">Ingresos por Producto</div>
           <span class="card-badge success">Top 10</span>
         </div>
+        <div id="insight-prod-bar" class="chart-insight"></div>
         <div style="height:380px;position:relative;overflow-y:auto;overflow-x:hidden;">
           <canvas id="prod-bar-chart"></canvas>
         </div>
@@ -3497,7 +3531,9 @@ background:#10B981;
     <h2 class="page-title">Comparativos</h2>
     <p class="page-subtitle">Año vs año · Mensual · Rolling 12M · Tendencia multi-año</p>
   </div>
+  <div class="topbar-actions"><button onclick="openCFOWith('¿Qué tendencia ves en mis comparativos y qué debería hacer al respecto?')" style="padding:8px 14px;border-radius:9px;border:1px solid rgba(167,139,250,.35);background:rgba(167,139,250,.08);color:#a78bfa;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:background .15s;" onmouseover="this.style.background='rgba(167,139,250,.18)'" onmouseout="this.style.background='rgba(167,139,250,.08)'">🤖 Preguntar al CFO</button></div>
 </header>
+<div id="resumen-comparativosView" class="obbio-resumen" style="display:none;"></div>
 <div style="padding:0 24px 24px;">
   <div class="comp-pills">
     <button class="comp-pill active" data-mode="tendencia" onclick="compSetMode('tendencia')">📈 Tendencia</button>
@@ -7604,6 +7640,114 @@ function mkChart(id,cfg){
 }
 
 /* ─────────────────── DASHBOARD VIEW ─────────────────── */
+// ── Resumen Obbio (IA anclada a datos reales, con caché) ──────────────────
+window._obbioResumenCache=window._obbioResumenCache||{};
+
+function _obbioResumenRender(el,text){
+  const lines=text.split('\n').filter(l=>l.trim());
+  const html=lines.map(l=>`<div style="display:flex;gap:8px;margin-bottom:5px;"><span style="color:#a78bfa;flex-shrink:0;">•</span><span>${l.replace(/^[•\-\*]\s*/,'')}</span></div>`).join('');
+  el.innerHTML=`<div class="obbio-resumen-hdr">🤖 Resumen Obbio</div><div class="obbio-resumen-body">${html||text}</div>`;
+  el.style.display='';
+}
+
+async function _obbioResumen(moduleId,lines,containerId){
+  const el=document.getElementById(containerId); if(!el) return;
+  const valid=lines.filter(l=>l.value!=null&&l.value!=='');
+  if(!valid.length){
+    el.innerHTML='<div class="obbio-resumen-hdr">🤖 Resumen Obbio</div><div class="obbio-resumen-body" style="color:var(--muted);font-size:12px;">Aún no hay datos suficientes para un resumen — ingresa tus datos financieros para activarlo.</div>';
+    el.style.display=''; return;
+  }
+  const fp=valid.map(l=>String(l.value).slice(0,8)).join('|');
+  const ck=moduleId+':'+fp;
+  if(window._obbioResumenCache[ck]){ _obbioResumenRender(el,window._obbioResumenCache[ck]); return; }
+  el.innerHTML='<div class="obbio-resumen-hdr">🤖 Resumen Obbio</div><div class="obbio-resumen-body" style="color:var(--muted);font-size:12px;">Analizando datos…</div>';
+  el.style.display='';
+  const sysPrompt='Eres un analista financiero. Se te dan cifras reales de un módulo de dashboard.\nEscribe EXACTAMENTE 2-3 viñetas breves con los hallazgos más importantes.\nREGLAS: solo usa cifras que te proporcionan explícitamente. Nunca inventes números ni porcentajes. Sin introducción ni cierre. Solo viñetas con • al inicio. Máximo 20 palabras por viñeta. Añade interpretación, no solo repitas los datos.';
+  const question=`Módulo "${moduleId}" — datos reales:\n${valid.map(l=>`${l.label}: ${l.value}`).join('\n')}\n\n¿Cuáles son los 2-3 hallazgos más importantes?`;
+  try{
+    const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question,financialContext:sysPrompt,history:[]})});
+    const j=await r.json();
+    const t=j.text||'No se pudo generar el resumen.';
+    window._obbioResumenCache[ck]=t;
+    _obbioResumenRender(el,t);
+  }catch(e){
+    el.innerHTML='<div class="obbio-resumen-hdr">🤖 Resumen Obbio</div><div class="obbio-resumen-body" style="color:var(--muted);font-size:12px;">No disponible — verifica la conexión.</div>';
+  }
+}
+
+function renderDiagEjecutivo(r){
+  const block=document.getElementById('diag-ejecutivo'); if(!block) return;
+  if(!r||!r.ventas){block.style.display='none';return;}
+  const hallazgos=[], acciones=[];
+  // ── Score ──
+  if(r.score!=null){
+    const sl=r.score>=80?{t:'pos',txt:`Score financiero: ${r.score}/100 — condición óptima`}
+            :r.score>=60?{t:'pos',txt:`Score financiero: ${r.score}/100 — condición saludable`}
+            :r.score>=40?{t:'warn',txt:`Score financiero: ${r.score}/100 — requiere atención`}
+            :             {t:'danger',txt:`Score financiero: ${r.score}/100 — situación de riesgo`};
+    hallazgos.push(sl);
+    if(r.score<60) acciones.push('Revisa los KPIs marcados en rojo para priorizar mejoras.');
+  }
+  // ── YoY ──
+  if(r.yoy!=null){
+    if(r.yoy>=10)     hallazgos.push({t:'pos',  txt:`Crecimiento sólido — ventas ▲ +${r.yoy.toFixed(1)}% vs año anterior`});
+    else if(r.yoy>=0) hallazgos.push({t:'info', txt:`Crecimiento moderado — ventas ▲ +${r.yoy.toFixed(1)}% vs año anterior`});
+    else{hallazgos.push({t:'warn',txt:`Ventas cayeron ▼ ${Math.abs(r.yoy).toFixed(1)}% vs año anterior`});
+         acciones.push('Analiza las causas de caída y revisa la estrategia comercial.');}
+  }
+  // ── Liquidez ──
+  if(r.razCorriente!=null){
+    if(r.razCorriente>=1.5)    hallazgos.push({t:'pos',   txt:`Liquidez sólida — razón corriente ${r.razCorriente.toFixed(2)}x`});
+    else if(r.razCorriente>=1){hallazgos.push({t:'warn',  txt:`Liquidez ajustada — razón corriente ${r.razCorriente.toFixed(2)}x`});
+      const dso=r.diasCobro!=null?` (DSO actual: ${Math.round(r.diasCobro)}d)`:'';
+      acciones.push(`Acelerar cobranza${dso} para fortalecer el capital de trabajo.`);}
+    else{hallazgos.push({t:'danger',txt:`⚠️ Alerta de liquidez — RC ${r.razCorriente.toFixed(2)}x, pasivos CP superan activos`});
+         acciones.push('Urgente: renegociar plazos con proveedores y acelerar cobros.');}
+  }
+  // ── Margen EBITDA ──
+  if(r.margenEbitda!=null){
+    if(r.margenEbitda>=20)     hallazgos.push({t:'pos',   txt:`EBITDA sobresaliente — margen ${r.margenEbitda.toFixed(1)}%`});
+    else if(r.margenEbitda>=10)hallazgos.push({t:'pos',   txt:`EBITDA saludable — margen ${r.margenEbitda.toFixed(1)}%`});
+    else if(r.margenEbitda>=0){hallazgos.push({t:'warn',  txt:`Margen EBITDA bajo — ${r.margenEbitda.toFixed(1)}%`});
+      acciones.push('Revisar estructura de costos para mejorar la rentabilidad operativa.');}
+    else{hallazgos.push({t:'danger',txt:`EBITDA negativo — ${r.margenEbitda.toFixed(1)}%: la operación consume recursos`});
+         acciones.push('Revisión urgente de costos: la operación destruye valor en este periodo.');}
+  }
+  // ── Apalancamiento ──
+  if(r.debtEbitda!=null){
+    if(r.debtEbitda>4){hallazgos.push({t:'danger',txt:`Apalancamiento crítico — D/EBITDA ${r.debtEbitda.toFixed(1)}x`});
+      acciones.push('Desapalancamiento urgente — riesgo de insolvencia si continúa la tendencia.');}
+    else if(r.debtEbitda>2.5){hallazgos.push({t:'warn',txt:`Apalancamiento elevado — D/EBITDA ${r.debtEbitda.toFixed(1)}x`});
+      acciones.push('Evitar nueva deuda. Meta: reducir D/EBITDA por debajo de 2.5x.');}
+  }
+  // Priorizar severity: danger → warn → info → pos
+  const _sev={danger:0,warn:1,info:2,pos:3};
+  hallazgos.sort((a,b)=>(_sev[a.t]??4)-(_sev[b.t]??4));
+  // Score chip
+  const chip=document.getElementById('diag-score-chip');
+  if(chip&&r.score!=null){
+    const col=r.score>=80?'var(--success)':r.score>=60?'var(--warning)':'var(--danger)';
+    const bg=r.score>=80?'rgba(34,197,94,.15)':r.score>=60?'rgba(245,158,11,.15)':'rgba(244,92,92,.15)';
+    chip.style.cssText=`padding:5px 14px;border-radius:20px;font-size:12px;font-weight:800;background:${bg};color:${col};border:1px solid ${col};`;
+    chip.textContent=`Score ${r.score}/100`;
+  } else if(chip){ chip.style.display='none'; }
+  // Hallazgos
+  const clrBg={pos:'rgba(34,197,94,.08)',info:'rgba(59,130,246,.08)',warn:'rgba(245,158,11,.1)',danger:'rgba(244,92,92,.1)'};
+  const clrBd={pos:'var(--success)',info:'#3B82F6',warn:'var(--warning)',danger:'var(--danger)'};
+  const hList=document.getElementById('diag-hallazgos');
+  if(hList) hList.innerHTML=hallazgos.slice(0,5).map(h=>`<div style="padding:7px 10px;background:${clrBg[h.t]};border-left:3px solid ${clrBd[h.t]};border-radius:0 8px 8px 0;font-size:12.5px;color:var(--text);">${h.txt}</div>`).join('');
+  // Acciones
+  const acPanel=document.getElementById('diag-acciones');
+  const acList=document.getElementById('diag-acciones-list');
+  if(acPanel&&acList){
+    if(acciones.length){
+      acList.innerHTML=acciones.slice(0,3).map(a=>`<div style="display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--text);"><span style="color:var(--primary);flex-shrink:0;">→</span><span>${a}</span></div>`).join('');
+      acPanel.style.display='';
+    } else { acPanel.style.display='none'; }
+  }
+  block.style.display='';
+}
+
 function renderDashboardView(r){
   _syncDashSelects();
   const ov=document.getElementById('onboardingOverlay');
@@ -7621,8 +7765,18 @@ function renderDashboardView(r){
     ['fcSales','fcEbitda'].forEach(id=>{const e=document.getElementById(id);if(e)e.innerHTML='—';});
     document.querySelectorAll('#dashboardView .kpi-value').forEach(e=>e.innerHTML='—');
     document.querySelectorAll('#dashboardView .kpi-change').forEach(e=>{e.className='kpi-change neutral';e.innerHTML='Sin datos';});
+    renderDiagEjecutivo(null);
     return;
   }
+  renderDiagEjecutivo(r);
+  _obbioResumen('Dashboard',[
+    {label:'Ingresos',value:r.ventas?_m(r.ventas):null},
+    {label:'EBITDA',value:r.ebitda!=null?_m(r.ebitda):null},
+    {label:'Margen EBITDA',value:r.margenEbitda!=null?r.margenEbitda.toFixed(1)+'%':null},
+    {label:'Crecimiento YoY',value:r.yoy!=null?(r.yoy>=0?'+':'')+r.yoy.toFixed(1)+'%':null},
+    {label:'Score financiero',value:r.score!=null?r.score+'/100':null},
+    {label:'Flujo neto',value:r.flujoNeto!=null?_m(r.flujoNeto):null},
+  ],'resumen-dashboard');
   // KPI cards (por ID explícito)
   const set=(id,v)=>{ const e=document.getElementById(id); if(e) e.innerHTML=v; };
   set('fcSales',  _m(r.ventas));
@@ -7643,6 +7797,18 @@ function renderDashboardView(r){
     changes[0].className='kpi-change '+s;
     changes[0].innerHTML=a+' '+Math.abs(r.yoy).toFixed(1)+'% vs año ant.';
   }
+  // Insight antes de gráfica principal
+  (function(){
+    const ins=document.getElementById('insight-mainChart'); if(!ins) return;
+    let txt='';
+    if(r.yoy!=null){
+      const dir=r.yoy>=0?'subieron ▲':'cayeron ▼';
+      txt=`Las ventas ${dir} ${Math.abs(r.yoy).toFixed(1)}% vs el año anterior — base actual: ${_m(r.ventas)}.`;
+    } else if(r.margenEbitda!=null){
+      txt=`Margen EBITDA de ${r.margenEbitda.toFixed(1)}% sobre ingresos de ${_m(r.ventas)}.`;
+    }
+    ins.textContent=txt; ins.classList.toggle('visible',!!txt);
+  })();
   // Sparklines + gráfica principal — adaptativa por granularidad
   const labels=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
   const _gran=r._meta?.mensual?.granularidad||'sin_dato';
@@ -7962,6 +8128,14 @@ function renderFinanceView(r){
   // Badge en topbar
   const yoyEl=el.querySelector('.kpi-change');
   if(yoyEl && r.yoy!=null){ const s=r.yoy>=0?'positive':'negative'; yoyEl.className='kpi-change '+s; yoyEl.innerHTML=(r.yoy>=0?'▲':'▼')+' '+Math.abs(r.yoy).toFixed(1)+'%'; }
+  _obbioResumen('Inteligencia Financiera',[
+    {label:'Ingresos',value:r.ventas?_m(r.ventas):null},
+    {label:'Margen Bruto',value:r.margenBruto!=null?r.margenBruto.toFixed(1)+'%':null},
+    {label:'EBITDA',value:r.ebitda!=null?_m(r.ebitda):null},
+    {label:'Margen EBITDA',value:r.margenEbitda!=null?r.margenEbitda.toFixed(1)+'%':null},
+    {label:'Utilidad Neta',value:r.utilNeta!=null?_m(r.utilNeta):null},
+    {label:'Margen Neto',value:r.margenNeto!=null?r.margenNeto.toFixed(1)+'%':null},
+  ],'resumen-financeView');
 }
 
 /* ─────────────────── ANALYTICS VIEW ─────────────────── */
@@ -8199,6 +8373,17 @@ function renderCashflowView(r){
   if(svs[1]){ svs[1].innerHTML=_m(r.flujoInv)+badgeEstimado(r._meta?.flujoInv); svs[1].style.color=r.flujoInv<=0?'var(--danger)':'var(--success)'; }
   if(svs[2]){ svs[2].innerHTML=_m(r.flujoFin)+badgeEstimado(r._meta?.flujoFin); svs[2].style.color=r.flujoFin>=0?'var(--success)':'var(--danger)'; }
   if(svs[3]){ svs[3].innerHTML=_m(r.flujoNeto); svs[3].className='statement-value'+(r.flujoNeto>=0?' positive':''); }
+  // Insight antes de gráfica de flujo (creado dinámicamente ya que el wrapper viene del HTML original)
+  (function(){
+    if(r.flujoNeto==null) return;
+    const canvas=document.getElementById('cashFlowChart'); if(!canvas) return;
+    const wrap=canvas.closest('.chart-container'); if(!wrap) return;
+    let ins=document.getElementById('insight-cashFlowChart');
+    if(!ins){ ins=document.createElement('div'); ins.id='insight-cashFlowChart'; ins.className='chart-insight'; wrap.parentNode.insertBefore(ins,wrap); }
+    const dir=r.flujoNeto>=0?'genera':'consume';
+    ins.textContent=`La operación ${dir} ${_m(Math.abs(r.flujoNeto))} de caja neta en el periodo.`;
+    ins.classList.add('visible');
+  })();
   // Gráfica de flujo mensual — solo si hay datos reales
   const _cfGran=r._meta?.mensual?.granularidad||'sin_dato';
   const _cfWrap=document.getElementById('cashFlowChart')?.closest('.chart-container');
@@ -8235,6 +8420,13 @@ function renderCashflowView(r){
     if(r.ccc>0) cfBriefs.push({tipo:r.ccc<60?'info':'warn',titulo:'Ciclo de Efectivo: '+_d(r.ccc),texto:r.ccc<60?'Ciclo eficiente. El efectivo regresa rápido.':'Ciclo largo. Reducir DSO o aumentar DPO libera caja.'});
     grid.innerHTML=cfBriefs.slice(0,3).map(b=>`<div class="briefing-item ${bg[b.tipo]||'info-border'}"><div class="briefing-title">${b.titulo}</div><div class="briefing-text">${b.texto}</div></div>`).join('');
   }
+  _obbioResumen('Flujo de Caja',[
+    {label:'Flujo operativo',value:r.flujoOp!=null?_m(r.flujoOp):null},
+    {label:'Flujo neto',value:r.flujoNeto!=null?_m(r.flujoNeto):null},
+    {label:'Caja disponible',value:r.caja?_m(r.caja):null},
+    {label:'Razón corriente',value:r.razCorriente!=null?r.razCorriente.toFixed(2)+'x':null},
+    {label:'CCC',value:r.ccc!=null?Math.round(r.ccc)+'d':null},
+  ],'resumen-cashflowView');
 }
 
 /* ─────────────────── WORKING CAPITAL VIEW ─────────────────── */
@@ -9098,6 +9290,12 @@ function renderForecastView(r){
     );
   }
   _applyForecast(r);
+  _obbioResumen('Pronóstico',[
+    {label:'Ingresos actuales',value:r.ventas?_m(r.ventas):null},
+    {label:'EBITDA actual',value:r.ebitda!=null?_m(r.ebitda):null},
+    {label:'Crecimiento YoY',value:r.yoy!=null?(r.yoy>=0?'+':'')+r.yoy.toFixed(1)+'%':null},
+    {label:'Año base',value:r.anio||null},
+  ],'resumen-forecastView');
 }
 function _applyForecast(r){
   const el=document.getElementById('forecastView'); if(!el||!r) return;
@@ -9134,6 +9332,14 @@ function _applyForecast(r){
 
   const yrBase=r.anio?+r.anio:new Date().getFullYear();
   const years=[yrBase+1,yrBase+2,yrBase+3,yrBase+4,yrBase+5];
+
+  // Insight antes de gráfica de proyección
+  (function(){
+    const ins=document.getElementById('insight-forecastChart'); if(!ins) return;
+    const dir=gBase>=0?`▲ +${Math.round(gBase*100)}`:`▼ ${Math.round(Math.abs(gBase)*100)}`;
+    ins.textContent=`Escenario base proyecta ${dir}% para ${years[0]}, llegando a ${_m(base)}.`;
+    ins.classList.add('visible');
+  })();
 
   // ── Método badge ──
   const hasMensual=r.ingMensual&&r.ingMensual.length===12&&r.ingMensual.some(v=>v>0);
@@ -9447,9 +9653,19 @@ function renderRiskView(r){
   </div>
   <div class="card">
     <div class="card-header"><div class="card-title">📡 Radar de Riesgos</div><span class="card-badge">${gLabel} · ${gRisk}/100</span></div>
+    <div id="insight-riskChart" class="chart-insight visible">Risk Score global: ${gRisk}/100 — ${gLabel}. Categoría más débil: ${worst.icon} ${worst.nom} (${worst.s}/100).</div>
     <div class="chart-container"><canvas id="riskChart"></canvas></div>
-  </div>`;
+  </div>
+  <div id="resumen-riskView" class="obbio-resumen" style="display:none;"></div>`;
   setTimeout(()=>mkChart('riskChart',{type:'radar',data:{labels:cats.map(c=>c.nom),datasets:[{data:cats.map(c=>c.s),borderColor:'#22C55E',backgroundColor:'rgba(34,197,94,.15)',borderWidth:2,pointBackgroundColor:cats.map(c=>c.s>=70?'#22D3A0':c.s>=40?'#F5A623':'#F45C5C'),pointRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1E1E22',callbacks:{label:ctx=>` ${ctx.label}: ${ctx.parsed.r}/100`}}},scales:{r:{grid:{color:'rgba(255,255,255,.08)'},ticks:{display:false},pointLabels:{color:'#A1A1AA',font:{size:12}},suggestedMin:0,suggestedMax:100}}}}),80);
+  _obbioResumen('Centro de Riesgos',[
+    {label:'Risk Score global',value:gRisk+'/100 ('+gLabel+')'},
+    {label:'Score financiero',value:r.score!=null?r.score+'/100':null},
+    {label:'Razón corriente',value:r.razCorriente!=null?r.razCorriente.toFixed(2)+'x':null},
+    {label:'D/EBITDA',value:r.debtEbitda!=null?r.debtEbitda.toFixed(1)+'x':null},
+    {label:'Margen EBITDA',value:r.margenEbitda!=null?r.margenEbitda.toFixed(1)+'%':null},
+    {label:'Categoría más débil',value:worst.nom+' ('+worst.s+'/100)'},
+  ],'resumen-riskView');
 }
 
 /* ─────────────────── COPILOT ─────────────────── */
@@ -10484,6 +10700,10 @@ window.fetchBenchmark=async function(){
     }
   };
   window.openChatbot = function(){ if(!_open) window.toggleChatbot(); };
+  window.openCFOWith = function(q){
+    openChatbot();
+    setTimeout(()=>{ const i=document.getElementById('chatInput'); if(i){ i.value=q; i.focus(); } }, 300);
+  };
 
   /* ── Determina si hay datos y muestra el estado correcto ── */
   function refreshChatState(){
@@ -10889,6 +11109,17 @@ function renderComparativosView(r){
     setTimeout(()=>mkChart('compChart',{type:'line',data:{labels:rLabels,datasets:[
       {label:'R12M Ventas',data:rolling.map(v=>+(v/1e6).toFixed(2)),borderColor:'#22C55E',backgroundColor:'rgba(34,197,94,.1)',borderWidth:2.5,fill:true,tension:.4,pointRadius:2,pointHoverRadius:5},
     ]},options:{...baseOpts,plugins:{...baseOpts.plugins,legend:{display:false}},scales:{x:{...baseOpts.scales.x,ticks:{...baseOpts.scales.x.ticks,maxRotation:45,font:{size:10}}},y:{...baseOpts.scales.y,ticks:{...baseOpts.scales.y.ticks,callback:v=>v+'M'}}}}}),60);
+  }
+  // Resumen Obbio — solo cuando hay datos reales
+  if(r){
+    const hist=window._obbioHistorico||[];
+    const histStr=hist.length>=2?hist.slice(-3).map(h=>h.anio+':$'+Math.round(h.ventas/1e6)+'M').join(', '):null;
+    _obbioResumen('Comparativos',[
+      {label:'Ingresos actuales',value:r.ventas?_m(r.ventas):null},
+      {label:'Crecimiento YoY',value:r.yoy!=null?(r.yoy>=0?'+':'')+r.yoy.toFixed(1)+'%':null},
+      {label:'Año',value:r.anio||null},
+      {label:'Histórico ventas',value:histStr},
+    ],'resumen-comparativosView');
   }
 }
 window.renderComparativosView=renderComparativosView;
@@ -11711,6 +11942,24 @@ window.toggleSidebarDesktop=toggleSidebarDesktop;
       if(window._charts) window._charts['prod-bar-chart']=_prodChart;
     }
     window._prodData={lista,totalIngreso,totalTx,topIng,topVol,ticketProm};
+    // Insight antes de gráfica de productos
+    (function(){
+      const ins=document.getElementById('insight-prod-bar'); if(!ins) return;
+      if(topIng&&totalIngreso>0){
+        const pct=(topIng.pctTotal*100).toFixed(1);
+        ins.textContent=`"${topIng.nombre}" genera el ${pct}% de los ingresos totales (${_fm(topIng.ingreso)}).`;
+        ins.classList.add('visible');
+      } else { ins.classList.remove('visible'); }
+    })();
+    // Resumen Obbio para Ventas por Producto
+    _obbioResumen('Ventas por Producto',[
+      {label:'Ingreso total',value:totalIngreso?_fm(totalIngreso):null},
+      {label:'Transacciones',value:totalTx?totalTx.toLocaleString():null},
+      {label:'Productos',value:lista.length?lista.length+' SKUs':null},
+      {label:'Top producto (ingreso)',value:topIng?topIng.nombre+' '+_fm(topIng.ingreso)+' ('+(topIng.pctTotal*100).toFixed(0)+'%)':null},
+      {label:'Top producto (volumen)',value:topVol?topVol.nombre+' '+topVol.unidades.toLocaleString()+' uds':null},
+      {label:'Ticket promedio',value:ticketProm?_fm(ticketProm):null},
+    ],'resumen-productosView');
     // ── Correlación producto × sucursal ──
     const psData=calcProdSucursal(_fRows);
     const psCard=document.getElementById('prod-suc-card');
