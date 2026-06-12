@@ -1607,8 +1607,10 @@ th[data-tip]{cursor:default;}
             Gestión de liquidez operativa
         </p>
     </div>
+    <div class="topbar-actions"><button onclick="openCFOWith('¿Cómo está mi capital de trabajo y mi ciclo de efectivo?')" style="padding:8px 14px;border-radius:9px;border:1px solid rgba(167,139,250,.35);background:rgba(167,139,250,.08);color:#a78bfa;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:background .15s;" onmouseover="this.style.background='rgba(167,139,250,.18)'" onmouseout="this.style.background='rgba(167,139,250,.08)'">🤖 Preguntar al CFO</button></div>
 </header>
 
+<div id="resumen-workingCapitalView" class="obbio-resumen" style="display:none;"></div>
 <section class="kpi-grid">
 
     <div class="kpi-card accent-blue">
@@ -1673,6 +1675,7 @@ th[data-tip]{cursor:default;}
         </div>
     </div>
 
+    <p id="insight-workingCapitalView" class="chart-insight"></p>
     <div class="financial-kpis">
 
         <div class="fin-kpi">
@@ -1769,8 +1772,10 @@ th[data-tip]{cursor:default;}
             Monitoreo de estructura financiera y endeudamiento
         </p>
     </div>
+    <div class="topbar-actions"><button onclick="openCFOWith('¿Es saludable mi nivel de deuda y cómo lo reduzco?')" style="padding:8px 14px;border-radius:9px;border:1px solid rgba(167,139,250,.35);background:rgba(167,139,250,.08);color:#a78bfa;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:background .15s;" onmouseover="this.style.background='rgba(167,139,250,.18)'" onmouseout="this.style.background='rgba(167,139,250,.08)'">🤖 Preguntar al CFO</button></div>
 </header>
 
+<div id="resumen-debtView" class="obbio-resumen" style="display:none;"></div>
 <section class="kpi-grid">
 
     <div class="kpi-card accent-red">
@@ -1865,6 +1870,7 @@ th[data-tip]{cursor:default;}
             </div>
         </div>
 
+        <p id="insight-debtView" class="chart-insight"></p>
         <div class="chart-container">
             <canvas id="debtChart"></canvas>
         </div>
@@ -1989,6 +1995,7 @@ th[data-tip]{cursor:default;}
     <p class="page-subtitle">Simula escenarios de crecimiento y evalúa su impacto en P&amp;L, flujo libre y valor de empresa · Mueve los sliders para actualizar en tiempo real</p>
   </div>
   <div class="topbar-actions">
+    <button onclick="openCFOWith('¿Qué escenario del modelo financiero debo considerar según mis datos actuales?')" style="padding:8px 14px;border-radius:9px;border:1px solid rgba(167,139,250,.35);background:rgba(167,139,250,.08);color:#a78bfa;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:background .15s;" onmouseover="this.style.background='rgba(167,139,250,.18)'" onmouseout="this.style.background='rgba(167,139,250,.08)'">🤖 Preguntar al CFO</button>
     <button onclick="applyScenario('opt')" style="padding:8px 14px;border-radius:9px;border:1px solid rgba(34,211,160,.3);background:rgba(34,211,160,.1);color:var(--success);font-size:12px;font-weight:700;cursor:pointer;">🟢 Optimista</button>
     <button onclick="applyScenario('base')" style="padding:8px 14px;border-radius:9px;border:1px solid rgba(34,197,94,.3);background:rgba(34,197,94,.1);color:var(--primary);font-size:12px;font-weight:700;cursor:pointer;">🔵 Base</button>
     <button onclick="applyScenario('pes')" style="padding:8px 14px;border-radius:9px;border:1px solid rgba(244,92,92,.3);background:rgba(244,92,92,.1);color:var(--danger);font-size:12px;font-weight:700;cursor:pointer;">🔴 Conservador</button>
@@ -2087,6 +2094,7 @@ th[data-tip]{cursor:default;}
   </div>
 </div>
 
+<div id="resumen-modelView" class="obbio-resumen" style="display:none;"></div>
 <!-- TABLA DE PROYECCIÓN 5 AÑOS -->
 <div class="card">
   <div class="card-header">
@@ -2118,6 +2126,7 @@ th[data-tip]{cursor:default;}
     <div class="chart-legend-item"><div class="chart-legend-dot" style="background:var(--success);"></div>EBITDA</div>
     <div class="chart-legend-item"><div class="chart-legend-dot" style="background:var(--purple);border-radius:50%;"></div>Enterprise Value</div>
   </div>
+  <p id="insight-modelView" class="chart-insight"></p>
   <div class="chart-container"><canvas id="modelChart"></canvas></div>
 </div>
 
@@ -2136,9 +2145,11 @@ Estrategia Ejecutiva
 Recomendaciones financieras automatizadas
 </p>
 </div>
+<div class="topbar-actions"><button onclick="openCFOWith('¿Cuál es mi posición estratégica y qué debo priorizar?')" style="padding:8px 14px;border-radius:9px;border:1px solid rgba(167,139,250,.35);background:rgba(167,139,250,.08);color:#a78bfa;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:background .15s;" onmouseover="this.style.background='rgba(167,139,250,.18)'" onmouseout="this.style.background='rgba(167,139,250,.08)'">🤖 Preguntar al CFO</button></div>
 
 </header>
 
+<div id="resumen-strategyView" class="obbio-resumen" style="display:none;"></div>
 <section class="kpi-grid">
 
 <div class="kpi-card accent-green">
@@ -2313,6 +2324,7 @@ Mapa Estratégico de Impacto
 
 </div>
 
+<p id="insight-strategyView" class="chart-insight"></p>
 <div class="chart-container">
 
 <canvas id="strategyChart"></canvas>
@@ -2328,7 +2340,9 @@ Mapa Estratégico de Impacto
 <div id="costosGastosView" class="view" style="display:none;">
 <header class="topbar">
   <div><h2 class="page-title">Costos y Gastos</h2><p class="page-subtitle">Composición de costos, estructura de gastos y sensibilidad operativa</p></div>
+  <div class="topbar-actions"><button onclick="openCFOWith('¿Dónde están mis mayores costos y cómo optimizarlos?')" style="padding:8px 14px;border-radius:9px;border:1px solid rgba(167,139,250,.35);background:rgba(167,139,250,.08);color:#a78bfa;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:background .15s;" onmouseover="this.style.background='rgba(167,139,250,.18)'" onmouseout="this.style.background='rgba(167,139,250,.08)'">🤖 Preguntar al CFO</button></div>
 </header>
+<div id="resumen-costosGastosView" class="obbio-resumen" style="display:none;"></div>
 <!-- Tabs -->
 <div style="display:flex;gap:4px;margin-bottom:20px;background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:4px;width:fit-content;">
   <button id="cgTab_costos" onclick="cgSwitch('costos')" style="padding:8px 20px;border-radius:9px;border:none;background:var(--primary);color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:.15s;">🏭 Costos</button>
@@ -2344,7 +2358,7 @@ Mapa Estratégico de Impacto
   <div class="kpi-card accent-blue"><div class="kpi-top"><div class="kpi-label">Mayor Componente</div><div class="kpi-icon blue">🔍</div></div><div class="kpi-value" id="cv-kpi-top">—</div><div class="kpi-bottom"><div class="kpi-change neutral" id="cv-kpi-top-sub">Sin datos</div></div></div>
 </section>
 <div class="financial-grid">
-  <div class="card"><div class="card-header"><div class="card-title">Composición del COGS</div></div><div class="chart-container"><canvas id="costosDonutChart"></canvas></div></div>
+  <div class="card"><div class="card-header"><div class="card-title">Composición del COGS</div></div><p id="insight-costosView" class="chart-insight"></p><div class="chart-container"><canvas id="costosDonutChart"></canvas></div></div>
   <div class="card"><div class="card-header"><div class="card-title">% sobre Ventas por Componente</div></div><div class="chart-container"><canvas id="costosBarChart"></canvas></div></div>
 </div>
 <div class="card"><div class="card-header"><div class="card-title">Sensibilidad de Costos</div></div><div id="cv-sens-body" style="padding:16px 20px;"></div></div>
@@ -2359,7 +2373,7 @@ Mapa Estratégico de Impacto
   <div class="kpi-card accent-green"><div class="kpi-top"><div class="kpi-label">Margen Operativo</div><div class="kpi-icon green">⚡</div></div><div class="kpi-value" id="gv-kpi-ebit">—</div><div class="kpi-bottom"><div class="kpi-change neutral" id="gv-kpi-ebit-sub">Sin datos</div></div></div>
 </section>
 <div class="financial-grid">
-  <div class="card"><div class="card-header"><div class="card-title">Gastos por Categoría</div></div><div class="chart-container"><canvas id="gastosDonutChart"></canvas></div></div>
+  <div class="card"><div class="card-header"><div class="card-title">Gastos por Categoría</div></div><p id="insight-gastosView" class="chart-insight"></p><div class="chart-container"><canvas id="gastosDonutChart"></canvas></div></div>
   <div class="card"><div class="card-header"><div class="card-title">Desglose por Rubro</div></div><div class="chart-container"><canvas id="gastosBarChart"></canvas></div></div>
 </div>
 <div class="card"><div class="card-header"><div class="card-title">Análisis y Recomendaciones</div></div><div class="briefing-grid" id="gv-briefings"><div class="briefing-item info-border"><div class="briefing-title">Sin datos</div><div class="briefing-text">Ingresa datos para ver el análisis.</div></div></div></div>
@@ -2956,7 +2970,7 @@ background:#10B981;
   <header class="topbar">
     <div><h2 class="page-title">🧠 Diagnóstico Financiero IA</h2><p class="page-subtitle">Análisis automático a partir de tus datos · se actualiza al recalcular</p></div>
     <div style="display:flex;gap:8px;align-items:center;">
-      <button onclick="openChatbot()" style="padding:11px 18px;border-radius:11px;border:1px solid rgba(167,139,250,.35);background:rgba(167,139,250,.1);color:#a78bfa;font-weight:700;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;">🤖 Copiloto CFO</button>
+      <button onclick="openCFOWith('Explícame los hallazgos más importantes del diagnóstico financiero.')" style="padding:11px 18px;border-radius:11px;border:1px solid rgba(167,139,250,.35);background:rgba(167,139,250,.1);color:#a78bfa;font-weight:700;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;">🤖 Preguntar al CFO</button>
       <button onclick="generarReportePDF()" style="padding:11px 20px;border-radius:11px;border:none;background:var(--primary);color:#fff;font-weight:700;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;">📄 Reporte PDF</button>
     </div>
   </header>
@@ -2968,6 +2982,7 @@ background:#10B981;
   </div>
 
   <div id="ai_content" style="display:none;">
+    <div id="resumen-aiView" class="obbio-resumen" style="display:none;"></div>
     <!-- DIAGNÓSTICO 4 COLUMNAS -->
     <div class="card">
       <div class="card-header">
@@ -4237,6 +4252,19 @@ function updateModel(){
     window.modelChartInst.data.datasets[2].data = tRows[5].vals.map(v=>+v.toFixed(2));
     window.modelChartInst.update('active');
   }
+  const insModel=document.querySelector('#insight-modelView');
+  if(insModel){insModel.textContent=`Proyección: EBITDA ${eMarg}% de margen — ${eMarg>=20?'margen sólido para el siguiente año':eMarg>=12?'margen razonable, monitorea costos':'margen bajo, considera ajustar el escenario'}.`;insModel.classList.add('visible');}
+  clearTimeout(window._modelResumenTimer);
+  window._modelResumenTimer=setTimeout(()=>{
+    if(_rc&&_rc.ventas){
+      _obbioResumen('Modelo Financiero',[
+        {label:'Ventas actuales',value:'$'+baseSales.toFixed(1)+'M'},
+        {label:'EBITDA actual',value:_rc.ebitda!=null?'$'+(_rc.ebitda/1e6).toFixed(1)+'M':null},
+        {label:'Crecimiento simulado',value:(gRate>=0?'+':'')+gRate+'%'},
+        {label:'Margen EBITDA objetivo',value:eMarg+'%'},
+      ],'resumen-modelView');
+    }
+  },1200);
 }
 
 function applyScenario(type){
@@ -6662,6 +6690,12 @@ function downloadTemplate(){
         <div style="font-size:12px;color:var(--muted);">Si reduces ${top.n} un 5%, EBITDA subiría ${_m(top.v*0.05)} — margen pasaría de ${_pp(r.margenEbitda)} a ${_pp(r.margenEbitda+top.v*0.05/r.ventas*100)}.</div>
       </div>`:'');
     }
+    _obbioResumen('Diagnóstico IA',[
+      {label:'Score financiero',value:r.score+'/100'},
+      {label:'Ingresos',value:r.ventas?_m(r.ventas):null},
+      {label:'EBITDA',value:r.ebitda!=null?_m(r.ebitda):null},
+      {label:'Margen neto',value:r.margenNeto!=null?_pp(r.margenNeto):null},
+    ],'resumen-aiView');
   }
   window.renderAIView=renderAIView;
 
@@ -8467,6 +8501,15 @@ function renderWorkingCapitalView(r){
     if(r.ccc!=null) briefs.push({tipo:'info',titulo:'CCC: '+_d(r.ccc),texto:r.ccc<50?'Ciclo de efectivo óptimo. La empresa recupera rápido su inversión operativa.':'Negociar +5 días de DPO con proveedores podría mejorar el ciclo en '+Math.round(r.ccc*0.08)+' días.'});
     grid.innerHTML=briefs.slice(0,3).map(b=>`<div class="briefing-item ${bg[b.tipo]}"><div class="briefing-title">${b.titulo}</div><div class="briefing-text">${b.texto}</div></div>`).join('');
   }
+  const insWC=el.querySelector('#insight-workingCapitalView');
+  if(insWC&&r.ccc!=null){insWC.textContent=`CCC: ${Math.round(r.ccc)} días — ${r.ccc<50?'ciclo eficiente, la caja se recupera rápido':'ciclo largo; cobrar antes o pagar más lento mejoraría la liquidez'}.`;insWC.classList.add('visible');}
+  _obbioResumen('Capital de Trabajo',[
+    {label:'CxC',value:r.cxc?_m(r.cxc):null},
+    {label:'Inventario',value:r.inventario?_m(r.inventario):null},
+    {label:'CxP',value:r.cxp?_m(r.cxp):null},
+    {label:'Capital Trabajo Neto',value:r.capTrabNeto!=null?_m(r.capTrabNeto):null},
+    {label:'CCC',value:r.ccc!=null?Math.round(r.ccc)+' días':null},
+  ],'resumen-workingCapitalView');
 }
 
 /* ─────────────────── COSTOS VIEW ─────────────────── */
@@ -8521,6 +8564,14 @@ function renderCostosView(r){
     const cta=hasBreakdown?'':'<p style="margin-top:14px;font-size:12px;color:var(--accent);border-top:1px solid rgba(255,255,255,.06);padding-top:12px;">💡 Captura el desglose opcional en Ingresar Datos para ver el análisis por componente.</p>';
     sb.innerHTML=`<div style="padding:4px 0 16px;"><div style="margin-bottom:14px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><span style="font-size:12px;color:var(--muted);">COGS sobre ventas</span><span style="font-size:13px;font-weight:700;color:${barColor};">${pct!=null?_pp(pct):'—'}${benchGap!=null?' (ref. sector '+_pp(benchPct)+' · '+(benchGap>0?'+':'')+benchGap+'pp)':''}</span></div><div style="height:8px;background:rgba(255,255,255,.07);border-radius:99px;overflow:hidden;"><div style="height:100%;width:${barW}%;background:${barColor};border-radius:99px;transition:width .6s ease;"></div></div></div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;"><div style="background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.18);border-radius:10px;padding:12px;"><div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Reducir COGS 1%</div><div style="font-size:17px;font-weight:800;color:#22C55E;">+${_m(r.cogs*0.01)}</div><div style="font-size:11px;color:var(--muted);">EBITDA adicional</div></div><div style="background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.18);border-radius:10px;padding:12px;"><div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Reducir COGS 5%</div><div style="font-size:17px;font-weight:800;color:#22C55E;">+${_m(r.cogs*0.05)}</div><div style="font-size:11px;color:var(--muted);">EBITDA adicional</div></div><div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:12px;"><div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Margen bruto</div><div style="font-size:17px;font-weight:800;color:${_clr(r.margenBruto,_mbRef,_mbRef*0.65)};">${_pp(r.margenBruto)}</div><div style="font-size:11px;color:var(--muted);">${r.margenBruto>=_mbRef?'Excelente':r.margenBruto>=_mbRef*0.65?'Saludable':'Bajo'}</div></div></div>${cta}</div>`;
   }
+  const insCostos=el.querySelector('#insight-costosView');
+  if(insCostos&&pct!=null){insCostos.textContent=`COGS: ${_pp(pct)} de ventas — ${pct<=_cogsRef?'por debajo del referente sector ('+_pp(_cogsRef)+'), margen bruto eficiente':_cogsGap+'pp sobre referente ('+_pp(_cogsRef)+'); hay palanca de mejora'}.`;insCostos.classList.add('visible');}
+  _obbioResumen('Costos',[
+    {label:'COGS',value:r.cogs?_m(r.cogs):null},
+    {label:'COGS/Ventas',value:pct!=null?_pp(pct):null},
+    {label:'Margen Bruto',value:r.margenBruto!=null?_pp(r.margenBruto):null},
+    {label:'Referente sector',value:_pp(_cogsRef)},
+  ],'resumen-costosGastosView');
 }
 
 /* ─────────────────── GASTOS VIEW ─────────────────── */
@@ -8594,6 +8645,16 @@ function renderGastosView(r){
   if(!hasBreakdown) briefs.push({tipo:'info',titulo:'Activa el análisis detallado',texto:'Captura el desglose opcional en Ingresar Datos para ver el análisis por rubro individual (sueldos, renta, publicidad, comisiones, etc.).'});
   const grid=document.getElementById('gv-briefings');
   if(grid) grid.innerHTML=briefs.slice(0,4).map(b=>`<div class="briefing-item ${bg[b.tipo]}"><div class="briefing-title">${b.titulo}</div><div class="briefing-text">${b.texto}</div></div>`).join('');
+  const elCG=document.getElementById('costosGastosView');
+  const insGastos=elCG&&elCG.querySelector('#insight-gastosView');
+  if(insGastos&&pct!=null){insGastos.textContent=`Gastos operativos: ${_pp(pct)} de ventas — ${pct<=_gastRef?'eficiente vs referente ('+_pp(_gastRef)+')':_gapG+'pp sobre referente ('+_pp(_gastRef)+'); priorizar optimización'}.`;insGastos.classList.add('visible');}
+  _obbioResumen('Gastos',[
+    {label:'Gastos totales',value:gastoTotal?_m(gastoTotal):null},
+    {label:'Gastos/Ventas',value:pct!=null?_pp(pct):null},
+    {label:'G. Admin',value:r.gadmin?_m(r.gadmin):null},
+    {label:'G. Ventas',value:r.gventas?_m(r.gventas):null},
+    {label:'Margen Operativo',value:r.margenOp!=null?_pp(r.margenOp):null},
+  ],'resumen-costosGastosView');
 }
 
 /* ─────────────────── DEBT VIEW ─────────────────── */
@@ -8645,6 +8706,15 @@ function renderDebtView(r){
     briefs.push({tipo:'info',titulo:'Perfil de vencimientos',texto:'Deuda CP: '+_m(r.pasivoCp)+' · Deuda LP: '+_m(r.pasivoLp)+'. '+(r.pasivoLp>r.pasivoCp?'Perfil de largo plazo saludable.':'Alta concentración en corto plazo. Refinanciar si es posible.')});
     grid.innerHTML=briefs.slice(0,3).map(b=>`<div class="briefing-item ${bg[b.tipo]}"><div class="briefing-title">${b.titulo}</div><div class="briefing-text">${b.texto}</div></div>`).join('');
   }
+  const insDebt=el.querySelector('#insight-debtView');
+  if(insDebt&&r.debtEbitda!=null){insDebt.textContent=`Debt/EBITDA: ${_x(r.debtEbitda)}x — ${r.debtEbitda<2?'apalancamiento bajo, hay margen para nuevo crédito':r.debtEbitda<4?'nivel moderado, vigilar crecimiento de deuda':'nivel elevado, priorizar desapalancamiento'}.`;insDebt.classList.add('visible');}
+  _obbioResumen('Endeudamiento',[
+    {label:'Deuda CP',value:r.pasivoCp?_m(r.pasivoCp):null},
+    {label:'Deuda LP',value:r.pasivoLp?_m(r.pasivoLp):null},
+    {label:'Debt/EBITDA',value:r.debtEbitda!=null?_x(r.debtEbitda)+'x':null},
+    {label:'Cobertura intereses',value:r.cobIntereses!=null?_x(r.cobIntereses)+'x':null},
+    {label:'Apalancamiento',value:r.apalancamiento!=null?_pp(r.apalancamiento):null},
+  ],'resumen-debtView');
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
@@ -8875,6 +8945,7 @@ function renderTaxView(r){
       <p class="page-subtitle">${r.empresa||'Empresa'} · Período ${r.anio||'—'} · Análisis tributario automatizado</p>
     </div>
     <div style="display:flex;gap:8px;align-items:center;">
+      <button onclick="openCFOWith('¿Qué oportunidades fiscales tengo según mis datos?')" style="padding:8px 14px;border-radius:9px;border:1px solid rgba(167,139,250,.35);background:rgba(167,139,250,.08);color:#a78bfa;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">🤖 Preguntar al CFO</button>
       <button onclick="switchTaxPais('MX')" style="padding:8px 14px;border-radius:9px;border:1px solid ${isMX?'var(--primary)':'var(--border)'};background:${isMX?'var(--primary-dim)':'transparent'};color:${isMX?'var(--primary)':'var(--muted)'};font-size:12px;font-weight:700;cursor:pointer;">🇲🇽 México</button>
       <button onclick="switchTaxPais('ES')" style="padding:8px 14px;border-radius:9px;border:1px solid ${!isMX?'var(--primary)':'var(--border)'};background:${!isMX?'var(--primary-dim)':'transparent'};color:${!isMX?'var(--primary)':'var(--muted)'};font-size:12px;font-weight:700;cursor:pointer;">🇪🇸 España</button>
     </div>
@@ -8885,6 +8956,8 @@ function renderTaxView(r){
     <span style="font-size:15px;flex-shrink:0;">ℹ️</span>
     <span>Todos los cálculos son <strong style="color:var(--text);">estimaciones internas del sistema</strong> basadas en tus cifras y tasas configurables. <strong style="color:var(--text);">No constituyen declaración fiscal ni dato oficial del ${isMX?'SAT':'AEAT'}.</strong> Para declaraciones y cumplimiento formal, consúltanos.</span>
   </div>
+  <div id="resumen-taxView" class="obbio-resumen" style="display:none;"></div>
+  <p id="insight-taxView" class="chart-insight"></p>
 
   <!-- ── SCORE + INSIGHTS ── -->
   <div style="display:grid;grid-template-columns:230px 1fr;gap:16px;margin-bottom:16px;">
@@ -9129,6 +9202,14 @@ function renderTaxView(r){
       </div>`}
     </div>
   </div>`;
+  const insTax=el.querySelector('#insight-taxView');
+  if(insTax){insTax.textContent=`Tax Health Score: ${score}/100 — ${score>=80?'riesgo bajo, posición fiscal saludable':score>=60?'riesgo moderado, revisar anomalías identificadas':'riesgo alto, atender hallazgos prioritarios'}.`;insTax.classList.add('visible');}
+  _obbioResumen('Inteligencia Fiscal',[
+    {label:'Tax Health Score',value:score+'/100'},
+    {label:'ISR estimado',value:r.isr?_m(r.isr):null},
+    {label:'Carga fiscal total',value:r.ventas?_pp(cargaTotal/r.ventas*100):null},
+    {label:'Anomalías',value:anoms.length+' hallazgos'},
+  ],'resumen-taxView');
 }
 
 /* ─────────────────── FINANCIAL CENTER VIEW ─────────────────── */
@@ -9144,7 +9225,10 @@ function renderFinancialCenterView(r){
   el.innerHTML=`
   <header class="topbar">
     <div><h2 class="page-title">📑 Centro Financiero</h2><p class="page-subtitle">Estados financieros · ${r.empresa||''} ${r.anio||''}</p></div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button onclick="openCFOWith('¿Qué me dicen los estados financieros completos de mi empresa?')" style="padding:8px 14px;border-radius:9px;border:1px solid rgba(167,139,250,.35);background:rgba(167,139,250,.08);color:#a78bfa;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">🤖 Preguntar al CFO</button>
       <button onclick="generarReportePDF&&generarReportePDF()" style="padding:11px 20px;border-radius:11px;border:none;background:var(--primary);color:#fff;font-weight:700;font-size:13px;cursor:pointer;">📄 Exportar PDF</button>
+    </div>
   </header>
   <section class="kpi-grid">
     <div class="kpi-card accent-green"><div class="kpi-top"><div class="kpi-label">Ventas</div><div class="kpi-icon green">💰</div></div><div class="kpi-value">${_m(r.ventas)}</div><div class="kpi-bottom"><div class="kpi-change ${r.yoy!=null&&r.yoy>=0?'positive':'negative'}">${r.yoy!=null?(r.yoy>=0?'▲':'▼')+Math.abs(r.yoy).toFixed(1)+'% YoY':'—'}</div></div></div>
@@ -9152,6 +9236,8 @@ function renderFinancialCenterView(r){
     <div class="kpi-card accent-yellow"><div class="kpi-top"><div class="kpi-label">Utilidad Neta</div><div class="kpi-icon yellow">🏆</div></div><div class="kpi-value">${_m(r.utilNeta)}</div><div class="kpi-bottom"><div class="kpi-change ${r.utilNeta>=0?'positive':'negative'}">${_pp(r.margenNeto)} margen</div></div></div>
     <div class="kpi-card accent-purple"><div class="kpi-top"><div class="kpi-label">Flujo Libre</div><div class="kpi-icon purple">⚡</div></div><div class="kpi-value">${_m(r.flujoNeto)}</div><div class="kpi-bottom"><div class="kpi-change ${r.flujoNeto>=0?'positive':'negative'}">${r.flujoNeto>=0?'Positivo':'Negativo'}</div></div></div>
   </section>
+  <div id="resumen-financialCenterView" class="obbio-resumen" style="display:none;"></div>
+  <p id="insight-financialCenterView" class="chart-insight"></p>
   <div class="card">
     <div style="display:flex;gap:10px;padding:4px 0 20px;flex-wrap:wrap;">
       <button class="filter-apply" onclick="showFinancialTab('incomeStatement')" style="flex:1;min-width:140px;">Estado de Resultados</button>
@@ -9246,6 +9332,14 @@ function renderFinancialCenterView(r){
       </div>
     </div>
   </div>`;
+  const insFC=el.querySelector('#insight-financialCenterView');
+  if(insFC){insFC.textContent=`Score financiero: ${r.score}/100 — ${r.score>=80?'excelente condición, empresa bien posicionada':r.score>=60?'condición aceptable, hay áreas de mejora':'requiere atención, revisar ratios críticos'}.`;insFC.classList.add('visible');}
+  _obbioResumen('Centro Financiero',[
+    {label:'Ventas',value:r.ventas?_m(r.ventas):null},
+    {label:'EBITDA',value:r.ebitda!=null?_m(r.ebitda):null},
+    {label:'Utilidad Neta',value:r.utilNeta!=null?_m(r.utilNeta):null},
+    {label:'Score financiero',value:r.score+'/100'},
+  ],'resumen-financialCenterView');
 }
 
 /* ─────────────────── FORECAST VIEW ─────────────────── */
@@ -9527,6 +9621,14 @@ function renderStrategyView(r){
     Math.max(0,100-r.ccc)
   ];
   mkChart('strategyChart',{type:'radar',data:{labels:['Rentabilidad','Liquidez','Bajo Apalancamiento','ROE','Crecimiento','Ciclo Eficiente'],datasets:[{data:vals,borderColor:'#22C55E',backgroundColor:'rgba(34,197,94,.15)',borderWidth:2,pointBackgroundColor:'#22C55E',pointRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1E1E22',callbacks:{label:ctx=>` ${ctx.label}: ${ctx.parsed.r.toFixed(0)}/100`}}},scales:{r:{grid:{color:'rgba(255,255,255,.08)'},ticks:{display:false},pointLabels:{color:'#A1A1AA',font:{size:12}},suggestedMin:0,suggestedMax:100}}}});
+  const insStr=el.querySelector('#insight-strategyView');
+  if(insStr){insStr.textContent=`Score estratégico: ${r.score}/100 — ${r.score>=80?'posición sólida en todas las dimensiones':r.score>=60?'posición aceptable, hay oportunidades de mejora':'atención requerida en áreas críticas'}.`;insStr.classList.add('visible');}
+  _obbioResumen('Estrategia Ejecutiva',[
+    {label:'Score financiero',value:r.score+'/100'},
+    {label:'Impacto potencial',value:impactTotal>0?_m(impactTotal):null},
+    {label:'Margen EBITDA',value:r.margenEbitda!=null?_pp(r.margenEbitda):null},
+    {label:'Crecimiento YoY',value:r.yoy!=null?(r.yoy>=0?'+':'')+r.yoy.toFixed(1)+'%':null},
+  ],'resumen-strategyView');
 }
 function strategyDrillDown(idx){
   const el=document.getElementById('strategyView'); if(!el) return;
