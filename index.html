@@ -749,6 +749,49 @@ th[data-tip]{cursor:default;}
   </div>
 </div>
 
+<!-- ==================== MODAL: NUTRIR — SELECTOR DE PERÍODO ==================== -->
+<div id="nutrirPeriodModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:9999;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
+  <div style="width:100%;max-width:440px;margin:20px;padding:32px 28px;background:var(--card);border:1px solid var(--border);border-radius:20px;box-shadow:0 30px 60px rgba(0,0,0,.5);">
+    <div style="text-align:center;margin-bottom:22px;">
+      <div style="font-size:28px;margin-bottom:10px;">📅</div>
+      <h2 id="nutrirPMTitle" style="font-size:17px;font-weight:800;color:var(--text);margin-bottom:6px;">¿A qué período corresponde este Excel?</h2>
+      <p id="nutrirPMSub" style="font-size:12px;color:var(--muted);line-height:1.5;">No se pudo detectar el mes automáticamente. Selecciona el período manualmente.</p>
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:20px;">
+      <div style="flex:1;">
+        <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:6px;">Año</label>
+        <select id="nutrirSelYear" style="width:100%;padding:10px 12px;background:var(--card2);border:1px solid var(--border);border-radius:9px;color:var(--text);font-size:13px;outline:none;cursor:pointer;"></select>
+      </div>
+      <div style="flex:1;">
+        <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:6px;">Mes</label>
+        <select id="nutrirSelMes" style="width:100%;padding:10px 12px;background:var(--card2);border:1px solid var(--border);border-radius:9px;color:var(--text);font-size:13px;outline:none;cursor:pointer;">
+          <option value="01">Enero</option><option value="02">Febrero</option><option value="03">Marzo</option>
+          <option value="04">Abril</option><option value="05">Mayo</option><option value="06">Junio</option>
+          <option value="07">Julio</option><option value="08">Agosto</option><option value="09">Septiembre</option>
+          <option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option>
+        </select>
+      </div>
+    </div>
+    <button onclick="_nutrirConfirmPeriod()" style="width:100%;padding:13px;border-radius:11px;border:none;background:var(--primary);color:#07080A;font-weight:800;font-size:14px;cursor:pointer;margin-bottom:8px;">Confirmar período →</button>
+    <button onclick="document.getElementById('nutrirPeriodModal').style.display='none'" style="width:100%;padding:10px;border-radius:11px;border:1px solid var(--border);background:none;color:var(--muted);font-size:13px;cursor:pointer;">Cancelar</button>
+  </div>
+</div>
+
+<!-- ==================== MODAL: NUTRIR — PERÍODO DUPLICADO ==================== -->
+<div id="nutrirDupModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:9999;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
+  <div style="width:100%;max-width:420px;margin:20px;padding:32px 28px;background:var(--card);border:1px solid var(--border);border-radius:20px;box-shadow:0 30px 60px rgba(0,0,0,.5);">
+    <div style="text-align:center;margin-bottom:20px;">
+      <div style="font-size:28px;margin-bottom:10px;">⚠️</div>
+      <h2 id="nutrirDupTitle" style="font-size:17px;font-weight:800;color:var(--text);margin-bottom:6px;">Período ya registrado</h2>
+      <p id="nutrirDupMsg" style="font-size:13px;color:var(--muted);line-height:1.55;"></p>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <button onclick="_nutrirDupReplace()" style="width:100%;padding:13px;border-radius:11px;border:none;background:var(--warning);color:#07080A;font-weight:800;font-size:14px;cursor:pointer;">Reemplazar ese período</button>
+      <button onclick="document.getElementById('nutrirDupModal').style.display='none'" style="width:100%;padding:11px;border-radius:11px;border:1px solid var(--border);background:none;color:var(--muted);font-size:13px;cursor:pointer;">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <!-- ==================== MODAL: NUEVO CLIENTE (ADMIN) ==================== -->
 <div id="sbClienteModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9998;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
   <div style="width:100%;max-width:420px;margin:20px;padding:36px 32px;background:var(--card);border:1px solid var(--border);border-radius:20px;box-shadow:0 30px 60px rgba(0,0,0,.5);">
@@ -841,6 +884,12 @@ th[data-tip]{cursor:default;}
       <span>⚡</span><span>Ingresar / Actualizar Datos</span>
     </button>
   </div>
+  <div class="sidebar-data-btn" style="padding-top:0;margin-top:-2px;">
+    <button onclick="document.getElementById('nutrirMainInput').click()" style="border-color:rgba(167,139,250,.35);background:linear-gradient(135deg,rgba(167,139,250,.10),rgba(34,197,94,.06));color:#a78bfa;" title="Agrega un período nuevo al histórico sin borrar los anteriores">
+      <span>➕</span><span>Nutrir sistema</span>
+    </button>
+  </div>
+  <input type="file" id="nutrirMainInput" accept=".xlsx,.xls" style="display:none;" onchange="handleNutrirFiles(this.files)">
 
   <div class="sidebar-divider"></div>
 
@@ -3608,9 +3657,15 @@ background:#10B981;
     <div class="uw-or"><div class="uw-or-line"></div><span>o captura manualmente</span><div class="uw-or-line"></div></div>
     <button class="uw-btn-outline" onclick="uwShow('uwM1')">Ingresar datos a mano &nbsp;→</button>
     <div class="uw-template-hint">¿Primera vez? <button class="uw-link-btn" onclick="downloadTemplate()">Descarga la plantilla con ejemplos →</button></div>
-    <div id="uw0-clear-zone" style="display:none;margin-top:18px;padding:14px 18px;border-radius:13px;border:1px solid rgba(244,92,92,.25);background:rgba(244,92,92,.05);align-items:center;justify-content:space-between;gap:12px;">
-      <div style="font-size:13px;color:var(--muted);">Ya tienes datos cargados en el sistema.</div>
-      <button onclick="limpiarSistema()" style="padding:8px 16px;border-radius:9px;border:1px solid rgba(244,92,92,.4);background:rgba(244,92,92,.1);color:var(--danger);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;transition:.15s;" onmouseover="this.style.background='rgba(244,92,92,.2)'" onmouseout="this.style.background='rgba(244,92,92,.1)'">🗑 Eliminar datos</button>
+    <div id="uw0-clear-zone" style="display:none;margin-top:18px;border-radius:13px;border:1px solid rgba(244,92,92,.25);background:rgba(244,92,92,.05);padding:14px 18px;flex-direction:column;gap:10px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+        <div style="font-size:13px;color:var(--muted);">Ya tienes datos cargados en el sistema.</div>
+        <button onclick="limpiarSistema()" style="padding:8px 16px;border-radius:9px;border:1px solid rgba(244,92,92,.4);background:rgba(244,92,92,.1);color:var(--danger);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;transition:.15s;" onmouseover="this.style.background='rgba(244,92,92,.2)'" onmouseout="this.style.background='rgba(244,92,92,.1)'">🗑 Eliminar datos</button>
+      </div>
+      <div style="border-top:1px solid rgba(167,139,250,.2);padding-top:10px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+        <div style="font-size:12px;color:var(--muted);line-height:1.45;">¿Nuevo período mensual? Agrégalo sin borrar los anteriores.</div>
+        <button onclick="document.getElementById('nutrirMainInput').click()" style="padding:8px 16px;border-radius:9px;border:1px solid rgba(167,139,250,.4);background:rgba(167,139,250,.1);color:#a78bfa;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;transition:.15s;" onmouseover="this.style.background='rgba(167,139,250,.2)'" onmouseout="this.style.background='rgba(167,139,250,.1)'">➕ Nutrir sistema</button>
+      </div>
     </div>
   </div>
 
@@ -4216,6 +4271,12 @@ function updateModel(){
   setTxt('projIntereses',fmtM(intereses));
   setTxt('projISR',      fmtM(isr));
   setTxt('projMargenNeto', margenN.toFixed(1)+'%');
+  const _pais=(document.getElementById('ii_pais')||{}).value||'MX';
+  const _ft=FISCAL_TERMS[_pais]||FISCAL_TERMS.MX;
+  const elIsrLbl=document.getElementById('modelIsrLabel');
+  if(elIsrLbl) elIsrLbl.textContent='🏛️ Tasa '+(_pais==='ES'?'IS (Imp. Sociedades)':'ISR');
+  const projISRTitle=document.querySelector('#projISR')?.closest('.fin-kpi')?.querySelector('.fin-kpi-title');
+  if(projISRTitle) projISRTitle.textContent=_ft.impuesto+' Estimado';
 
   // Escenarios
   setTxt('sc_opt_val',  '$'+(baseSales*1.2).toFixed(1)+'M');
@@ -4921,6 +4982,11 @@ function getERData(){
 }
 
 /* ── CÁLCULO FINANCIERO COMPLETO ── */
+/* ── Diccionario fiscal centralizado — fuente única de etiquetas por país ── */
+const FISCAL_TERMS = {
+  MX: { impuesto:'ISR', organismo:'SAT', iva:'IVA (16%)', tasaNominal:'30%', moneda:'MXN' },
+  ES: { impuesto:'IS',  organismo:'AEAT', iva:'IVA (21%)', tasaNominal:'25%', moneda:'EUR'  }
+};
 /* ── Motor fiscal por país (MX/ES) — fuente única, sin duplicación ── */
 function motorFiscal(pais, uai, ventas, cogs){
   if(pais==='ES'){
@@ -5349,7 +5415,7 @@ function mostrarResultados(r){
     <div class="res-kpi"><div class="res-kpi-label">EBITDA${badgeEstimado(r._meta?.ebitda)}</div><div class="res-kpi-val" style="color:var(--primary)">${fmt(r.ebitda)}</div><div class="res-kpi-sub">Margen ${fmtPct(r.margenEbitda)}</div></div>
     <div class="res-kpi"><div class="res-kpi-label">Utilidad Neta</div><div class="res-kpi-val" style="color:${r.utilNeta>=0?'var(--success)':'var(--danger)'}">${fmt(r.utilNeta)}</div><div class="res-kpi-sub">Margen ${fmtPct(r.margenNeto)}</div></div>
     <div class="res-kpi"><div class="res-kpi-label">Flujo de Caja</div><div class="res-kpi-val" style="color:${r.flujoNeto>=0?'var(--success)':'var(--danger)'}">${fmt(r.flujoNeto)}</div><div class="res-kpi-sub">Operativo: ${fmt(r.flujoOp)}</div></div>
-    <div class="res-kpi"><div class="res-kpi-label">ISR Estimado${badgeEstimado(r._meta?.isr)}</div><div class="res-kpi-val" style="color:var(--warning)">${fmt(r.isr)}</div><div class="res-kpi-sub">Tasa ${fmtPct(r.isr/Math.max(r.uai,1)*100)}</div></div>
+    <div class="res-kpi"><div class="res-kpi-label">${(r.fiscal?.etiquetaImpuesto||'ISR')} Estimado${badgeEstimado(r._meta?.isr)}</div><div class="res-kpi-val" style="color:var(--warning)">${fmt(r.isr)}</div><div class="res-kpi-sub">Tasa ${fmtPct(r.isr/Math.max(r.uai,1)*100)}</div></div>
   </div>
 
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
@@ -5368,7 +5434,7 @@ function mostrarResultados(r){
           <tr style="border-bottom:1px solid var(--border2);background:rgba(34,197,94,.1);"><td style="padding:9px 12px;font-weight:800;color:var(--primary);">= EBITDA${badgeEstimado(r._meta?.ebitda)}</td><td style="padding:9px 12px;font-weight:800;text-align:right;color:var(--primary);">${fmt(r.ebitda)} <small style="font-weight:400;">${fmtPct(r.margenEbitda)}</small></td></tr>
           <tr style="border-bottom:1px solid var(--border2);"><td style="padding:9px 12px;color:var(--muted);">(−) G. Financieros</td><td style="padding:9px 12px;font-weight:700;text-align:right;color:var(--danger);">(${fmt(r.gfin)})</td></tr>
           <tr style="border-bottom:1px solid var(--border2);"><td style="padding:9px 12px;color:var(--muted);">= UAI</td><td style="padding:9px 12px;font-weight:700;text-align:right;">${fmt(r.uai)}</td></tr>
-          <tr style="border-bottom:1px solid var(--border2);"><td style="padding:9px 12px;color:var(--muted);">(−) ISR estimado${badgeEstimado(r._meta?.isr)}</td><td style="padding:9px 12px;font-weight:700;text-align:right;color:var(--warning);">(${fmt(r.isr)})</td></tr>
+          <tr style="border-bottom:1px solid var(--border2);"><td style="padding:9px 12px;color:var(--muted);">(−) ${(r.fiscal?.etiquetaImpuesto||'ISR')} estimado${badgeEstimado(r._meta?.isr)}</td><td style="padding:9px 12px;font-weight:700;text-align:right;color:var(--warning);">(${fmt(r.isr)})</td></tr>
           <tr style="background:rgba(34,211,160,.08);"><td style="padding:11px 12px;font-weight:800;font-size:14px;">= UTILIDAD NETA</td><td style="padding:11px 12px;font-weight:800;text-align:right;font-size:15px;color:${r.utilNeta>=0?'var(--success)':'var(--danger)'};">${fmt(r.utilNeta)} <small style="font-size:11px;font-weight:400;">${fmtPct(r.margenNeto)}</small></td></tr>
         </table>
       </div>
@@ -6014,6 +6080,251 @@ function showExcelPreview(data,filename){
       </div>`;
   }
 }
+/* ─────────────────────────────────────────────────────────────
+   NUTRIR SISTEMA — carga acumulativa de períodos
+   ─────────────────────────────────────────────────────────────
+   Regla fuente única: al nutrir, los campos raíz (ii_ventas, etc.)
+   = suma de TODOS los períodos (P&L). Balance = período más reciente.
+   El motor de cálculo no cambia — sigue leyendo los campos raíz.
+   ───────────────────────────────────────────────────────────── */
+window._nutrirPendingData = null;  // Excel data siendo procesado
+window._nutrirPendingKey  = null;  // periodoKey en espera de confirmación
+
+const _MESES_NOM = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+function _formatPeriodKey(key){
+  const m=key.match(/^(\d{4})-(\d{2})$/);
+  if(!m) return key;
+  return (_MESES_NOM[parseInt(m[2],10)-1]||m[2])+' '+m[1];
+}
+
+function _detectPeriodKey(d){
+  const p=String(d.periodo||'').trim();
+  // Exact YYYY-MM
+  if(/^\d{4}-\d{2}$/.test(p)) return p;
+  // Month name + year (ES/EN)
+  const MAP={enero:1,january:1,jan:1,febrero:2,february:2,feb:2,marzo:3,march:3,mar:3,
+    abril:4,april:4,apr:4,mayo:5,may:5,junio:6,june:6,jun:6,julio:7,july:7,jul:7,
+    agosto:8,august:8,aug:8,septiembre:9,september:9,sep:9,sept:9,
+    octubre:10,october:10,oct:10,noviembre:11,november:11,nov:11,
+    diciembre:12,december:12,dec:12};
+  const pl=p.toLowerCase();
+  const yr=(pl.match(/(\d{4})/)||[])[1];
+  for(const [name,num] of Object.entries(MAP)){
+    if(pl.includes(name)&&yr) return `${yr}-${String(num).padStart(2,'0')}`;
+  }
+  // Single non-zero month in monthlyByYear
+  if(d.monthlyByYear){
+    for(const [y,months] of Object.entries(d.monthlyByYear)){
+      const nz=months.reduce((a,v,i)=>{if(v>0)a.push(i);return a;},[]);
+      if(nz.length===1) return `${y}-${String(nz[0]+1).padStart(2,'0')}`;
+    }
+  }
+  return null;
+}
+
+function _recalcRootFromPeriodos(periodos){
+  const keys=Object.keys(periodos).sort();
+  if(!keys.length) return {};
+  const sum=f=>keys.reduce((acc,k)=>acc+(Number(periodos[k][f])||0),0);
+  const latest=periodos[keys[keys.length-1]];
+  return {
+    ventas:sum('ventas'), cogs:sum('cogs'), gadmin:sum('gadmin'),
+    gventas:sum('gventas'), gfin:sum('gfin'), dep:sum('dep'),
+    caja:latest.caja||0, cxc:latest.cxc||0, inventario:latest.inventario||0,
+    activo_fijo:latest.activo_fijo||0, pasivo_cp:latest.pasivo_cp||0,
+    pasivo_lp:latest.pasivo_lp||0, cxp:latest.cxp||0, capital:latest.capital||0,
+    anio:keys[keys.length-1].slice(0,4)
+  };
+}
+
+function handleNutrirFiles(fileList){
+  if(!fileList||!fileList.length) return;
+  if(!window.XLSX){showNotif('❌ Librería Excel no cargada','error');return;}
+  if(!window._sbUser){showNotif('⚠️ Debes estar autenticado para nutrir el sistema','warning');return;}
+  if(!window._sbEmpresaId){showNotif('⚠️ Primero carga los datos iniciales de la empresa','warning');return;}
+  const files=Array.from(fileList).filter(f=>/\.(xlsx|xls)$/i.test(f.name));
+  if(!files.length){showNotif('❌ Solo se aceptan archivos .xlsx o .xls','error');return;}
+  const file=files[0];
+  const reader=new FileReader();
+  reader.onload=function(ev){
+    (async()=>{
+      try{
+        const wb=XLSX.read(ev.target.result,{type:'array'});
+        let data=parseExcelWorkbook(wb);
+        const _pn=v=>parseFloat(String(v||'').replace(/[$,\s]/g,''))||0;
+        if(!(_pn(data.ventas)>0)){
+          showNotif('🤖 Formato libre — analizando con IA...','info',6000);
+          try{
+            const aiData=await _aiMapExcel(wb);
+            Object.entries(aiData).forEach(([k,v])=>{if(v!==null&&v!==undefined&&(data[k]===''||data[k]===undefined||data[k]===0))data[k]=v;});
+          }catch(e){showNotif('⚠️ Mapeo IA no disponible','warning',4000);}
+        }
+        data._fileName=file.name;
+        window._nutrirPendingData=data;
+        showViewFromBanner('ingresodatosView');
+        if(typeof uwShow==='function') uwShow('uwXL');
+        _showNutrirPreview(data,file.name);
+      }catch(err){showNotif('❌ Error al leer '+file.name+': '+err.message,'error');}
+    })();
+  };
+  reader.readAsArrayBuffer(file);
+  // Reset input so same file can be re-uploaded
+  const inp=document.getElementById('nutrirMainInput');
+  if(inp) inp.value='';
+}
+
+function _showNutrirPreview(data,filename){
+  const cont=$('uwXLContent');
+  if(!cont) return;
+  const fmtM=n=>'$'+Math.round(parseFloat(n||0)).toLocaleString('es-MX');
+  const v=parseFloat(data.ventas||0),c=parseFloat(data.cogs||0);
+  const detected=_detectPeriodKey(data);
+  const periodoLabel=detected?_formatPeriodKey(detected):'Sin detectar';
+  const periodoColor=detected?'var(--success)':'var(--warning)';
+  cont.innerHTML=`
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;padding:14px 18px;border-radius:14px;background:rgba(167,139,250,.06);border:1px solid rgba(167,139,250,.2);">
+      <div style="font-size:26px;">➕</div>
+      <div>
+        <div style="font-weight:700;font-size:14px;">Nutrir sistema · ${filename}</div>
+        <div style="color:var(--muted);font-size:12px;">Agregar período sin borrar datos anteriores</div>
+      </div>
+      <button onclick="uwShow('uw0')" style="margin-left:auto;padding:7px 13px;border-radius:9px;border:1px solid var(--border);background:none;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;">← Cambiar</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px;">
+      <div style="background:var(--card2);border:1px solid var(--border2);border-radius:12px;padding:14px 16px;">
+        <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;margin-bottom:6px;">Ventas detectadas</div>
+        <div style="font-size:20px;font-weight:800;color:var(--primary);">${v>0?fmtM(v):'—'}</div>
+      </div>
+      <div style="background:var(--card2);border:1px solid var(--border2);border-radius:12px;padding:14px 16px;">
+        <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;margin-bottom:6px;">COGS detectado</div>
+        <div style="font-size:20px;font-weight:800;">${c>0?fmtM(c):'—'}</div>
+      </div>
+    </div>
+    <div style="padding:14px 16px;border-radius:12px;background:var(--card2);border:1px solid var(--border2);margin-bottom:20px;">
+      <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;margin-bottom:8px;">Período detectado</div>
+      <div style="font-size:16px;font-weight:800;color:${periodoColor};">${periodoLabel}</div>
+      ${!detected?'<div style="font-size:12px;color:var(--warning);margin-top:4px;">No se pudo determinar el mes. Deberás seleccionarlo manualmente.</div>':''}
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      ${detected
+        ?`<button onclick="_nutrirCheckAndSave('${detected}')" style="flex:1;min-width:200px;padding:14px 20px;border-radius:13px;border:none;background:rgba(167,139,250,.85);color:#07080A;font-weight:800;font-size:14px;cursor:pointer;">➕ Agregar ${periodoLabel}</button>`
+        :`<button onclick="_showNutrirPeriodPicker()" style="flex:1;min-width:200px;padding:14px 20px;border-radius:13px;border:none;background:var(--warning);color:#07080A;font-weight:800;font-size:14px;cursor:pointer;">📅 Seleccionar período</button>`}
+    </div>`;
+}
+
+function _showNutrirPeriodPicker(){
+  const m=document.getElementById('nutrirPeriodModal');
+  if(!m) return;
+  // Populate year selector
+  const sel=document.getElementById('nutrirSelYear');
+  if(sel){
+    sel.innerHTML='';
+    const yr=new Date().getFullYear();
+    for(let y=yr+1;y>=yr-6;y--){
+      const opt=document.createElement('option');
+      opt.value=String(y);
+      opt.textContent=String(y);
+      if(y===yr) opt.selected=true;
+      sel.appendChild(opt);
+    }
+  }
+  // Pre-select month from detected year/partial if possible
+  const d=window._nutrirPendingData;
+  if(d){
+    const p=String(d.periodo||'');
+    const yrM=(p.match(/(\d{4})/)||[])[1];
+    if(yrM&&sel) sel.value=yrM;
+  }
+  m.style.display='flex';
+}
+
+function _nutrirConfirmPeriod(){
+  const yr=(document.getElementById('nutrirSelYear')||{}).value||new Date().getFullYear();
+  const mes=(document.getElementById('nutrirSelMes')||{}).value||'01';
+  const key=`${yr}-${mes}`;
+  document.getElementById('nutrirPeriodModal').style.display='none';
+  _nutrirCheckAndSave(key);
+}
+
+async function _nutrirCheckAndSave(periodoKey){
+  if(!window._nutrirPendingData){showNotif('❌ Sin datos pendientes','error');return;}
+  if(!window._sb||!window._sbEmpresaId){showNotif('❌ Sin conexión a base de datos','error');return;}
+  // Load current periodos from Supabase
+  const {data:cur}=await window._sb.from('empresas').select('data').eq('id',window._sbEmpresaId).maybeSingle();
+  const periodos=(cur?.data?.periodos)||{};
+  window._nutrirCurrentPeriodos=periodos;  // cache for save
+  window._nutrirPendingKey=periodoKey;
+  if(periodos[periodoKey]){
+    // Duplicate — ask user
+    const msg=document.getElementById('nutrirDupMsg');
+    if(msg) msg.textContent=`Ya tienes datos de ${_formatPeriodKey(periodoKey)}. ¿Quieres reemplazarlos con esta nueva carga o cancelar?`;
+    document.getElementById('nutrirDupModal').style.display='flex';
+  } else {
+    await _nutrirSave(periodoKey,false);
+  }
+}
+
+function _nutrirDupReplace(){
+  document.getElementById('nutrirDupModal').style.display='none';
+  _nutrirSave(window._nutrirPendingKey,true);
+}
+
+async function _nutrirSave(periodoKey, overwrite){
+  const d=window._nutrirPendingData;
+  if(!d) return;
+  const pn=v=>parseFloat(String(v||'').replace(/[$,\s]/g,''))||0;
+  // Build period entry
+  const entry={
+    ventas:pn(d.ventas), cogs:pn(d.cogs), gadmin:pn(d.gadmin),
+    gventas:pn(d.gventas), gfin:pn(d.gfin), dep:pn(d.depreciacion||d.dep),
+    caja:pn(d.caja), cxc:pn(d.cxc), inventario:pn(d.inventario),
+    activo_fijo:pn(d.activo_fijo), pasivo_cp:pn(d.pasivo_cp),
+    pasivo_lp:pn(d.pasivo_lp), cxp:pn(d.cxp), capital:pn(d.capital),
+    cargadoEn:new Date().toISOString(), fileName:d._fileName||''
+  };
+  // Merge period
+  const periodos={...(window._nutrirCurrentPeriodos||{}), [periodoKey]:entry};
+  // Recalculate root fields
+  const root=_recalcRootFromPeriodos(periodos);
+  // Store periodos for merge in next sbUpsertEmpresa call
+  window._nutrirPeriodosToMerge=periodos;
+  // Update form inputs to root values
+  const set=(id,val)=>{const el=document.getElementById(id);if(el&&val!==undefined&&val!==null)el.value=val;};
+  set('ii_ventas',root.ventas||'');
+  set('ii_cogs',root.cogs||'');
+  set('ii_gadmin',root.gadmin||'');
+  set('ii_gventas',root.gventas||'');
+  set('ii_gfin',root.gfin||'');
+  set('ii_depreciacion',root.dep||'');
+  set('ii_caja',root.caja||'');
+  set('ii_cxc',root.cxc||'');
+  set('ii_inventario',root.inventario||'');
+  set('ii_activo_fijo',root.activo_fijo||'');
+  set('ii_pasivo_cp',root.pasivo_cp||'');
+  set('ii_pasivo_lp',root.pasivo_lp||'');
+  set('ii_cxp',root.cxp||'');
+  if(root.anio) set('ii_anio',root.anio);
+  // Trigger full recalculation (which triggers save including periodos via _nutrirPeriodosToMerge)
+  if(typeof calcFinanciero==='function') calcFinanciero();
+  // Reset state
+  window._nutrirPendingData=null;
+  window._nutrirPendingKey=null;
+  window._nutrirCurrentPeriodos=null;
+  // Feedback and navigate
+  showNotif(`✅ ${_formatPeriodKey(periodoKey)} ${overwrite?'actualizado':'agregado'} al histórico. Histórico: ${Object.keys(periodos).length} período(s).`,'success',6000);
+  if(typeof showView==='function'){
+    const dashBtn=document.querySelector('.nav button[onclick*="dashboardView"]');
+    showView('dashboardView',dashBtn);
+  }
+}
+window.handleNutrirFiles=handleNutrirFiles;
+window._showNutrirPeriodPicker=_showNutrirPeriodPicker;
+window._nutrirConfirmPeriod=_nutrirConfirmPeriod;
+window._nutrirCheckAndSave=_nutrirCheckAndSave;
+window._nutrirDupReplace=_nutrirDupReplace;
+window._nutrirSave=_nutrirSave;
+
 function _showAiConfirm(){
   const d=_pendingExcelData;
   if(!d) return;
@@ -6590,10 +6901,12 @@ function downloadTemplate(){
       add('Comercial','baja','Capitalizar el crecimiento','Creces '+_pp(r.yoy)+'. Asegura que la capacidad operativa y el capital de trabajo acompañen.','Sostiene crecimiento','Planeación','Escalar con orden');
 
     const tasaEf = r.uai>0 ? (r.isr/r.uai*100) : 0;
+    const _fi = r.fiscal||{etiquetaImpuesto:'ISR',tasaImpuesto:.30,organismoFiscal:'SAT'};
+    const _tasaStr = ((_fi.tasaImpuesto||.30)*100).toFixed(0)+'%';
     if(r.isr>0)
-      add('Fiscal','media','Planeación fiscal','ISR estimado: '+_m(r.isr)+' (tasa efectiva ~'+_pp(tasaEf)+'). Deducciones autorizadas, depreciación acelerada y estímulos del sector pueden reducir la base gravable estimada. La tasa ISR (30%) es fija por ley.','Deducción potencial','Antes del cierre fiscal','Menor base gravable estimada');
+      add('Fiscal','media','Planeación fiscal',_fi.etiquetaImpuesto+' estimado: '+_m(r.isr)+' (tasa efectiva ~'+_pp(tasaEf)+'). Deducciones aplicables y depreciación pueden reducir la base gravable estimada. Tasa nominal: '+_tasaStr+'.','Deducción potencial','Antes del cierre fiscal','Menor base gravable estimada');
     if(r.activoFijo>0 && r.dep < r.activoFijo*0.03)
-      add('Fiscal','baja','Aprovechar la depreciación','Registras poca depreciación frente a tu activo fijo ('+_m(r.activoFijo)+'). La depreciación es un gasto deducible que reduce la base gravable del ISR sin salida de efectivo.','Deducción potencial','Próxima declaración','Escudo fiscal');
+      add('Fiscal','baja','Aprovechar la depreciación','Registras poca depreciación frente a tu activo fijo ('+_m(r.activoFijo)+'). La depreciación es un gasto deducible que reduce la base gravable del '+_fi.etiquetaImpuesto+' sin salida de efectivo.','Deducción potencial','Próxima declaración','Escudo fiscal');
 
     const ord={alta:0,media:1,baja:2};
     ins.sort((a,b)=>ord[a.prioridad]-ord[b.prioridad]);
@@ -8954,7 +9267,7 @@ function renderTaxView(r){
   <!-- ── DISCLAIMER ESTIMACIÓN FISCAL ── -->
   <div style="padding:10px 16px;border-radius:10px;background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.2);margin-bottom:14px;display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted);">
     <span style="font-size:15px;flex-shrink:0;">ℹ️</span>
-    <span>Todos los cálculos son <strong style="color:var(--text);">estimaciones internas del sistema</strong> basadas en tus cifras y tasas configurables. <strong style="color:var(--text);">No constituyen declaración fiscal ni dato oficial del ${isMX?'SAT':'AEAT'}.</strong> Para declaraciones y cumplimiento formal, consúltanos.</span>
+    <span><strong style="color:var(--text);">Información orientativa. No constituye asesoría fiscal oficial.</strong> Los cálculos son estimaciones basadas en tus cifras y tasas configurables. No constituyen declaración fiscal ni dato oficial del ${isMX?'SAT':'AEAT'}. Consulta a tu especialista fiscal.</span>
   </div>
   <div id="resumen-taxView" class="obbio-resumen" style="display:none;"></div>
   <p id="insight-taxView" class="chart-insight"></p>
@@ -9069,7 +9382,7 @@ function renderTaxView(r){
       </thead>
       <tbody>
         <tr style="border-bottom:1px solid var(--border2);">
-          <td style="padding:9px 14px;color:var(--muted);">${f.etiquetaImpuesto} (${isMX?'ISR':'IS'}) estimado${badgeEstimado(r._meta?.isr)}</td>
+          <td style="padding:9px 14px;color:var(--muted);">${f.etiquetaImpuesto} estimado${badgeEstimado(r._meta?.isr)}</td>
           <td style="padding:9px 14px;text-align:right;font-weight:700;color:var(--warning);">${_m(r.isr)}</td>
           <td style="padding:9px 14px;text-align:right;font-weight:600;">${_pp((r.isr||0)/r.ventas*100)}</td>
           <td style="padding:9px 14px;text-align:right;font-size:11px;color:var(--muted);">9–15%</td>
@@ -9092,8 +9405,8 @@ function renderTaxView(r){
           <td style="padding:9px 14px;text-align:right;font-weight:700;">${_pp(ivaN/r.ventas*100)}</td>
           <td style="padding:9px 14px;text-align:right;font-size:11px;color:var(--muted);">7–12%</td>
         </tr>
-        ${(r.uai||0)>0?`<tr style="border-bottom:1px solid var(--border2);">
-          <td style="padding:9px 14px;color:var(--muted);">${isMX?'PTU estimada (10% UAI)':'Reserva de capitalización (est.)'}</td>
+        ${(r.uai||0)>0&&isMX?`<tr style="border-bottom:1px solid var(--border2);">
+          <td style="padding:9px 14px;color:var(--muted);">PTU estimada (10% UAI)</td>
           <td style="padding:9px 14px;text-align:right;font-weight:700;color:var(--muted);">${_m(r.uai*0.10)}</td>
           <td style="padding:9px 14px;text-align:right;">${_pp(r.uai*0.10/r.ventas*100)}</td>
           <td style="padding:9px 14px;text-align:right;font-size:11px;color:var(--muted);">~10% UAI</td>
@@ -9206,7 +9519,7 @@ function renderTaxView(r){
   if(insTax){insTax.textContent=`Tax Health Score: ${score}/100 — ${score>=80?'riesgo bajo, posición fiscal saludable':score>=60?'riesgo moderado, revisar anomalías identificadas':'riesgo alto, atender hallazgos prioritarios'}.`;insTax.classList.add('visible');}
   _obbioResumen('Inteligencia Fiscal',[
     {label:'Tax Health Score',value:score+'/100'},
-    {label:'ISR estimado',value:r.isr?_m(r.isr):null},
+    {label:(r.fiscal?.etiquetaImpuesto||'ISR')+' estimado',value:r.isr?_m(r.isr):null},
     {label:'Carga fiscal total',value:r.ventas?_pp(cargaTotal/r.ventas*100):null},
     {label:'Anomalías',value:anoms.length+' hallazgos'},
   ],'resumen-taxView');
@@ -9256,7 +9569,7 @@ function renderFinancialCenterView(r){
           <tr style="border-bottom:1px solid var(--border2);"><td style="padding:10px 14px;color:var(--muted);">(−) G. Ventas</td><td style="padding:10px 14px;text-align:right;font-weight:700;color:var(--danger);">(${_m(r.gventas)})</td><td style="padding:10px 14px;text-align:right;">${_pp(r.gventas/r.ventas*100)}</td></tr>
           <tr style="border-bottom:1px solid var(--border2);background:rgba(34,197,94,.08);"><td style="padding:10px 14px;font-weight:800;color:var(--primary);">= EBITDA</td><td style="padding:10px 14px;text-align:right;font-weight:800;color:var(--primary);">${_m(r.ebitda)}</td><td style="padding:10px 14px;text-align:right;font-weight:700;color:var(--primary);">${_pp(r.margenEbitda)}</td></tr>
           <tr style="border-bottom:1px solid var(--border2);"><td style="padding:10px 14px;color:var(--muted);">(−) G. Financieros</td><td style="padding:10px 14px;text-align:right;font-weight:700;color:var(--danger);">(${_m(r.gfin)})</td><td style="padding:10px 14px;text-align:right;">${_pp(r.gfin/r.ventas*100)}</td></tr>
-          <tr style="border-bottom:1px solid var(--border2);"><td style="padding:10px 14px;color:var(--muted);">(−) ISR estimado</td><td style="padding:10px 14px;text-align:right;font-weight:700;color:var(--warning);">(${_m(r.isr)})</td><td style="padding:10px 14px;text-align:right;">${_pp(r.isr/r.ventas*100)}</td></tr>
+          <tr style="border-bottom:1px solid var(--border2);"><td style="padding:10px 14px;color:var(--muted);">(−) ${r.fiscal?.etiquetaImpuesto||'ISR'} estimado</td><td style="padding:10px 14px;text-align:right;font-weight:700;color:var(--warning);">(${_m(r.isr)})</td><td style="padding:10px 14px;text-align:right;">${_pp(r.isr/r.ventas*100)}</td></tr>
           <tr style="background:rgba(34,211,160,.06);"><td style="padding:11px 14px;font-weight:800;font-size:14px;">= UTILIDAD NETA</td><td style="padding:11px 14px;text-align:right;font-weight:800;font-size:15px;color:${r.utilNeta>=0?'var(--success)':'var(--danger)'};">${_m(r.utilNeta)}</td><td style="padding:11px 14px;text-align:right;font-weight:800;">${_pp(r.margenNeto)}</td></tr>
         </tbody>
       </table>
@@ -11404,7 +11717,12 @@ async function sbUpsertEmpresa(dashData){
   // Siempre incluir filas de productos para no sobrescribirlas
   const pr=typeof window._getProdRows==='function'?window._getProdRows():[];
   const pf=typeof window._getProdFiles==='function'?window._getProdFiles():[];
-  const fullData=pr.length>0?{...dashData,_prodRows:pr,_prodFiles:pf}:dashData;
+  let fullData=pr.length>0?{...dashData,_prodRows:pr,_prodFiles:pf}:dashData;
+  // Preservar periodos acumulados si existen (flujo Nutrir)
+  if(window._nutrirPeriodosToMerge){
+    fullData={...fullData, periodos:window._nutrirPeriodosToMerge};
+    delete window._nutrirPeriodosToMerge;
+  }
   if(_sbEmpresaId){
     // UPDATE: nunca tocar user_id (evita corrupción cuando admin edita datos de un cliente)
     // Solo actualizar nombre si dashData trae uno real (evita sobreescribir con 'Sin nombre')
