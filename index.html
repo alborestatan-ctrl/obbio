@@ -5725,6 +5725,7 @@ function parseExcelWorkbook(wb){
       return {map,byYear};
     };
     const kvGet=(m,...keys)=>{
+      if(!m||typeof m!=='object') return '';
       for(const k of keys){
         const kn=norm(k);
         const hit=Object.keys(m).find(h=>h.includes(kn));
@@ -5739,8 +5740,15 @@ function parseExcelWorkbook(wb){
     const erYears=Object.keys(erResult.byYear).map(Number).sort((a,b)=>b-a);
     const balYears=Object.keys(balResult.byYear).map(Number).sort((a,b)=>b-a);
     const mostRecent=erYears[0]||balYears[0]||null;
-    const erMap=mostRecent?erResult.byYear[mostRecent]:erResult.map;
-    const balMap=mostRecent?balResult.byYear[mostRecent]:balResult.map;
+    // Si el año más reciente no existe en una hoja (ej. ER multi-año + balance de un año),
+    // usar el byYear de esa hoja si existe, si no su map de columna única, si no objeto vacío.
+    const pickMap=(res,yr)=>{
+      if(yr&&res.byYear&&res.byYear[yr]&&Object.keys(res.byYear[yr]).length) return res.byYear[yr];
+      if(res.byYear){ const ys=Object.keys(res.byYear); if(ys.length) return res.byYear[ys[ys.length-1]]; }
+      return res.map||{};
+    };
+    const erMap=pickMap(erResult,mostRecent);
+    const balMap=pickMap(balResult,mostRecent);
     if(mostRecent) data.periodo=String(mostRecent);
 
     // Estado de Resultados (current year)
