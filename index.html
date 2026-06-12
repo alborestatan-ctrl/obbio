@@ -3580,9 +3580,10 @@ background:#10B981;
           <tbody id="prod-suc-tbody"></tbody>
         </table>
       </div>
-      <p style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.5;">
-        Requiere columna <strong>Sucursal</strong> en tu hoja <em>Ventas (Opcional)</em> del Excel.
-        Color = intensidad de ingreso relativa por sucursal.
+      <p style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">
+        <strong style="color:var(--text);">Cómo leer:</strong> cada celda muestra el ingreso de ese producto en esa sucursal.
+        El <span style="color:#22C55E;font-weight:600;">verde más intenso</span> = mayor ingreso relativo; blanco = mínimo.
+        Requiere columna <strong>Sucursal</strong> en la hoja <em>Ventas (Opcional)</em> del Excel.
       </p>
     </div>
   </div>
@@ -5752,12 +5753,12 @@ function parseExcelWorkbook(wb){
     if(mostRecent) data.periodo=String(mostRecent);
 
     // Estado de Resultados (current year)
-    data.ventas       = kvGet(erMap,'ventas netas','ventas totales','ingresos netos','ingresos totales','ingresos');
-    data.cogs         = kvGet(erMap,'costo de ventas','costo directo','cogs');
-    data.gadmin       = kvGet(erMap,'gastos de administraci','gastos admin','administracion','gastos generales');
-    data.gventas      = kvGet(erMap,'gastos de ventas','gastos ventas','comercializaci','marketing y ventas');
+    data.ventas       = kvGet(erMap,'ventas netas','ventas totales','ingresos netos','ingresos totales','total de ingresos','ingresos');
+    data.cogs         = kvGet(erMap,'costo de venta','costo directo','cogs','cost of goods','coste de venta');
+    data.gadmin       = kvGet(erMap,'gastos de administraci','gasto de administraci','gastos admin','administracion','gastos generales');
+    data.gventas      = kvGet(erMap,'gastos de venta','gasto de venta','gastos comercial','gasto comercial','comercializaci','marketing y venta','gastos de distribuci','selling expense');
     data.depreciacion = kvGet(erMap,'depreci','amortiz','d&a');
-    data.gfin         = kvGet(erMap,'gastos financiero','intereses pagado','financiero');
+    data.gfin         = kvGet(erMap,'gastos financiero','gasto financiero','intereses pagado','costo financiero','interest expense');
 
     // Balance General (current year)
     data.caja         = kvGet(balMap,'caja','efectivo','bancos');
@@ -6149,8 +6150,8 @@ function _recalcRootFromPeriodos(periodos){
 function handleNutrirFiles(fileList){
   if(!fileList||!fileList.length) return;
   if(!window.XLSX){showNotif('❌ Librería Excel no cargada','error');return;}
-  if(!window._sbUser){showNotif('⚠️ Debes estar autenticado para nutrir el sistema','warning');return;}
-  if(!window._sbEmpresaId){showNotif('⚠️ Primero carga los datos iniciales de la empresa','warning');return;}
+  if(!_sbUser){showNotif('⚠️ Debes estar autenticado para nutrir el sistema','warning');return;}
+  if(!_sbEmpresaId){showNotif('⚠️ Primero carga los datos iniciales de la empresa','warning');return;}
   const files=Array.from(fileList).filter(f=>/\.(xlsx|xls)$/i.test(f.name));
   if(!files.length){showNotif('❌ Solo se aceptan archivos .xlsx o .xls','error');return;}
   const file=files[0];
@@ -6257,9 +6258,10 @@ function _nutrirConfirmPeriod(){
 
 async function _nutrirCheckAndSave(periodoKey){
   if(!window._nutrirPendingData){showNotif('❌ Sin datos pendientes','error');return;}
-  if(!window._sb||!window._sbEmpresaId){showNotif('❌ Sin conexión a base de datos','error');return;}
+  const _activeEmpresaId=_sbEmpresaId||document.getElementById('sbEmpresaSelect')?.value;
+  if(!_sb||!_activeEmpresaId){showNotif('❌ Sin conexión a base de datos','error');return;}
   // Load current periodos from Supabase
-  const {data:cur}=await window._sb.from('empresas').select('data').eq('id',window._sbEmpresaId).maybeSingle();
+  const {data:cur}=await _sb.from('empresas').select('data').eq('id',_activeEmpresaId).maybeSingle();
   const periodos=(cur?.data?.periodos)||{};
   window._nutrirCurrentPeriodos=periodos;  // cache for save
   window._nutrirPendingKey=periodoKey;
@@ -8401,7 +8403,7 @@ function renderDashboardView(r){
     if(pbadge){ pbadge.textContent='Top cliente: '+topPct; pbadge.className='card-badge '+(entries[0][1]/total>0.3?'warning':'success'); }
     if(pleg1) pleg1.textContent='Ingreso por cliente ($M)';
     if(pleg80) pleg80.style.display='';
-    mkChart('paretoChart',{type:'bar',data:{labels:entries.map(e=>e[0].split(' ')[0]),datasets:[{type:'bar',label:'Ingreso ($M)',data:vals,backgroundColor:'#22C55ECC',borderRadius:8,yAxisID:'y'},{type:'line',label:'Acumulado',data:cumPct,borderColor:'#F5A623',borderWidth:2.5,pointRadius:5,pointBackgroundColor:'#F5A623',tension:.3,fill:false,yAxisID:'y2'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1E1E22',callbacks:{label:ctx=>ctx.dataset.label==='Acumulado'?` Acum: ${ctx.parsed.y}%`:` ${_m(ctx.parsed.y*1e6)}`}}},scales:{x:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',font:{size:10},maxRotation:30}},y:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',callback:v=>'$'+v+'M'},position:'left'},y2:{grid:{display:false},ticks:{color:'#F5A623',callback:v=>v+'%'},position:'right',min:0,max:100}}}});
+    mkChart('paretoChart',{type:'bar',data:{labels:entries.map(e=>e[0].length>14?e[0].slice(0,13)+'…':e[0]),datasets:[{type:'bar',label:'Ingreso ($M)',data:vals,backgroundColor:'#22C55ECC',borderRadius:8,yAxisID:'y'},{type:'line',label:'Acumulado',data:cumPct,borderColor:'#F5A623',borderWidth:2.5,pointRadius:5,pointBackgroundColor:'#F5A623',tension:.3,fill:false,yAxisID:'y2'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1E1E22',callbacks:{label:ctx=>ctx.dataset.label==='Acumulado'?` Acum: ${ctx.parsed.y}%`:` ${_m(ctx.parsed.y*1e6)}`}}},scales:{x:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',font:{size:10},maxRotation:30}},y:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',callback:v=>'$'+v+'M'},position:'left'},y2:{grid:{display:false},ticks:{color:'#F5A623',callback:v=>v+'%'},position:'right',min:0,max:100}}}});
   } else {
     const costV=[r.cogs,r.gadmin,r.gventas,r.gfin].map(v=>+(v/1e6).toFixed(2));
     const totC=costV.reduce((a,b)=>a+b,0)||1; let cumC=0;
@@ -12404,9 +12406,9 @@ window.toggleSidebarDesktop=toggleSidebarDesktop;
           const cells=psData.sucursales.map(s=>{
             const v=(p.sdata[s]||{}).ingreso||0;
             const a=maxIng>0?(v/maxIng*0.65+0.05).toFixed(2):'0.05';
-            return `<td style="text-align:right;background:rgba(34,197,94,${a});padding:8px 10px;">${v>0?_fm(v):'—'}</td>`;
+            return `<td style="text-align:right;background:rgba(34,197,94,${a});padding:8px 10px;color:var(--text);font-weight:${v>0?'600':'400'};">${v>0?_fm(v):'—'}</td>`;
           }).join('');
-          return `<tr><td title="${p.nombre}"><div style="max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.nombre}</div></td>${cells}<td style="text-align:right;font-weight:700;">${_fm(p.total)}</td></tr>`;
+          return `<tr><td title="${p.nombre}"><div style="max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text);">${p.nombre}</div></td>${cells}<td style="text-align:right;font-weight:700;color:var(--text);">${_fm(p.total)}</td></tr>`;
         }).join('');
       } else {
         psCard.style.display='none';
