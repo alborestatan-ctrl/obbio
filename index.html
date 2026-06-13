@@ -5110,6 +5110,16 @@ function calcFinanciero(){
     if(concentracion!=null){ if(concentracion<=2) score-=8; else if(concentracion<=3) score-=4; }
     score=Math.max(0,Math.min(100,Math.round(score)));
   }
+  // Cuenta cuántos de los 7 factores tienen datos reales (para mostrar transparencia en UI)
+  const _factCount=score===null?0:[
+    margenEbitda!=null,
+    margenNeto!=null,
+    razCorriente!=null,
+    (debtEbitda!=null||debtEbitdaCritical),
+    cobIntereses!=null,
+    yoy!=null,
+    concentracion!=null,
+  ].filter(Boolean).length;
 
   // Briefings automáticos
   const briefings=generarBriefings({margenEbitda,margenNeto,razCorriente,debtEbitda,debtEbitdaCritical,cobIntereses,ccc,yoy,score,concentracion,utilNeta,flujoNeto,ebitda,deudaTotal});
@@ -5167,7 +5177,7 @@ function calcFinanciero(){
     razCorriente,pruebaAcida,debtEbitda,debtEbitdaCritical,cobIntereses,deudaTotal,
     apalancamiento,debtEquity,roa,roe,
     diasCobro,diasPago,diasInv,ccc,
-    yoy,concentracion,score,
+    yoy,concentracion,score,scoreFactores:_factCount,
     briefings,
     ingMensual,ebitdaMensual,cfMensual,
     empresa:($('ii_empresa')||{}).value||'',
@@ -5269,6 +5279,7 @@ function previewCalc(){
 /* ── CALCULAR Y APLICAR ── */
 function calcularYAplicar(){
   if(typeof collectManualOptional==='function') collectManualOptional();
+  window._obbioResumenCache={};
   let r;
   try{ r=calcFinanciero(); }catch(e){ alert('Error en cálculo: '+e.message); return; }
   mostrarResultados(r);
@@ -5391,14 +5402,14 @@ function mostrarResultados(r){
   <!-- SCORE -->
   <div class="card">
     <div class="card-header">
-      <div class="card-title">🏆 Score Financiero · ${r.score!=null?r.score+'/100':'—'}</div>
+      <div class="card-title">🏆 Score Financiero · ${r.score!=null?r.score+'/100':'—'}${r.score!=null&&r.scoreFactores<7?` <span style="font-size:11px;font-weight:400;color:var(--muted2)">(${r.scoreFactores} de 7 factores con datos)</span>`:''}</div>
       <span class="card-badge ${r.score>=80?'success':r.score>=60?'warning':''}">${scoreLabel}</span>
     </div>
     <div style="height:8px;background:var(--border2);border-radius:4px;overflow:hidden;margin-bottom:8px;">
       <div style="width:${r.score??0}%;height:100%;background:${scoreColor};border-radius:4px;transition:.8s;"></div>
     </div>
     <div style="font-size:11px;color:var(--muted2);margin-bottom:14px;line-height:1.55;">
-      Metodología: ponderación de 7 factores sobre base 50 — margen EBITDA (±15pt), margen neto (±10pt), razón corriente (±10pt), Deuda/EBITDA (±8pt), cobertura de intereses (±7pt), crecimiento YoY (±5pt), concentración de clientes (−8pt máx). Rango: 0–100.
+      Metodología: base 50 + 7 factores — margen EBITDA (+15/−15pt), margen neto (+10/−10pt), razón corriente (+10/−8pt), Deuda/EBITDA (+8/−15pt), cobertura de intereses (+7/−8pt), crecimiento YoY (+5/−5pt), concentración de clientes (0/−8pt). Factores sin datos no suman ni restan. Rango: 0–100.
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;">
       ${r.briefings.map(b=>`
@@ -5453,6 +5464,7 @@ function mostrarResultados(r){
         <tr style="border-bottom:1px solid var(--border2);"><td style="padding:9px 12px;color:var(--muted);">Apalancamiento</td><td style="padding:9px 12px;font-weight:700;text-align:right;">${fmtPct(r.apalancamiento)}</td></tr>
         <tr style="border-bottom:1px solid var(--border2);"><td style="padding:9px 12px;color:var(--muted);">ROA</td><td style="padding:9px 12px;font-weight:700;text-align:right;">${fmtPct(r.roa)}</td></tr>
         <tr style="border-bottom:1px solid var(--border2);"><td style="padding:9px 12px;color:var(--muted);">ROE</td><td style="padding:9px 12px;font-weight:700;text-align:right;">${r.capitalNegativo?'<span style="color:var(--danger);font-weight:700;">⚠ Insolvente</span>':fmtPct(r.roe)}</td></tr>
+        <tr style="border-bottom:1px solid var(--border2);"><td style="padding:9px 12px;color:var(--muted);">Deuda / Capital (D/E)</td><td style="padding:9px 12px;font-weight:700;text-align:right;">${r.capitalNegativo?'<span style="color:var(--danger);font-weight:700;">⚠ Insolvente</span>':fmtX(r.debtEquity)} ${r.debtEquity!=null&&!r.capitalNegativo?badgeTipo(r.debtEquity<1?'pos':r.debtEquity<2?'warn':'danger'):''}</td></tr>
         <tr style="border-bottom:1px solid var(--border2);"><td style="padding:9px 12px;color:var(--muted);">DSO (días cobranza)</td><td style="padding:9px 12px;font-weight:700;text-align:right;">${r.diasCobro!=null?Math.round(r.diasCobro)+' días':'—'}</td></tr>
         <tr style="border-bottom:1px solid var(--border2);"><td style="padding:9px 12px;color:var(--muted);">DPO (días proveedores)</td><td style="padding:9px 12px;font-weight:700;text-align:right;">${r.diasPago!=null?Math.round(r.diasPago)+' días':'—'}</td></tr>
         <tr><td style="padding:9px 12px;color:var(--muted);">CCC (ciclo efectivo)</td><td style="padding:9px 12px;font-weight:700;text-align:right;color:${r.ccc!=null?(r.ccc<40?'var(--success)':r.ccc<70?'var(--warning)':'var(--danger)'):'var(--muted)'};">${r.ccc!=null?Math.round(r.ccc)+' días':'—'}</td></tr>
@@ -5753,31 +5765,32 @@ function parseExcelWorkbook(wb){
     if(mostRecent) data.periodo=String(mostRecent);
 
     // Estado de Resultados (current year)
-    data.ventas       = kvGet(erMap,'ventas netas','ventas totales','ingresos netos','ingresos totales','total de ingresos','ingresos');
-    data.cogs         = kvGet(erMap,'costo de venta','costo directo','cogs','cost of goods','coste de venta');
-    data.gadmin       = kvGet(erMap,'gastos de administraci','gasto de administraci','gastos admin','administracion','gastos generales');
+    data.ventas       = kvGet(erMap,'ventas netas','ventas totales','ingresos netos','ingresos totales','total de ingresos','net revenue','net sales','revenue','facturaci','ingresos');
+    data.cogs         = kvGet(erMap,'costo de venta','costo de lo vendido','costo de produc','costos de produc','costo directo','coste de venta','cost of goods','cogs');
+    data.gadmin       = kvGet(erMap,'gastos de administraci','gasto de administraci','gastos administrativ','administrativ','gastos admin','sg&a','sga','gastos generales','gastos de operaci');
     data.gventas      = kvGet(erMap,'gastos de venta','gasto de venta','gastos comercial','gasto comercial','comercializaci','marketing y venta','gastos de distribuci','selling expense');
     data.depreciacion = kvGet(erMap,'depreci','amortiz','d&a');
     data.gfin         = kvGet(erMap,'gastos financiero','gasto financiero','intereses pagado','costo financiero','interest expense');
 
     // Balance General (current year)
     data.caja         = kvGet(balMap,'caja','efectivo','bancos');
-    data.cxc          = kvGet(balMap,'cuentas por cobrar','cartera');
+    data.cxc          = kvGet(balMap,'cuentas por cobrar','trade receivable','accounts receivable','cartera','clientes');
     data.inventario   = kvGet(balMap,'inventario','existencia','stock');
-    data.activo_fijo  = kvGet(balMap,'activo fijo','propiedad planta','activo no circulante');
-    data.cxp          = kvGet(balMap,'cuentas por pagar','proveedores');
-    data.pasivo_cp    = kvGet(balMap,'pasivo corto','deuda corto','pasivo circul','obligaciones cp');
-    data.pasivo_lp    = kvGet(balMap,'pasivo largo','deuda largo','pasivo no circul');
+    data.activo_fijo  = kvGet(balMap,'activo fijo','activo no circul','activo no corriente','propiedad planta','pp&e','ppe','inmovilizado');
+    data.cxp          = kvGet(balMap,'cuentas por pagar','accounts payable','trade payable','proveedores');
+    data.pasivo_cp    = kvGet(balMap,'pasivo a corto','pasivo corto','pasivo circul','pasivos corrientes','deuda a corto','deuda corto','obligaciones a corto','obligaciones corto','obligaciones cp');
+    data.pasivo_lp    = kvGet(balMap,'pasivo a largo','pasivo largo','pasivo no circul','pasivo no corriente','deuda a largo','deuda largo','obligaciones a largo');
+    data.capital      = kvGet(balMap,'capital contable','patrimonio neto','patrimonio','equity','fondos propios','capital');
 
     // Build historico from prior years in ER + Balance multi-year columns
     const histYears=[...new Set([...erYears.slice(1),...balYears.slice(1)])].sort((a,b)=>a-b);
     const histMap={}; // year → combined object
     histYears.forEach(yr=>{
       const er=erResult.byYear[yr]||{}, bal=balResult.byYear[yr]||{};
-      const v=kvN(er,'ventas netas','ventas totales','ingresos');
+      const v=kvN(er,'ventas netas','ventas totales','net revenue','net sales','revenue','facturaci','ingresos');
       if(v>0||Object.keys(bal).length>0){
-        const _hcg=kvN(er,'costo de ventas','cogs'),_hga=kvN(er,'gastos de administraci'),_hgv=kvN(er,'gastos de ventas'),_hdep=kvN(er,'depreci');
-        histMap[yr]={anio:yr,ventas:v,ebitda:v>0?v-_hcg-_hga-_hgv:0,cogs:_hcg,gadmin:_hga,gventas:_hgv,dep:_hdep,gfin:kvN(er,'gastos financiero','intereses'),caja:kvN(bal,'caja','efectivo'),cxc:kvN(bal,'cuentas por cobrar'),inventario:kvN(bal,'inventario'),activo_fijo:kvN(bal,'activo fijo'),cxp:kvN(bal,'cuentas por pagar'),pasivo_cp:kvN(bal,'pasivo corto'),pasivo_lp:kvN(bal,'pasivo largo'),capital:kvN(bal,'capital')};
+        const _hcg=kvN(er,'costo de venta','costo de lo vendido','costo de produc','cogs'),_hga=kvN(er,'gastos de administraci','gastos administrativ','administrativ'),_hgv=kvN(er,'gastos de venta','gasto de venta','gastos comercial','comercializaci'),_hdep=kvN(er,'depreci','amortiz');
+        histMap[yr]={anio:yr,ventas:v,ebitda:v>0?v-_hcg-_hga-_hgv+_hdep:0,cogs:_hcg,gadmin:_hga,gventas:_hgv,dep:_hdep,gfin:kvN(er,'gastos financiero','intereses'),caja:kvN(bal,'caja','efectivo'),cxc:kvN(bal,'cuentas por cobrar'),inventario:kvN(bal,'inventario'),activo_fijo:kvN(bal,'activo fijo'),cxp:kvN(bal,'cuentas por pagar'),pasivo_cp:kvN(bal,'pasivo a corto','pasivo corto','pasivo circul'),pasivo_lp:kvN(bal,'pasivo a largo','pasivo largo','pasivo no circul'),capital:kvN(bal,'capital contable','patrimonio','capital')};
       }
     });
 
@@ -6170,6 +6183,7 @@ function handleNutrirFiles(fileList){
           }catch(e){showNotif('⚠️ Mapeo IA no disponible','warning',4000);}
         }
         data._fileName=file.name;
+        _checkParserWarnings(data);
         window._nutrirPendingData=data;
         showViewFromBanner('ingresodatosView');
         if(typeof uwShow==='function') uwShow('uwXL');
@@ -6315,8 +6329,9 @@ async function _nutrirSave(periodoKey, overwrite){
   set('ii_pasivo_lp',root.pasivo_lp||'');
   set('ii_cxp',root.cxp||'');
   if(root.anio) set('ii_anio',root.anio);
-  // Trigger full recalculation (which triggers save including periodos via _nutrirPeriodosToMerge)
-  if(typeof calcFinanciero==='function') calcFinanciero();
+  // Trigger full recalculation+save cycle: updates window._obbioCalc, calls saveData→sbUpsertEmpresa
+  // (sbUpsertEmpresa picks up and persists window._nutrirPeriodosToMerge set above)
+  if(typeof calcularYAplicar==='function') calcularYAplicar();
   // Reset state
   window._nutrirPendingData=null;
   window._nutrirPendingKey=null;
@@ -6400,6 +6415,31 @@ function _applyAiConfirm(){
   d.capital=gNum('capital');
   applyExcelData();
 }
+/* ── Parser-gap warning: lists ER/balance fields that stayed at 0 after parsing ── */
+function _checkParserWarnings(d){
+  if(!d||d._format!=='estructurado') return; // solo aplica para formato estructurado
+  const pn=v=>parseFloat(String(v||'').replace(/[$,\s]/g,''))||0;
+  const erFields=[
+    {key:'ventas',     label:'Ventas/Ingresos'},
+    {key:'cogs',       label:'Costo de Ventas'},
+    {key:'gadmin',     label:'Gastos Administrativos'},
+    {key:'gventas',    label:'Gastos de Ventas'},
+  ];
+  const balFields=[
+    {key:'pasivo_cp',  label:'Pasivo Corto Plazo'},
+    {key:'pasivo_lp',  label:'Pasivo Largo Plazo'},
+  ];
+  // Only warn if at least one ER field was recognized (avoids noise on totally blank data)
+  const anyER=erFields.some(f=>pn(d[f.key])>0);
+  if(!anyER) return;
+  const anyBal=[...balFields,{key:'caja',label:'Caja'},{key:'activo_fijo',label:'Activo Fijo'}].some(f=>pn(d[f.key])>0);
+  const missing=[];
+  erFields.forEach(f=>{ if(!(pn(d[f.key])>0)) missing.push(f.label); });
+  if(anyBal) balFields.forEach(f=>{ if(!(pn(d[f.key])>0)) missing.push(f.label); });
+  if(missing.length&&typeof showNotif==='function')
+    showNotif(`⚠️ No se reconocieron: ${missing.join(', ')}. Revisa los nombres en tu Excel o captura manualmente (tomados como 0).`,'warning',9000);
+}
+
 function applyExcelData(){
   if(!_pendingExcelData) return;
   const d=_pendingExcelData;
@@ -6444,6 +6484,7 @@ function applyExcelData(){
   setVal('ii_pasivo_cp',   parseNum(d.pasivo_cp));
   setVal('ii_pasivo_lp',   parseNum(d.pasivo_lp));
   setVal('ii_cxp',         parseNum(d.cxp));
+  if(parseNum(d.capital)>0) setVal('ii_capital', parseNum(d.capital));
   // ── Estado de Resultados: mensual si hay series, anual en caso contrario ──
   const monthly=String(d.m_ventas||'').split(',').filter(x=>x.trim()!=='');
   const hasMonthly=monthly.length>=2;
@@ -6497,6 +6538,8 @@ function applyExcelData(){
     const curV=parseNum(d.ventas);
     if(prevEntry&&prevEntry.ventas>0&&curV>0) setVal('ii_yoy', ((curV/prevEntry.ventas-1)*100).toFixed(1));
   }
+  // ── Aviso de campos no reconocidos (parser gap warning) ──
+  _checkParserWarnings(d);
   // ── Motor: deriva TODOS los indicadores y refresca dashboard + gráficas ──
   if(typeof calcularYAplicar==='function') calcularYAplicar();
   // Show data preview instead of jumping directly to dashboard
@@ -6850,7 +6893,7 @@ function downloadTemplate(){
     if(r.capTrabNeto<0) RI.push(it('Capital de trabajo negativo', 'Tu capital de trabajo neto es '+_m(r.capTrabNeto)+'. Es el dinero para operar (activos corrientes menos pasivos corrientes); en negativo, financias la operación con deuda de corto plazo.'));
     else F.push(it('Capital de trabajo positivo', 'Cuentas con '+_m(r.capTrabNeto)+' de capital de trabajo neto, el colchón con el que financias el día a día.'));
 
-    if(r.ccc>BM.ccc) RI.push(it('Ciclo de efectivo largo', 'Tu Ciclo de Conversión de Efectivo es '+Math.round(r.ccc)+' días (referente ~'+BM.ccc+'). Es el tiempo que tarda un peso en volver a tu caja; entre más largo, más efectivo queda atrapado en la operación.'));
+    if(r.ccc>BM.ccc) RI.push(it('Ciclo de efectivo largo', 'Tu Ciclo de Conversión de Efectivo es ~'+Math.round(r.ccc)+' días est. (referente ~'+BM.ccc+'). Es el tiempo que tarda un peso en volver a tu caja; entre más largo, más efectivo queda atrapado en la operación.'));
 
     if(r.yoy!=null){
       if(r.yoy>10) F.push(it('Crecimiento acelerado', 'Tus ingresos crecieron '+_pp(r.yoy)+' vs. el año anterior: expansión sostenida.'));
@@ -6897,10 +6940,10 @@ function downloadTemplate(){
       add('Financiera','media','Elevar el margen neto','Tu margen neto ('+_pp(r.margenNeto)+') está bajo el referente ('+_pp(BM.margenNeto)+'). Revisa costos y gasto financiero.','+'+_m(r.ventas*(BM.margenNeto-r.margenNeto)/100)+' utilidad','Mediano plazo','Mayor rentabilidad');
 
     if(r.ccc>BM.ccc)
-      add('Operativa','alta','Optimizar capital de trabajo','Tu ciclo de efectivo ('+Math.round(r.ccc)+' días) inmoviliza caja. Mejorar cobranza, inventario y plazos con proveedores la libera.','≈ '+_m((r.ventas/365)*10)+' por cada 10 días','Atender en 60 días','Efectivo liberado');
+      add('Operativa','alta','Optimizar capital de trabajo','Tu ciclo de efectivo (~'+Math.round(r.ccc)+' días est.) inmoviliza caja. Mejorar cobranza, inventario y plazos con proveedores la libera.','≈ '+_m((r.ventas/365)*10)+' por cada 10 días','Atender en 60 días','Efectivo liberado');
     if(r.diasCobro>BM.dso)
       add('Operativa','media','Acelerar cobranza (DSO)','Cobras en '+Math.round(r.diasCobro)+' días vs. '+BM.dso+' del referente. Políticas de crédito y recordatorios reducen el DSO.','≈ '+_m((r.ventas/365)*(r.diasCobro-BM.dso))+' en caja','Mediano plazo','Mejor liquidez');
-    if(r.gadmin>0)
+    if(r.gadmin>0&&r.ventas>0&&r.gadmin/r.ventas*100>5)
       add('Operativa','media','Eficiencia de gastos','Recortar 8% de gastos administrativos ('+_m(r.gadmin)+') va directo al EBITDA sin tocar ventas.','+'+_m(r.gadmin*0.08)+' EBITDA','Atender en 90 días','Mayor margen');
 
     if(r.concentracion && r.concentracion<=3)
