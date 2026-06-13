@@ -3667,6 +3667,7 @@ background:#10B981;
         <div style="font-size:12px;color:var(--muted);line-height:1.45;">¿Nuevo período mensual? Agrégalo sin borrar los anteriores.</div>
         <button onclick="document.getElementById('nutrirMainInput').click()" style="padding:8px 16px;border-radius:9px;border:1px solid rgba(167,139,250,.4);background:rgba(167,139,250,.1);color:#a78bfa;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;transition:.15s;" onmouseover="this.style.background='rgba(167,139,250,.2)'" onmouseout="this.style.background='rgba(167,139,250,.1)'">➕ Nutrir sistema</button>
       </div>
+      <div id="nutrirPeriodList" style="display:none;"></div>
     </div>
   </div>
 
@@ -4633,6 +4634,7 @@ function uwShow(id){
   if(id==='uw0'){
     const cz=document.getElementById('uw0-clear-zone');
     if(cz) cz.style.display=window._obbioCalc?'flex':'none';
+    if(window._obbioCalc&&typeof _renderPeriodManager==='function') _renderPeriodManager();
   }
 }
 
@@ -5730,9 +5732,16 @@ function parseExcelWorkbook(wb){
         if(yearCols.length>0){
           yearCols.forEach(({col,year})=>{ const n=toNum(row[col]); if(n!==0) byYear[year][kn]=String(n); });
         } else {
-          const vRaw=row[1];
-          if(vRaw===''||vRaw===undefined||vRaw===null) return;
-          const n=toNum(vRaw); if(n!==0) map[kn]=String(n);
+          // Col B is the standard value column. If absent/non-numeric (e.g. 3-col monthly template
+          // with layout [Concepto | '' | Importe]), scan cols C-E for the first actual Excel number.
+          const vB=row[1];
+          let n=(vB!==''&&vB!==undefined&&vB!==null)?toNum(vB):0;
+          if(n===0){
+            for(let ci=2;ci<Math.min(row.length,5)&&n===0;ci++){
+              if(typeof row[ci]==='number') n=row[ci];
+            }
+          }
+          if(n!==0) map[kn]=String(n);
         }
       });
       return {map,byYear};
@@ -6294,6 +6303,56 @@ function _nutrirDupReplace(){
   _nutrirSave(window._nutrirPendingKey,true);
 }
 
+// ── Helper compartido: aplica periodos → form + historico + monthly + recalc + save ──
+// Llamado por _nutrirSave (agregar) y _deletePeriodo (borrar individual).
+function _nutrirApplyPeriodos(periodos){
+  const root=_recalcRootFromPeriodos(periodos);
+  const _s=(id,v)=>{const el=document.getElementById(id);if(el&&v!=null)el.value=v;};
+  _s('ii_ventas',root.ventas||''); _s('ii_cogs',root.cogs||'');
+  _s('ii_gadmin',root.gadmin||''); _s('ii_gventas',root.gventas||'');
+  _s('ii_gfin',root.gfin||''); _s('ii_depreciacion',root.dep||'');
+  _s('ii_caja',root.caja||''); _s('ii_cxc',root.cxc||'');
+  _s('ii_inventario',root.inventario||''); _s('ii_activo_fijo',root.activo_fijo||'');
+  _s('ii_pasivo_cp',root.pasivo_cp||''); _s('ii_pasivo_lp',root.pasivo_lp||'');
+  _s('ii_cxp',root.cxp||''); if(root.anio) _s('ii_anio',root.anio);
+
+  // PARTE 2 — Construir window._obbioHistorico agrupando períodos por año
+  // → permite que las gráficas de tendencia rendericen cuando hay 2+ años
+  const byYear={};
+  for(const [k,v] of Object.entries(periodos)){
+    const yr=parseInt(k.slice(0,4)); if(!yr||isNaN(yr)) continue;
+    if(!byYear[yr]) byYear[yr]={anio:yr,ventas:0,cogs:0,gadmin:0,gventas:0,dep:0,gfin:0,
+      caja:0,cxc:0,inventario:0,activo_fijo:0,cxp:0,pasivo_cp:0,pasivo_lp:0,capital:0};
+    const h=byYear[yr];
+    h.ventas+=Number(v.ventas)||0; h.cogs+=Number(v.cogs)||0;
+    h.gadmin+=Number(v.gadmin)||0; h.gventas+=Number(v.gventas)||0;
+    h.dep+=Number(v.dep)||0; h.gfin+=Number(v.gfin)||0;
+    ['caja','cxc','inventario','activo_fijo','cxp','pasivo_cp','pasivo_lp','capital'].forEach(f=>{
+      if(Number(v[f])) h[f]=Number(v[f]);
+    });
+  }
+  const hist=Object.values(byYear)
+    .map(h=>({...h,ebitda:h.ventas>0?h.ventas-h.cogs-h.gadmin-h.gventas+h.dep:0}))
+    .filter(h=>h.ventas>0).sort((a,b)=>a.anio-b.anio);
+  if(hist.length) window._obbioHistorico=hist;
+
+  // Construir series mensuales para períodos tipo 'YYYY-MM' (e.g. '2025-01')
+  const mby={};
+  for(const [k,v] of Object.entries(periodos)){
+    const m=k.match(/^(\d{4})-(\d{2})$/); if(!m) continue;
+    const yr=parseInt(m[1]),mo=parseInt(m[2])-1;
+    if(!mby[yr]) mby[yr]=new Array(12).fill(0);
+    if(mo>=0&&mo<12) mby[yr][mo]=Number(v.ventas)||0;
+  }
+  if(Object.keys(mby).length) window._obbioMonthlyByYear={...(window._obbioMonthlyByYear||{}),...mby};
+
+  // Persistir y recalcular
+  window._nutrirPeriodosToMerge=periodos;
+  window._nutrirLoadedPeriodos=periodos;
+  if(typeof calcularYAplicar==='function') calcularYAplicar();
+  if(typeof _renderPeriodManager==='function') _renderPeriodManager();
+}
+
 async function _nutrirSave(periodoKey, overwrite){
   const d=window._nutrirPendingData;
   if(!d) return;
@@ -6307,36 +6366,13 @@ async function _nutrirSave(periodoKey, overwrite){
     pasivo_lp:pn(d.pasivo_lp), cxp:pn(d.cxp), capital:pn(d.capital),
     cargadoEn:new Date().toISOString(), fileName:d._fileName||''
   };
-  // Merge period
   const periodos={...(window._nutrirCurrentPeriodos||{}), [periodoKey]:entry};
-  // Recalculate root fields
-  const root=_recalcRootFromPeriodos(periodos);
-  // Store periodos for merge in next sbUpsertEmpresa call
-  window._nutrirPeriodosToMerge=periodos;
-  // Update form inputs to root values
-  const set=(id,val)=>{const el=document.getElementById(id);if(el&&val!==undefined&&val!==null)el.value=val;};
-  set('ii_ventas',root.ventas||'');
-  set('ii_cogs',root.cogs||'');
-  set('ii_gadmin',root.gadmin||'');
-  set('ii_gventas',root.gventas||'');
-  set('ii_gfin',root.gfin||'');
-  set('ii_depreciacion',root.dep||'');
-  set('ii_caja',root.caja||'');
-  set('ii_cxc',root.cxc||'');
-  set('ii_inventario',root.inventario||'');
-  set('ii_activo_fijo',root.activo_fijo||'');
-  set('ii_pasivo_cp',root.pasivo_cp||'');
-  set('ii_pasivo_lp',root.pasivo_lp||'');
-  set('ii_cxp',root.cxp||'');
-  if(root.anio) set('ii_anio',root.anio);
-  // Trigger full recalculation+save cycle: updates window._obbioCalc, calls saveData→sbUpsertEmpresa
-  // (sbUpsertEmpresa picks up and persists window._nutrirPeriodosToMerge set above)
-  if(typeof calcularYAplicar==='function') calcularYAplicar();
-  // Reset state
+  // Apply: sets form, builds historico, persists periodos, calls calcularYAplicar
+  _nutrirApplyPeriodos(periodos);
+  // Reset transient state
   window._nutrirPendingData=null;
   window._nutrirPendingKey=null;
   window._nutrirCurrentPeriodos=null;
-  // Feedback and navigate
   showNotif(`✅ ${_formatPeriodKey(periodoKey)} ${overwrite?'actualizado':'agregado'} al histórico. Histórico: ${Object.keys(periodos).length} período(s).`,'success',6000);
   if(typeof showView==='function'){
     const dashBtn=document.querySelector('.nav button[onclick*="dashboardView"]');
@@ -6349,6 +6385,73 @@ window._nutrirConfirmPeriod=_nutrirConfirmPeriod;
 window._nutrirCheckAndSave=_nutrirCheckAndSave;
 window._nutrirDupReplace=_nutrirDupReplace;
 window._nutrirSave=_nutrirSave;
+window._nutrirApplyPeriodos=_nutrirApplyPeriodos;
+
+/* ── PARTE 3: Administrador de períodos ──────────────────────── */
+function _renderPeriodManager(){
+  const cont=document.getElementById('nutrirPeriodList');
+  if(!cont) return;
+  const ps=window._nutrirLoadedPeriodos||{};
+  const keys=Object.keys(ps).sort();
+  if(!keys.length){ cont.style.display='none'; return; }
+  const fmtM=n=>'$'+Math.round(Number(n)||0).toLocaleString('es-MX');
+  cont.style.display='block';
+  cont.innerHTML=`<div style="border-top:1px solid rgba(167,139,250,.2);padding-top:12px;margin-top:4px;">
+    <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Períodos cargados (${keys.length})</div>
+    ${keys.map(k=>{
+      const v=ps[k];
+      const lbl=_formatPeriodKey(k);
+      const safeK=k.replace(/'/g,"\\'");
+      return `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 10px;border-radius:9px;background:var(--card2);margin-bottom:4px;border:1px solid var(--border2);">
+        <div>
+          <span style="font-size:13px;font-weight:700;color:var(--text);">${lbl}</span>
+          <span style="font-size:12px;color:var(--muted);margin-left:8px;">ventas ${fmtM(v.ventas)}</span>
+        </div>
+        <button onclick="_confirmDeletePeriodo('${safeK}')" title="Borrar ${lbl}" style="background:none;border:none;color:var(--muted);font-size:15px;cursor:pointer;padding:2px 6px;border-radius:6px;line-height:1;transition:color .15s;" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--muted)'">🗑️</button>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+function _confirmDeletePeriodo(key){
+  const lbl=_formatPeriodKey(key);
+  if(!confirm(`¿Borrar ${lbl}?\n\nEsto eliminará los datos de ese período del histórico. No se puede deshacer.`)) return;
+  _deletePeriodo(key);
+}
+
+async function _deletePeriodo(key){
+  const _eid=_sbEmpresaId||document.getElementById('sbEmpresaSelect')?.value;
+  if(!window._sb||!window._sbUser||!_eid){
+    showNotif('❌ Sin conexión a Supabase','error'); return;
+  }
+  const {data:cur}=await window._sb.from('empresas').select('data').eq('id',_eid).maybeSingle();
+  const periodos={...((cur?.data?.periodos)||{})};
+  delete periodos[key];
+  const remaining=Object.keys(periodos).length;
+  const lbl=_formatPeriodKey(key);
+  if(!remaining){
+    // Sin períodos restantes → limpiar estado (mismo efecto que limpiarSistema, sin confirm)
+    if(typeof window.sbLimpiarDatos==='function') await window.sbLimpiarDatos();
+    window._nutrirLoadedPeriodos={};
+    window._obbioCalc=null; window._obbioHistorico=null;
+    window._obbioMonthlyByYear=null; window._pendingExcelData=null;
+    window._obbioClienteMap=null; window._obbioRegionMap=null;
+    ['ii_ventas','ii_cogs','ii_gadmin','ii_gventas','ii_gfin','ii_dep',
+     'ii_caja','ii_cxc','ii_inventario','ii_activo_fijo','ii_pasivo_cp',
+     'ii_pasivo_lp','ii_capital'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    ['dash-clear-btn','topbar-clear-btn','topbar-save-btn'].forEach(id=>{const b=document.getElementById(id);if(b)b.style.display='none';});
+    if(typeof uwShow==='function') uwShow('uw0');
+    showNotif(`✅ ${lbl} eliminado. Sin períodos activos.`,'success',5000);
+    return;
+  }
+  // Recalcular con los períodos restantes
+  _nutrirApplyPeriodos(periodos);
+  showNotif(`✅ ${lbl} eliminado. Quedan ${remaining} período(s).`,'success',5000);
+}
+
+window._renderPeriodManager=_renderPeriodManager;
+window._confirmDeletePeriodo=_confirmDeletePeriodo;
+window._deletePeriodo=_deletePeriodo;
 
 function _showAiConfirm(){
   const d=_pendingExcelData;
@@ -12032,6 +12135,11 @@ function sbApplyEmpresaData(d){
   if(!d||!Object.keys(d).length) return;
   if(typeof applyData==='function')    applyData(d);
   if(typeof populateForm==='function') populateForm(d);
+  // Restaurar períodos cargados (flujo Nutrir) y renderizar administrador
+  if(d.periodos&&Object.keys(d.periodos).length){
+    window._nutrirLoadedPeriodos=d.periodos;
+    if(typeof _renderPeriodManager==='function') _renderPeriodManager();
+  }
   const calc=d._calc;
   if(calc){
     window._obbioCalc=calc;
