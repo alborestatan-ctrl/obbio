@@ -1208,8 +1208,8 @@ th[data-tip]{cursor:default;}
       <span class="card-badge success" id="mainChartYoyBadge" style="display:none;"></span>
     </div>
     <div class="chart-legend">
-      <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#22C55E;"></div>Ingresos (MXN M)</div>
-      <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#10B981;"></div>EBITDA (MXN M)</div>
+      <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#22C55E;"></div><span id="mainChartLegIng">Ingresos (MXN M)</span></div>
+      <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#10B981;"></div><span id="mainChartLegEbitda">EBITDA (MXN M)</span></div>
     </div>
     <div id="insight-mainChart" class="chart-insight"></div>
     <div class="chart-container">
@@ -1235,7 +1235,7 @@ th[data-tip]{cursor:default;}
     <div class="card">
       <div class="card-header">
         <div class="card-title">Desempeño Regional</div>
-        <span class="card-badge">Ingresos MXN M</span>
+        <span class="card-badge" id="mainChartBadgeIng">Ingresos MXN M</span>
       </div>
       <p id="regChartDesc" style="font-size:11.5px;color:var(--muted);margin:-4px 0 10px;">Compara el ingreso generado por zona geográfica o sucursal. Detecta dónde concentrar recursos comerciales.</p>
       <div class="chart-container small">
@@ -2119,7 +2119,7 @@ th[data-tip]{cursor:default;}
       <div class="fin-kpi"><div class="fin-kpi-title">Flujo Libre (FCF)</div><div class="fin-kpi-value" id="projCash">—</div></div>
       <div class="fin-kpi"><div class="fin-kpi-title">Enterprise Value</div><div class="fin-kpi-value" id="enterpriseValue" style="color:var(--purple)">—</div></div>
       <div class="fin-kpi"><div class="fin-kpi-title">Intereses anuales</div><div class="fin-kpi-value" id="projIntereses">—</div></div>
-      <div class="fin-kpi"><div class="fin-kpi-title">ISR Estimado</div><div class="fin-kpi-value" id="projISR" style="color:var(--warning)">—</div></div>
+      <div class="fin-kpi"><div class="fin-kpi-title" id="scnIsrTitle">ISR Estimado</div><div class="fin-kpi-value" id="projISR" style="color:var(--warning)">—</div></div>
       <div class="fin-kpi"><div class="fin-kpi-title">Margen Neto</div><div class="fin-kpi-value" id="projMargenNeto">—</div></div>
     </div>
     <!-- ESCENARIOS RESUMEN -->
@@ -2463,7 +2463,7 @@ Mapa Estratégico de Impacto
 
     <div class="kpi-card accent-blue">
         <div class="kpi-top">
-            <div class="kpi-label">ISR Estimado</div>
+            <div class="kpi-label" id="taxKpiIsrLbl">ISR Estimado</div>
             <div class="kpi-icon blue">💰</div>
         </div>
 
@@ -2537,7 +2537,7 @@ Mapa Estratégico de Impacto
             </tr>
 
             <tr>
-                <td>Pago Provisional ISR</td>
+                <td id="taxCalISR">Pago Provisional ISR</td>
                 <td>17 Mayo</td>
                 <td style="color:var(--success);">
                     Presentado
@@ -3925,7 +3925,7 @@ background:#10B981;
     <div id="uwTab_fiscal" class="uw-card uw-tab-panel" style="display:none;">
       <div class="uw-optional-note">
         Llena el IVA mensual para ver tu posición fiscal y el neto a pagar por período.<br>
-        IVA trasladado = el que cobras a tus clientes (16% de tus ventas). IVA acreditable = el que pagaste a proveedores (puedes descontarlo).
+        <span id="uwFiscalHint">IVA trasladado = el que cobras a tus clientes (16% de tus ventas). IVA acreditable = el que pagaste a proveedores (puedes descontarlo).</span>
       </div>
       <div class="uw-tbl-wrap">
         <table class="uw-tbl" id="tbl_manual_fiscal">
@@ -4264,7 +4264,7 @@ function updateModel(){
   setTxt('multValue',   multVal+'x');
 
   // KPIs
-  const fmtM=n=>'$'+Math.abs(n).toFixed(1)+'M';
+  const fmtM=n=>(window._currSym||'$')+Math.abs(n).toFixed(1)+'M';
   setTxt('projSales',    fmtM(sales));
   setTxt('projEbitda',   fmtM(ebitdaAmt));
   setTxt('projUtil',     fmtM(utilNeta));
@@ -4276,14 +4276,15 @@ function updateModel(){
   const _pais=(document.getElementById('ii_pais')||{}).value||'MX';
   const _ft=FISCAL_TERMS[_pais]||FISCAL_TERMS.MX;
   const elIsrLbl=document.getElementById('modelIsrLabel');
-  if(elIsrLbl) elIsrLbl.textContent='🏛️ Tasa '+(_pais==='ES'?'IS (Imp. Sociedades)':'ISR');
+  if(elIsrLbl) elIsrLbl.textContent='🏛️ Tasa '+_ft.impuesto;
   const projISRTitle=document.querySelector('#projISR')?.closest('.fin-kpi')?.querySelector('.fin-kpi-title');
   if(projISRTitle) projISRTitle.textContent=_ft.impuesto+' Estimado';
 
   // Escenarios
-  setTxt('sc_opt_val',  '$'+(baseSales*1.2).toFixed(1)+'M');
-  setTxt('sc_base_val', '$'+baseSales.toFixed(1)+'M');
-  setTxt('sc_pes_val',  '$'+(baseSales*0.9).toFixed(1)+'M');
+  const _sym=window._currSym||'$';
+  setTxt('sc_opt_val',  _sym+(baseSales*1.2).toFixed(1)+'M');
+  setTxt('sc_base_val', _sym+baseSales.toFixed(1)+'M');
+  setTxt('sc_pes_val',  _sym+(baseSales*0.9).toFixed(1)+'M');
 
   // Tabla 5 años
   const baseYear = parseInt((document.getElementById('ii_anio')||{value:'2024'}).value)||2024;
@@ -4303,7 +4304,7 @@ function updateModel(){
       <tr style="border-bottom:${ri<tRows.length-1?'1px solid var(--border2)':'none'};transition:.1s;cursor:default;"
         onmouseover="this.style.background='rgba(255,255,255,.02)'" onmouseout="this.style.background=''">
         <td style="padding:11px 14px;font-weight:${r.bold?'700':'500'};color:${r.color||'var(--text)'};">${r.lbl}</td>
-        ${r.vals.map(v=>`<td style="padding:11px 14px;text-align:right;font-weight:${r.bold?'700':'500'};font-variant-numeric:tabular-nums;color:${r.color||'var(--text)'};">${r.isPct?v.toFixed(1)+'%':'$'+v.toFixed(1)+'M'}</td>`).join('')}
+        ${r.vals.map(v=>`<td style="padding:11px 14px;text-align:right;font-weight:${r.bold?'700':'500'};font-variant-numeric:tabular-nums;color:${r.color||'var(--text)'};">${r.isPct?v.toFixed(1)+'%':(window._currSym||'$')+v.toFixed(1)+'M'}</td>`).join('')}
       </tr>`).join('');
   }
 
@@ -4321,8 +4322,8 @@ function updateModel(){
   window._modelResumenTimer=setTimeout(()=>{
     if(_rc&&_rc.ventas){
       _obbioResumen('Modelo Financiero',[
-        {label:'Ventas actuales',value:'$'+baseSales.toFixed(1)+'M'},
-        {label:'EBITDA actual',value:_rc.ebitda!=null?'$'+(_rc.ebitda/1e6).toFixed(1)+'M':null},
+        {label:'Ventas actuales',value:(window._currSym||'$')+baseSales.toFixed(1)+'M'},
+        {label:'EBITDA actual',value:_rc.ebitda!=null?(window._currSym||'$')+(_rc.ebitda/1e6).toFixed(1)+'M':null},
         {label:'Crecimiento simulado',value:(gRate>=0?'+':'')+gRate+'%'},
         {label:'Margen EBITDA objetivo',value:eMarg+'%'},
       ],'resumen-modelView');
@@ -4417,7 +4418,7 @@ updateModel();
       },
       scales:{
         x:baseOpts.scales.x,
-        y:{...baseOpts.scales.y, ticks:{...baseOpts.scales.y.ticks, callback:v=>'$'+v+'M'}}
+        y:{...baseOpts.scales.y, ticks:{...baseOpts.scales.y.ticks, callback:v=>(window._currSym||'$')+v+'M'}}
       }
     }
   });
@@ -4434,7 +4435,7 @@ function updateFinancialCenter(){
   const ids=['fcSales','fcEbitda','fcProfit','fcCash'];
   if(!r||!r.ventas){ ids.forEach(id=>{const e=document.getElementById(id);if(e)e.innerHTML='—';}); return; }
   const div=period.value==='monthly'?12:period.value==='quarterly'?4:1;
-  const fmt=v=>{const m=v/div;return m>=1e6?'$'+(m/1e6).toFixed(1)+'M':m>=1e3?'$'+(m/1e3).toFixed(0)+'K':'$'+Math.round(m);};
+  const fmt=v=>{const s=window._currSym||'$';const m=v/div;return m>=1e6?s+(m/1e6).toFixed(1)+'M':m>=1e3?s+(m/1e3).toFixed(0)+'K':s+Math.round(m);};
   [r.ventas,r.ebitda,r.utilNeta,r.flujoNeto].forEach((v,i)=>{const e=document.getElementById(ids[i]);if(e)e.innerHTML=fmt(v);});
 }
 period.addEventListener('change',updateFinancialCenter);
@@ -4609,15 +4610,23 @@ const num = id => parseFloat(($( id)||{}).value||0)||0;
 
 const fmt = (n, dec=1) => {
   if(n===null||n===undefined||isNaN(n)) return '—';
-  const s = n<0?'-':'';
-  const abs = Math.abs(n);
-  if(abs>=1e9) return s+'$'+(abs/1e9).toFixed(dec)+'B';
-  if(abs>=1e6) return s+'$'+(abs/1e6).toFixed(dec)+'M';
-  if(abs>=1e3) return s+'$'+(abs/1e3).toFixed(dec)+'K';
-  return s+'$'+abs.toFixed(0);
+  const s = n<0?'-':''; const abs = Math.abs(n);
+  const sym = window._currSym||'$';
+  if(abs>=1e9) return s+sym+(abs/1e9).toFixed(dec)+'B';
+  if(abs>=1e6) return s+sym+(abs/1e6).toFixed(dec)+'M';
+  if(abs>=1e3) return s+sym+(abs/1e3).toFixed(dec)+'K';
+  return s+sym+abs.toFixed(0);
 };
 const fmtPct = n => (n==null||isNaN(n))?'—':n.toFixed(1)+'%';
 const fmtX   = n => (n==null||!isFinite(n))?'—':n.toFixed(2)+'x';
+
+/* ── Formateador monetario global — usa siempre el símbolo y locale del país activo ── */
+function _fmtMoney(n){
+  if(n==null||isNaN(n)) return '—';
+  const s=n<0?'-':''; const abs=Math.abs(Math.round(n||0));
+  return s+(window._currSym||'$')+abs.toLocaleString(window._localeNum||'es-MX');
+}
+window._fmtMoney=_fmtMoney;
 
 /* ── Tabs de ingreso ── */
 function switchITab(n){
@@ -4759,7 +4768,7 @@ function collectManualOptional(){
 function uwLivePrev(){
   try{
     const r=calcFinanciero();
-    const fmtM=n=>(n==null||isNaN(n))?'—':'$'+Math.abs(Math.round(n)).toLocaleString('es-MX');
+    const fmtM=n=>_fmtMoney(n);
     const fmtP=n=>(n==null||isNaN(n))?'—':n.toFixed(1)+'%';
     const colM=n=>n>=0?'var(--success)':'var(--danger)';
     const colP=n=>n>=15?'var(--success)':n>=8?'var(--warning)':'var(--danger)';
@@ -4789,7 +4798,7 @@ function uwBuildReview(){
     {label:'Pasivo LP', id:'ii_pasivo_lp', money:true},
   ];
   const fmt=(v,money)=>{ if(!v) return '<span style="color:var(--muted2)">—</span>';
-    if(money){ const n=parseFloat(v); return isNaN(n)?v:'$'+Math.round(n).toLocaleString('es-MX'); }
+    if(money){ const n=parseFloat(v); return isNaN(n)?v:_fmtMoney(n); }
     return v; };
   const el=document.getElementById('uwReviewContent');
   if(!el) return;
@@ -4985,11 +4994,34 @@ function getERData(){
 }
 
 /* ── CÁLCULO FINANCIERO COMPLETO ── */
-/* ── Diccionario fiscal centralizado — fuente única de etiquetas por país ── */
-const FISCAL_TERMS = {
-  MX: { impuesto:'ISR', organismo:'SAT', iva:'IVA (16%)', tasaNominal:'30%', moneda:'MXN' },
-  ES: { impuesto:'IS',  organismo:'AEAT', iva:'IVA (21%)', tasaNominal:'25%', moneda:'EUR'  }
+/* ── LOCALE — fuente única de localización por país. Toda la UI lee de aquí. ── */
+const LOCALE = {
+  MX: {
+    pais:'México',       moneda:'MXN',  simbolo:'$',  localeNum:'es-MX',
+    impuestoUtilidad:'ISR',  tasaImpuesto:30,
+    impuestoConsumo:'IVA',   tasaConsumo:16,
+    autoridad:'SAT',
+    retencion:'Retención ISR',
+    repartoEmpleados:'PTU',
+    marcoNormativo:'LISR · LIVA · CFF',
+    benchmarkAtribucion:'Estimaciones internas del sistema · ref. orientativa (PyME México)',
+    // Impuesto: alias para motorFiscal compat
+    impuesto:'ISR', organismo:'SAT', iva:'IVA (16%)', tasaNominal:'30%',
+  },
+  ES: {
+    pais:'España',       moneda:'EUR',  simbolo:'€',  localeNum:'es-ES',
+    impuestoUtilidad:'IS',   tasaImpuesto:25,
+    impuestoConsumo:'IVA',   tasaConsumo:21,
+    autoridad:'AEAT',
+    retencion:'Retención IRPF',
+    repartoEmpleados:null,
+    marcoNormativo:'LIS · LIVA · LGT',
+    benchmarkAtribucion:'Estimaciones internas del sistema · ref. orientativa (UE/España)',
+    // Alias
+    impuesto:'IS', organismo:'AEAT', iva:'IVA (21%)', tasaNominal:'25%',
+  }
 };
+const FISCAL_TERMS = LOCALE; // alias backward-compat
 /* ── Motor fiscal por país (MX/ES) — fuente única, sin duplicación ── */
 function motorFiscal(pais, uai, ventas, cogs){
   if(pais==='ES'){
@@ -5234,7 +5266,7 @@ function generarBriefings(r){
     else                      B.push({tipo:'danger',titulo:'Alerta de liquidez',texto:`Razón corriente de ${r.razCorriente.toFixed(2)}x. Pasivos corrientes superan activos corrientes. Riesgo de iliquidez.`});
   }
 
-  if(r.debtEbitdaCritical)    B.push({tipo:'danger',titulo:'Deuda crítica — EBITDA negativo',texto:`Operación en pérdidas con deuda activa (${r.deudaTotal>0?'$'+Math.round(r.deudaTotal).toLocaleString('es-MX'):'—'}). Sin capacidad de pago: riesgo máximo.`});
+  if(r.debtEbitdaCritical)    B.push({tipo:'danger',titulo:'Deuda crítica — EBITDA negativo',texto:`Operación en pérdidas con deuda activa (${r.deudaTotal>0?_fmtMoney(r.deudaTotal):'—'}). Sin capacidad de pago: riesgo máximo.`});
   else if(r.debtEbitda!=null){
     if(r.debtEbitda<2)        B.push({tipo:'pos',titulo:'Deuda controlada',texto:`Ratio Deuda/EBITDA de ${r.debtEbitda.toFixed(1)}x. Apalancamiento saludable y manejable.`});
     else if(r.debtEbitda<4)   B.push({tipo:'warn',titulo:'Deuda moderada',texto:`Ratio Deuda/EBITDA de ${r.debtEbitda.toFixed(1)}x. Vigilar crecimiento de deuda respecto al EBITDA.`});
@@ -6011,7 +6043,7 @@ function parseExcelWorkbook(wb){
 function showExcelPreview(data,filename){
   const cont=$('uwXLContent');
   if(!cont) return;
-  const fmtM=n=>{ const v=parseFloat(n||0); return '$'+Math.round(v).toLocaleString('es-MX'); };
+  const fmtM=n=>_fmtMoney(parseFloat(n||0));
   const fmtPct=n=>{ const v=parseFloat(n||0); return v.toFixed(1)+'%'; };
   const pct=(a,b)=>b>0?((a/b)*100):0;
   const colGood='var(--success)',colWarn='var(--warning)',colDanger='var(--danger)';
@@ -6089,7 +6121,7 @@ function showExcelPreview(data,filename){
       {key:'gadmin',label:'Gastos Admin'},{key:'gventas',label:'Gastos Ventas'},
       {key:'gfin',label:'Gastos Financieros'},{key:'caja',label:'Caja y Bancos'},
     ];
-    const fmtVal=v=>{ const n=parseFloat(String(v).replace(/[$,]/g,'')); return isNaN(n)?v:'$'+Math.round(n).toLocaleString('es-MX'); };
+    const fmtVal=v=>{ const n=parseFloat(String(v).replace(/[$,€]/g,'')); return isNaN(n)?v:_fmtMoney(n); };
     const reqOk=REQUIRED.filter(f=>data[f.key]);
     const reqMiss=REQUIRED.filter(f=>!data[f.key]);
     const scoreColor=reqOk.length===REQUIRED.length?colGood:reqOk.length>=4?colWarn:colDanger;
@@ -6209,7 +6241,7 @@ function handleNutrirFiles(fileList){
 function _showNutrirPreview(data,filename){
   const cont=$('uwXLContent');
   if(!cont) return;
-  const fmtM=n=>'$'+Math.round(parseFloat(n||0)).toLocaleString('es-MX');
+  const fmtM=n=>_fmtMoney(parseFloat(n||0));
   const v=parseFloat(data.ventas||0),c=parseFloat(data.cogs||0);
   const detected=_detectPeriodKey(data);
   const periodoLabel=detected?_formatPeriodKey(detected):'Sin detectar';
@@ -6394,7 +6426,7 @@ function _renderPeriodManager(){
   const ps=window._nutrirLoadedPeriodos||{};
   const keys=Object.keys(ps).sort();
   if(!keys.length){ cont.style.display='none'; return; }
-  const fmtM=n=>'$'+Math.round(Number(n)||0).toLocaleString('es-MX');
+  const fmtM=n=>_fmtMoney(Number(n)||0);
   cont.style.display='block';
   cont.innerHTML=`<div style="border-top:1px solid rgba(167,139,250,.2);padding-top:12px;margin-top:4px;">
     <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Períodos cargados (${keys.length})</div>
@@ -6931,7 +6963,7 @@ function downloadTemplate(){
 <script>
 /* ==================== CFO INTELLIGENCE: Diagnóstico + Insights + PDF ==================== */
 (function(){
-  const _m = n => n==null||isNaN(n)?'—':(n<0?'-':'')+'$'+Math.abs(Math.round(n||0)).toLocaleString('es-MX');
+  const _m = n => window._fmtMoney?window._fmtMoney(n):(n==null||isNaN(n))?'—':(n<0?'-':'')+'$'+Math.abs(Math.round(n||0)).toLocaleString('es-MX');
   const _pp = n => n==null||isNaN(n)?'—':(Math.round((n||0)*10)/10).toFixed(1)+'%';
   const _x = n => (n==null||!isFinite(n)) ? '—' : (Math.round(n*10)/10).toFixed(1)+'x';
   const _esc = s => String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
@@ -6970,7 +7002,7 @@ function downloadTemplate(){
     if(r.margenEbitda>=BM.margenEbitda){
       F.push(it('Rentabilidad operativa sólida (EBITDA)', 'Tu margen EBITDA es '+_pp(r.margenEbitda)+', '+_pp(r.margenEbitda-BM.margenEbitda)+' por encima del referente del sector ('+_pp(BM.margenEbitda)+'). El EBITDA mide la ganancia que genera la operación antes de intereses, impuestos y depreciación: un margen alto indica un negocio eficiente convirtiendo ventas en utilidad operativa.'));
     } else if(r.margenEbitda>0){
-      RI.push(it('Margen EBITDA bajo el referente', 'Tu margen EBITDA es '+_pp(r.margenEbitda)+', debajo del referente ('+_pp(BM.margenEbitda)+'). Significa que de cada $100 vendidos la operación deja '+_pp(r.margenEbitda)+' antes de intereses e impuestos.'));
+      RI.push(it('Margen EBITDA bajo el referente', 'Tu margen EBITDA es '+_pp(r.margenEbitda)+', debajo del referente ('+_pp(BM.margenEbitda)+'). Significa que de cada '+(window._currSym||'$')+'100 vendidos la operación deja '+_pp(r.margenEbitda)+' antes de intereses e impuestos.'));
       RE.push(it('Mejorar el margen operativo', 'Llevar tu margen EBITDA al referente ('+_pp(BM.margenEbitda)+') subiría tu EBITDA de '+_m(r.ebitda)+' a '+_m(r.ventas*BM.margenEbitda/100)+'. Revisa precios, costo de ventas y gastos.'));
     } else {
       RI.push(it('EBITDA negativo', 'La operación pierde a nivel EBITDA ('+_m(r.ebitda)+'). Es la señal más urgente: el negocio no cubre sus costos operativos.'));
@@ -7004,7 +7036,7 @@ function downloadTemplate(){
     }
 
     // Margen bruto / estructura de costos (calculable sin balance)
-    if(r.margenBruto>=40) F.push(it('Margen bruto saludable','Tu margen bruto es '+_pp(r.margenBruto)+'. De cada $100 vendidos quedan '+_pp(r.margenBruto)+' tras cubrir el costo directo — por encima del referente de 40%.'));
+    if(r.margenBruto>=40) F.push(it('Margen bruto saludable','Tu margen bruto es '+_pp(r.margenBruto)+'. De cada '+(window._currSym||'$')+'100 vendidos quedan '+_pp(r.margenBruto)+' tras cubrir el costo directo — por encima del referente de 40%.'));
     else if(r.margenBruto<25&&r.margenBruto>0) RI.push(it('Margen bruto bajo','Margen bruto '+_pp(r.margenBruto)+': el costo de ventas consume '+_pp(100-r.margenBruto)+' de cada venta. Revisar precios o eficiencia en producción/compras.'));
     if(r.gadmin>0&&r.ventas>0&&r.gadmin/r.ventas*100>18) RI.push(it('Gastos administrativos elevados','G&A es '+_pp(r.gadmin/r.ventas*100)+' de las ventas ('+_m(r.gadmin)+'). Referente PyME ~12%. Reducir 5% añadiría '+_m(r.gadmin*0.05)+' al EBITDA.'));
     else if(r.gadmin>0&&r.ventas>0&&r.gadmin/r.ventas*100<10) F.push(it('Estructura administrativa eficiente','G&A es sólo '+_pp(r.gadmin/r.ventas*100)+' de ventas. Eficiencia que libera margen para crecimiento.'));
@@ -7057,7 +7089,7 @@ function downloadTemplate(){
       add('Comercial','baja','Capitalizar el crecimiento','Creces '+_pp(r.yoy)+'. Asegura que la capacidad operativa y el capital de trabajo acompañen.','Sostiene crecimiento','Planeación','Escalar con orden');
 
     const tasaEf = r.uai>0 ? (r.isr/r.uai*100) : 0;
-    const _fi = r.fiscal||{etiquetaImpuesto:'ISR',tasaImpuesto:.30,organismoFiscal:'SAT'};
+    const _fiL=LOCALE[r.pais||'MX']||LOCALE.MX; const _fi = r.fiscal||{etiquetaImpuesto:_fiL.impuestoUtilidad,tasaImpuesto:_fiL.tasaImpuesto/100,organismoFiscal:_fiL.autoridad};
     const _tasaStr = ((_fi.tasaImpuesto||.30)*100).toFixed(0)+'%';
     if(r.isr>0)
       add('Fiscal','media','Planeación fiscal',_fi.etiquetaImpuesto+' estimado: '+_m(r.isr)+' (tasa efectiva ~'+_pp(tasaEf)+'). Deducciones aplicables y depreciación pueden reducir la base gravable estimada. Tasa nominal: '+_tasaStr+'.','Deducción potencial','Antes del cierre fiscal','Menor base gravable estimada');
@@ -8130,7 +8162,7 @@ function mkChart(id,cfg){
           cfg.options.plugins.datalabels={
             display:(ctx)=>{ const v=ctx.dataset.data[ctx.dataIndex]; return v!=null&&Math.abs(v)>0; },
             anchor:'end',align:'top',offset:2,
-            formatter:(v)=>{ if(v==null||isNaN(v)) return ''; const a=Math.abs(+v); return '$'+(a>=1e6?(a/1e6).toFixed(1)+'M':a>=1000?(a/1e3).toFixed(0)+'K':a.toFixed(1)+'M'); },
+            formatter:(v)=>{ if(v==null||isNaN(v)) return ''; const a=Math.abs(+v); const _s=window._currSym||'$'; return _s+(a>=1e6?(a/1e6).toFixed(1)+'M':a>=1000?(a/1e3).toFixed(0)+'K':a.toFixed(1)+'M'); },
             color:'#A1A1AA',font:{weight:'600',size:9},clamp:false
           };
         }
@@ -8332,7 +8364,7 @@ function renderDashboardView(r){
     mkChart('mainChart',{type:'line',data:{labels,datasets:[
       {label:'Ingresos',data:r.ingMensual,borderColor:'#22C55E',borderWidth:2.5,tension:.4,pointRadius:4,pointBackgroundColor:'#22C55E',fill:true,backgroundColor:'rgba(34,197,94,.08)'},
       {label:'EBITDA',data:r.ebitdaMensual,borderColor:'#10B981',borderWidth:2.5,tension:.4,pointRadius:4,pointBackgroundColor:'#10B981',fill:true,backgroundColor:'rgba(16,185,129,.08)'}
-    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1E1E22',borderColor:'rgba(255,255,255,.1)',borderWidth:1,titleColor:'#fff',bodyColor:'#A1A1AA',padding:12,cornerRadius:10,callbacks:{label:ctx=>` ${ctx.dataset.label}: ${_m(ctx.parsed.y*1e6)}`}}},scales:{x:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',font:{size:12}}},y:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',font:{size:12},callback:v=>'$'+v+'M'}}}}});
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1E1E22',borderColor:'rgba(255,255,255,.1)',borderWidth:1,titleColor:'#fff',bodyColor:'#A1A1AA',padding:12,cornerRadius:10,callbacks:{label:ctx=>` ${ctx.dataset.label}: ${_m(ctx.parsed.y*1e6)}`}}},scales:{x:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',font:{size:12}}},y:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',font:{size:12},callback:v=>(window._currSym||'$')+v+'M'}}}}});
   } else if(_histD.length>=2){
     document.querySelectorAll('#dashboardView [data-nodata]').forEach(e=>e.remove());
     const _hL=_histD.map(h=>String(h.anio));
@@ -8342,7 +8374,7 @@ function renderDashboardView(r){
     mkChart('mainChart',{type:'bar',data:{labels:_hL,datasets:[
       {label:'Ingresos',data:_histD.map(h=>+(h.ventas/1e6).toFixed(2)),backgroundColor:'rgba(34,197,94,.6)',borderRadius:6},
       {label:'EBITDA',data:_histD.map(h=>+((h.ebitda||0)/1e6).toFixed(2)),backgroundColor:'rgba(16,185,129,.6)',borderRadius:6}
-    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{color:'#A1A1AA',boxWidth:10,font:{size:11}}},tooltip:{backgroundColor:'#1E1E22',callbacks:{label:ctx=>` ${ctx.dataset.label}: ${_m(ctx.parsed.y*1e6)}`}}},scales:{x:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',font:{size:12}}},y:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',font:{size:12},callback:v=>'$'+v+'M'}}}}});
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{color:'#A1A1AA',boxWidth:10,font:{size:11}}},tooltip:{backgroundColor:'#1E1E22',callbacks:{label:ctx=>` ${ctx.dataset.label}: ${_m(ctx.parsed.y*1e6)}`}}},scales:{x:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',font:{size:12}}},y:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',font:{size:12},callback:v=>(window._currSym||'$')+v+'M'}}}}});
   } else {
     ['spark1','spark2','spark3'].forEach(id=>{if(_charts[id]){try{_charts[id].destroy();}catch(e){}delete _charts[id];}});
     if(_charts['mainChart']){try{_charts['mainChart'].destroy();}catch(e){}delete _charts['mainChart'];}
@@ -8432,12 +8464,15 @@ function renderDashboardView(r){
   }
   // Barra de contexto País · Moneda — actualizar FX badge
   {
-    const _mon=r.moneda||'MXN';
-    const cf=document.getElementById('dashCtxFx');
-    if(cf&&_mon!=='MXN'&&_fxRates&&_fxRates[_mon]){
-      const inv=(1/_fxRates[_mon]).toFixed(2);
-      cf.textContent=`1 ${_mon} = $${inv} MXN`; cf.style.display='';
-    } else if(cf){ cf.style.display='none'; }
+    {
+      const _paisCx=(r.pais||'MX'); const _Lx=LOCALE[_paisCx]||LOCALE.MX;
+      const _mon=r.moneda||_Lx.moneda;
+      const cf=document.getElementById('dashCtxFx');
+      if(cf&&_mon!==_Lx.moneda&&_fxRates&&_fxRates[_mon]){
+        const inv=(1/_fxRates[_mon]).toFixed(2);
+        cf.textContent=`1 ${_mon} = ${_Lx.simbolo}${inv} ${_Lx.moneda}`; cf.style.display='';
+      } else if(cf){ cf.style.display='none'; }
+    }
   }
   // spark4: margen EBITDA — mensual si hay datos, anual si hay historico, vacío si no
   if(_gran==='mensual'){
@@ -8532,7 +8567,7 @@ function renderDashboardView(r){
     else if(_mHasDataReg) _regDescEl.textContent='Evolución de tus ingresos mes a mes durante el año. Identifica los meses de mayor y menor rendimiento.';
     else _regDescEl.textContent='Tu Excel no tiene datos de sucursales. Se muestra la tendencia anual de ingresos. Agrega una columna de sucursal/región para ver el análisis geográfico.';
   }
-  mkChart('regionChart',{type:'bar',data:{labels:_regLabels,datasets:[{data:_regVals,backgroundColor:_regColors.slice(0,_regLabels.length),borderColor:'transparent',borderRadius:8,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1E1E22',callbacks:{label:ctx=>` ${ctx.label}: ${_m(ctx.parsed.y*1e6)}`}}},scales:{x:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',font:{size:10},maxRotation:30}},y:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',callback:v=>'$'+v+'M'}}}}});
+  mkChart('regionChart',{type:'bar',data:{labels:_regLabels,datasets:[{data:_regVals,backgroundColor:_regColors.slice(0,_regLabels.length),borderColor:'transparent',borderRadius:8,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1E1E22',callbacks:{label:ctx=>` ${ctx.label}: ${_m(ctx.parsed.y*1e6)}`}}},scales:{x:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',font:{size:10},maxRotation:30}},y:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',callback:v=>(window._currSym||'$')+v+'M'}}}}});
   // paretoChart — clientes reales si existen, sino estructura de costos
   const clienteMap=r.clienteMap||window._obbioClienteMap||null;
   const ptitle=document.getElementById('paretoTitle');
@@ -8549,7 +8584,7 @@ function renderDashboardView(r){
     if(pbadge){ pbadge.textContent='Top cliente: '+topPct; pbadge.className='card-badge '+(entries[0][1]/total>0.3?'warning':'success'); }
     if(pleg1) pleg1.textContent='Ingreso por cliente ($M)';
     if(pleg80) pleg80.style.display='';
-    mkChart('paretoChart',{type:'bar',data:{labels:entries.map(e=>e[0].length>14?e[0].slice(0,13)+'…':e[0]),datasets:[{type:'bar',label:'Ingreso ($M)',data:vals,backgroundColor:'#22C55ECC',borderRadius:8,yAxisID:'y'},{type:'line',label:'Acumulado',data:cumPct,borderColor:'#F5A623',borderWidth:2.5,pointRadius:5,pointBackgroundColor:'#F5A623',tension:.3,fill:false,yAxisID:'y2'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1E1E22',callbacks:{label:ctx=>ctx.dataset.label==='Acumulado'?` Acum: ${ctx.parsed.y}%`:` ${_m(ctx.parsed.y*1e6)}`}}},scales:{x:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',font:{size:10},maxRotation:30}},y:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',callback:v=>'$'+v+'M'},position:'left'},y2:{grid:{display:false},ticks:{color:'#F5A623',callback:v=>v+'%'},position:'right',min:0,max:100}}}});
+    mkChart('paretoChart',{type:'bar',data:{labels:entries.map(e=>e[0].length>14?e[0].slice(0,13)+'…':e[0]),datasets:[{type:'bar',label:'Ingreso ($M)',data:vals,backgroundColor:'#22C55ECC',borderRadius:8,yAxisID:'y'},{type:'line',label:'Acumulado',data:cumPct,borderColor:'#F5A623',borderWidth:2.5,pointRadius:5,pointBackgroundColor:'#F5A623',tension:.3,fill:false,yAxisID:'y2'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1E1E22',callbacks:{label:ctx=>ctx.dataset.label==='Acumulado'?` Acum: ${ctx.parsed.y}%`:` ${_m(ctx.parsed.y*1e6)}`}}},scales:{x:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',font:{size:10},maxRotation:30}},y:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',callback:v=>(window._currSym||'$')+v+'M'},position:'left'},y2:{grid:{display:false},ticks:{color:'#F5A623',callback:v=>v+'%'},position:'right',min:0,max:100}}}});
   } else {
     const costV=[r.cogs,r.gadmin,r.gventas,r.gfin].map(v=>+(v/1e6).toFixed(2));
     const totC=costV.reduce((a,b)=>a+b,0)||1; let cumC=0;
@@ -8558,7 +8593,7 @@ function renderDashboardView(r){
     if(pbadge){ pbadge.textContent='COGS+Gastos'; pbadge.className='card-badge'; }
     if(pleg1) pleg1.textContent='Costo ($M)';
     if(pleg80) pleg80.style.display='none';
-    mkChart('paretoChart',{type:'bar',data:{labels:['COGS','G.Admin','G.Ventas','G.Fin'],datasets:[{type:'bar',label:'Costo ($M)',data:costV,backgroundColor:'#22C55ECC',borderRadius:8,yAxisID:'y'},{type:'line',label:'Acumulado',data:cumPct,borderColor:'#F5A623',borderWidth:2.5,pointRadius:5,pointBackgroundColor:'#F5A623',tension:.3,fill:false,yAxisID:'y2'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1E1E22'}},scales:{x:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA'}},y:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',callback:v=>'$'+v+'M'},position:'left'},y2:{grid:{display:false},ticks:{color:'#F5A623',callback:v=>v+'%'},position:'right',min:0,max:100}}}});
+    mkChart('paretoChart',{type:'bar',data:{labels:['COGS','G.Admin','G.Ventas','G.Fin'],datasets:[{type:'bar',label:'Costo ($M)',data:costV,backgroundColor:'#22C55ECC',borderRadius:8,yAxisID:'y'},{type:'line',label:'Acumulado',data:cumPct,borderColor:'#F5A623',borderWidth:2.5,pointRadius:5,pointBackgroundColor:'#F5A623',tension:.3,fill:false,yAxisID:'y2'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1E1E22'}},scales:{x:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA'}},y:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',callback:v=>(window._currSym||'$')+v+'M'},position:'left'},y2:{grid:{display:false},ticks:{color:'#F5A623',callback:v=>v+'%'},position:'right',min:0,max:100}}}});
   }
 }
 
@@ -8709,7 +8744,7 @@ function renderAnalyticsView(r){
         </div>
         <div><div class="chart-container small"><canvas id="analyticsChart"></canvas></div></div>
       </div></div>`;
-    mkChart('analyticsChart',{type:'bar',data:{labels:suc.map(s=>s.nombre),datasets:[{label:'Ingresos',data:suc.map(s=>+(s.ventas/1e6).toFixed(2)),backgroundColor:COLORS.slice(0,suc.length),borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1E1E22',callbacks:{label:c=>` ${_m(c.parsed.y*1e6)}`}}},scales:{x:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#A1A1AA'}},y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#A1A1AA',callback:v=>'$'+v+'M'}}}}});
+    mkChart('analyticsChart',{type:'bar',data:{labels:suc.map(s=>s.nombre),datasets:[{label:'Ingresos',data:suc.map(s=>+(s.ventas/1e6).toFixed(2)),backgroundColor:COLORS.slice(0,suc.length),borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1E1E22',callbacks:{label:c=>` ${_m(c.parsed.y*1e6)}`}}},scales:{x:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#A1A1AA'}},y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#A1A1AA',callback:v=>(window._currSym||'$')+v+'M'}}}}});
   }
 
   // ── BLOQUE REGIONES (desde hoja Ventas) ──
@@ -8781,7 +8816,7 @@ function renderAnalyticsView(r){
       </div></div>`;
     const top10=entries.slice(0,12);
     const cumPct10=[];let c2=0; top10.forEach(([,v])=>{ c2+=v; cumPct10.push(+((c2/totalCli)*100).toFixed(1)); });
-    setTimeout(()=>mkChart('clienteParetoChart',{type:'bar',data:{labels:top10.map(e=>e[0].split(' ')[0]),datasets:[{type:'bar',label:'Ingresos ($M)',data:top10.map(e=>+(e[1]/1e6).toFixed(2)),backgroundColor:'#22C55ECC',borderRadius:6,yAxisID:'y'},{type:'line',label:'Acumulado',data:cumPct10,borderColor:'#F5A623',borderWidth:2.5,pointRadius:4,pointBackgroundColor:'#F5A623',tension:.3,fill:false,yAxisID:'y2'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1E1E22'}},scales:{x:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#A1A1AA',font:{size:10},maxRotation:30}},y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#A1A1AA',callback:v=>'$'+v+'M'},position:'left'},y2:{grid:{display:false},ticks:{color:'#F5A623',callback:v=>v+'%'},position:'right',min:0,max:100}}}}),100);
+    setTimeout(()=>mkChart('clienteParetoChart',{type:'bar',data:{labels:top10.map(e=>e[0].split(' ')[0]),datasets:[{type:'bar',label:'Ingresos ($M)',data:top10.map(e=>+(e[1]/1e6).toFixed(2)),backgroundColor:'#22C55ECC',borderRadius:6,yAxisID:'y'},{type:'line',label:'Acumulado',data:cumPct10,borderColor:'#F5A623',borderWidth:2.5,pointRadius:4,pointBackgroundColor:'#F5A623',tension:.3,fill:false,yAxisID:'y2'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1E1E22'}},scales:{x:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#A1A1AA',font:{size:10},maxRotation:30}},y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#A1A1AA',callback:v=>(window._currSym||'$')+v+'M'},position:'left'},y2:{grid:{display:false},ticks:{color:'#F5A623',callback:v=>v+'%'},position:'right',min:0,max:100}}}}),100);
   }
 
   // ── Sin entidades: estado vacío accionable ──
@@ -8847,7 +8882,7 @@ function renderAnalyticsView(r){
 
   body.innerHTML=html;
   // Inyectar charts que usan setTimeout después del innerHTML
-  if(hasSuc) setTimeout(()=>mkChart('analyticsChart',{type:'bar',data:{labels:suc.map(s=>s.nombre),datasets:[{label:'Ingresos',data:suc.map(s=>+(s.ventas/1e6).toFixed(2)),backgroundColor:COLORS.slice(0,suc.length),borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1E1E22',callbacks:{label:c=>` ${_m(c.parsed.y*1e6)}`}}},scales:{x:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#A1A1AA'}},y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#A1A1AA',callback:v=>'$'+v+'M'}}}}}),30);
+  if(hasSuc) setTimeout(()=>mkChart('analyticsChart',{type:'bar',data:{labels:suc.map(s=>s.nombre),datasets:[{label:'Ingresos',data:suc.map(s=>+(s.ventas/1e6).toFixed(2)),backgroundColor:COLORS.slice(0,suc.length),borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1E1E22',callbacks:{label:c=>` ${_m(c.parsed.y*1e6)}`}}},scales:{x:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#A1A1AA'}},y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#A1A1AA',callback:v=>(window._currSym||'$')+v+'M'}}}}}),30);
   // Sin entidades → estado vacío accionable ya renderizado arriba (early return)
 }
 
@@ -8893,7 +8928,7 @@ function renderCashflowView(r){
   if(_cfGran==='mensual'){
     const labels=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
     if(_cfWrap) _cfWrap.querySelectorAll('[data-nodata]').forEach(n=>n.remove());
-    mkChart('cashFlowChart',{type:'bar',data:{labels,datasets:[{label:'Flujo Neto',data:r.cfMensual,backgroundColor:r.cfMensual.map(v=>v>=0?'#14B8A6':'#EF4444'),borderRadius:8,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},datalabels:{display:false},tooltip:{backgroundColor:'#1E1E22',callbacks:{label:ctx=>` Flujo: ${_m(ctx.parsed.y*1e6)}`}}},scales:{x:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',font:{size:12}}},y:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',callback:v=>'$'+v+'M'}}}}});
+    mkChart('cashFlowChart',{type:'bar',data:{labels,datasets:[{label:'Flujo Neto',data:r.cfMensual,backgroundColor:r.cfMensual.map(v=>v>=0?'#14B8A6':'#EF4444'),borderRadius:8,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},datalabels:{display:false},tooltip:{backgroundColor:'#1E1E22',callbacks:{label:ctx=>` Flujo: ${_m(ctx.parsed.y*1e6)}`}}},scales:{x:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',font:{size:12}}},y:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',callback:v=>(window._currSym||'$')+v+'M'}}}}});
   } else if(r.flujoOp||r.flujoInv||r.flujoFin){
     // Sin datos mensuales pero hay cifras anuales — mostrar desglose anual
     if(_cfWrap) _cfWrap.querySelectorAll('[data-nodata]').forEach(n=>n.remove());
@@ -9797,7 +9832,7 @@ function renderFinancialCenterView(r){
           <div>📊 <strong style="color:var(--muted);">Crecimiento YoY</strong> ±5 pts (umbral 5 / 15%)</div>
           <div>🎯 <strong style="color:var(--muted);">Concentración clientes</strong> −8 pts si ≤2 clientes top</div>
         </div>
-        <div style="margin-top:10px;font-size:11px;color:var(--muted2);border-top:1px solid var(--border2);padding-top:8px;">Inspirado en Altman Z-Score (1968) y benchmarks sectoriales INEGI / Banco de México. Score 80–100 = Óptimo · 60–79 = Aceptable · &lt;60 = Atención urgente.</div>
+        <div style="margin-top:10px;font-size:11px;color:var(--muted2);border-top:1px solid var(--border2);padding-top:8px;">Inspirado en Altman Z-Score (1968). Benchmarks: ${(LOCALE[r.pais||'MX']||LOCALE.MX).benchmarkAtribucion}. Score 80–100 = Óptimo · 60–79 = Aceptable · &lt;60 = Atención urgente.</div>
       </div>
     </div>
   </div>`;
@@ -9953,7 +9988,7 @@ function _applyForecast(r){
     tooltip:{backgroundColor:'#1E1E22',callbacks:{label:c=>` ${c.dataset.label}: ${_m(c.parsed.y*1e6)}`}}
   },scales:{
     x:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',font:{size:12}}},
-    y:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',callback:v=>'$'+v+'M'}}
+    y:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',callback:v=>(window._currSym||'$')+v+'M'}}
   }}});
 
   // ── Forecast mensual año 1 con estacionalidad ──
@@ -9982,7 +10017,7 @@ function _applyForecast(r){
       ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{color:'#A1A1AA',boxWidth:10,font:{size:11}}},datalabels:{display:false},
         tooltip:{backgroundColor:'#1E1E22',callbacks:{label:c=>` ${c.dataset.label}: ${_m(c.parsed.y*1e6)}`}}
       },scales:{x:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',font:{size:11}}},
-        y:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',callback:v=>'$'+v+'M'}}
+        y:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',callback:v=>(window._currSym||'$')+v+'M'}}
       }}});
       // Tabla mensual compacta
       const tbl=document.getElementById('fc-monthly-table');
@@ -10316,7 +10351,7 @@ function _metaEstimadosLine(r,plain){
   return '\nIMPORTANTE: los siguientes datos son ESTIMACIONES internas, no cifras exactas: '+items.join('; ')+'. Al mencionarlos, aclaralo y no los presentes como definitivos.';
 }
 function _buildCFOSystemPrompt(r){
-  const f=n=>{if(n==null||isNaN(n))return'—';const s=n<0?'-':'';const a=Math.abs(n);if(a>=1e9)return s+'$'+(a/1e9).toFixed(1)+'B';if(a>=1e6)return s+'$'+(a/1e6).toFixed(1)+'M';if(a>=1e3)return s+'$'+(a/1e3).toFixed(0)+'K';return s+'$'+a.toFixed(0);};
+  const f=n=>window._fmtMoney?window._fmtMoney(n):(n==null||isNaN(n))?'—':(n<0?'-':'')+'$'+Math.abs(n).toFixed(0);
   const p=n=>(n==null||isNaN(n))?'—':n.toFixed(1)+'%';
   const x=n=>(n==null||isNaN(n))?'—':n.toFixed(1)+'x';
   const d=n=>(n==null||isNaN(n))?'—':Math.round(n)+'d';
@@ -10334,7 +10369,7 @@ function _buildCFOSystemPrompt(r){
 Responde como asesor ejecutivo: conciso, directo, profesional. Máximo 4 oraciones por respuesta salvo que pidan más detalle.
 Usa SOLO los datos proporcionados. Nunca inventes cifras. Usa negritas para números clave.
 
-P&L: Ingresos ${f(r.ventas)}${r.yoy!=null?` (YoY ${r.yoy>0?'+':''}${r.yoy.toFixed(1)}%)`:''}| COGS ${f(r.cogs)}| MB ${f(r.utilBruta)} (${p(r.margenBruto)})| GAdmin ${f(r.gadmin)}| GVentas ${f(r.gventas)}| GFin ${f(r.gfin)}| EBITDA ${f(r.ebitda)} (${p(r.margenEbitda)})| UAI ${f(r.uai)}| ISR ${f(r.isr)}| Utilidad Neta ${f(r.utilNeta)} (${p(r.margenNeto)})
+P&L: Ingresos ${f(r.ventas)}${r.yoy!=null?` (YoY ${r.yoy>0?'+':''}${r.yoy.toFixed(1)}%)`:''}| COGS ${f(r.cogs)}| MB ${f(r.utilBruta)} (${p(r.margenBruto)})| GAdmin ${f(r.gadmin)}| GVentas ${f(r.gventas)}| GFin ${f(r.gfin)}| EBITDA ${f(r.ebitda)} (${p(r.margenEbitda)})| UAI ${f(r.uai)}| ${(LOCALE[r.pais||'MX']||LOCALE.MX).impuestoUtilidad} ${f(r.isr)}| Utilidad Neta ${f(r.utilNeta)} (${p(r.margenNeto)})
 Balance: Caja ${f(r.caja)}| CxC ${f(r.cxc)}| Inv ${f(r.inventario)}| ActivoFijo ${f(r.activoFijo)}| TotalActivos ${f(r.totalActivos)}| PasivoCP ${f(r.pasivoCp)}| PasivoLP ${f(r.pasivoLp)}| Capital ${f(r.capital)}
 Ratios: Score ${Math.round(r.score||0)}/100| Liquidez ${x(r.razCorriente)}| D/EBITDA ${x(r.debtEbitda)}| ROE ${p(r.roe)}| ROA ${p(r.roa)}| DSO ${d(r.diasCobro)}| DIO ${d(r.diasInv)}| DPO ${d(r.diasPago)}| CCC ${d(r.ccc)}| FlujoOp ${f(r.flujoOp)}| FlujoNeto ${f(r.flujoNeto)}
 Sucursales/Regiones: ${sucStr}
@@ -10397,7 +10432,7 @@ function buildFinancialProfile(r){
   p.crecimiento = r.yoy!=null?(r.yoy>15?'acelerado':r.yoy>5?'moderado':r.yoy>0?'lento':'negativo'):'sin_datos';
   // Fiscal
   p.pais = r.pais||'MX';
-  p.fiscalLabel = r.fiscal?r.fiscal.etiquetaImpuesto:(p.pais==='ES'?'IS 25%':'ISR');
+  p.fiscalLabel = r.fiscal?r.fiscal.etiquetaImpuesto:((LOCALE[p.pais]||LOCALE.MX).impuestoUtilidad);
   // Prioridades calculadas
   p.acciones=[];
   if(p.liquidez==='crítica') p.acciones.push({prioridad:1,area:'Liquidez',accion:`Razón corriente ${_x(r.razCorriente)} — déficit de activos circulantes. Acelerar cobranza y/o refinanciar pasivos CP.`,valor:_m(r.pasivoCp)});
@@ -10466,7 +10501,7 @@ function copilotRespond(q,r){
 
   /* ── CUÁNTO GANÉ / UTILIDAD NETA ── */
   if(has('cuanto gane','cuanto gano','que gane','que gano','gane en','gano en','utilidad neta','utilidad final','neta','ganancia neta','cuanto me quedo','que me quedo','me quedo')){
-    return `<strong>Ganaste ${_m(r.utilNeta)}</strong> de utilidad neta en ${r.anio||'el período'}.<br>De cada $100 que vendiste, ${_pp(r.margenNeto)} fue ganancia real.<br>${r.utilNeta>0?`Antes de impuestos: ${_m(r.uai)}, menos ISR de ${_m(r.isr)}.`:'La empresa registró pérdida neta. Revisar costos y gastos es urgente.'}`;
+    {const _impL=(LOCALE[r.pais||'MX']||LOCALE.MX).impuestoUtilidad;return `<strong>Ganaste ${_m(r.utilNeta)}</strong> de utilidad neta en ${r.anio||'el período'}.<br>De cada ${window._currSym||'$'}100 que vendiste, ${_pp(r.margenNeto)} fue ganancia real.<br>${r.utilNeta>0?`Antes de impuestos: ${_m(r.uai)}, menos ${_impL} de ${_m(r.isr)}.`:'La empresa registró pérdida neta. Revisar costos y gastos es urgente.'}`}
   }
 
   /* ── VENTAS / INGRESOS ── */
@@ -10519,7 +10554,7 @@ function copilotRespond(q,r){
 
   /* ── IMPUESTOS / FISCAL ── */
   if(has('isr','impuesto','fiscal','sat','iva','aeat','cuanto pago de impuestos','cuanto de iva','cuanto de isr')){
-    const fi=r.fiscal||{etiquetaImpuesto:'ISR',tasaImpuesto:.30,etiquetaIVA:'IVA',tasaIVA:.16,organismoFiscal:'SAT'};
+    const _fL2=LOCALE[r.pais||'MX']||LOCALE.MX; const fi=r.fiscal||{etiquetaImpuesto:_fL2.impuestoUtilidad,tasaImpuesto:_fL2.tasaImpuesto/100,etiquetaIVA:'IVA',tasaIVA:_fL2.tasaConsumo/100,organismoFiscal:_fL2.autoridad};
     return `<strong>${fi.etiquetaImpuesto}: ${_m(r.isr)}</strong> (${_pp(fi.tasaImpuesto*100)} sobre utilidad de ${_m(r.uai)})<br>${fi.etiquetaIVA} trasladado: ${_m(r.ivaTrasladado||r.ventas*fi.tasaIVA)} · Acreditable: ${_m(r.ivaAcreditable||r.cogs*fi.tasaIVA)} · <strong>Neto a pagar: ${_m(r.ivaNeto||(r.ventas-r.cogs)*fi.tasaIVA)}</strong>`;
   }
 
@@ -10547,7 +10582,7 @@ function copilotRespond(q,r){
 
   /* ── CAPITAL / PATRIMONIO ── */
   if(has('capital','patrimonio','equity','inversion de socios','cuanto invertimos','cuanto tienen los socios')){
-    return `<strong>Capital contable: ${_m(r.capital)}</strong><br>ROE (retorno para los socios): ${_pp(r.roe)} — por cada $100 invertidos, la empresa generó ${(r.roe||0).toFixed(1)} de utilidad.<br>${(r.roe||0)>15?'Excelente rendimiento para los socios.':(r.roe||0)>8?'Rendimiento aceptable, por encima de inversiones tradicionales.':'Por debajo del costo de capital típico (10–12%). Revisar rentabilidad.'}`;
+    return `<strong>Capital contable: ${_m(r.capital)}</strong><br>ROE (retorno para los socios): ${_pp(r.roe)} — por cada ${window._currSym||'$'}100 invertidos, la empresa generó ${(r.roe||0).toFixed(1)} de utilidad.<br>${(r.roe||0)>15?'Excelente rendimiento para los socios.':(r.roe||0)>8?'Rendimiento aceptable, por encima de inversiones tradicionales.':'Por debajo del costo de capital típico (10–12%). Revisar rentabilidad.'}`;
   }
 
   /* ── SALUDO ── */
@@ -10568,8 +10603,12 @@ window.copilotAsk=copilotAsk;
 window.copilotClear=copilotClear;
 
 function switchTaxPais(pais){
-  const sel=document.getElementById('ii_pais');
-  if(sel){ sel.value=pais; }
+  const L=LOCALE[pais]||LOCALE.MX;
+  const sel=document.getElementById('ii_pais'); if(sel) sel.value=pais;
+  const dp=document.getElementById('dashSelPais'); if(dp) dp.value=pais;
+  // Forzar moneda nativa del nuevo país
+  ['ii_moneda','dashSelMoneda'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=L.moneda; });
+  _updateIsrLabel(); // sincroniza moneda y símbolo
   if(typeof calcularYAplicar==='function') calcularYAplicar();
   else { const r=getCalc(); if(r){ r.pais=pais; r.fiscal=motorFiscal(pais,r.uai,r.ventas,r.cogs); window._obbioCalc=r; renderTaxView(r); } }
 }
@@ -10585,7 +10624,7 @@ window.calcularYMostrarPreview=calcularYMostrarPreview;
 
 function buildDataPreview(r){
   const body=document.getElementById('uwP_body'); if(!body) return;
-  const _m=n=>(n==null||isNaN(n)||n===0)?'—':'$'+Math.abs(Math.round(n)).toLocaleString('es-MX');
+  const _m=n=>(n==null||isNaN(n)||n===0)?'—':window._fmtMoney?window._fmtMoney(n):(n<0?'-':'')+'$'+Math.abs(Math.round(n)).toLocaleString('es-MX');
   const _pp=n=>(n==null||isNaN(n))?'—':(Math.round((n||0)*10)/10).toFixed(1)+'%';
   const _x=n=>(n==null||!isFinite(n))?'—':(Math.round(n*10)/10).toFixed(1)+'x';
   const fmt=n=>n>0?_m(n):'—';
@@ -10705,7 +10744,7 @@ function buildDataPreview(r){
       </div>
       <div class="dpv-company">
         <div class="dpv-company-name">${r.empresa||'Tu empresa'}</div>
-        <div class="dpv-company-sub">${r.anio||2024} · ${r.pais==='ES'?'España · IVA 21%':'México · IVA 16%'} · ${r.giro||'—'} · Score: <b style="color:${scoreColor};">${scoreLabel}</b></div>
+        <div class="dpv-company-sub">${r.anio||2024} · ${(LOCALE[r.pais||'MX']||LOCALE.MX).pais} · IVA ${(LOCALE[r.pais||'MX']||LOCALE.MX).tasaConsumo}% / ${(LOCALE[r.pais||'MX']||LOCALE.MX).impuestoUtilidad} ${(LOCALE[r.pais||'MX']||LOCALE.MX).tasaImpuesto}% · ${r.giro||'—'} · Score: <b style="color:${scoreColor};">${scoreLabel}</b></div>
         <div class="dpv-headline-kpis">
           <div class="dpv-hkpi"><div class="dpv-hkpi-v">${fmt(r.ventas)}</div><div class="dpv-hkpi-l">Ventas</div></div>
           <div class="dpv-hkpi"><div class="dpv-hkpi-v">${fmt(r.ebitda)}</div><div class="dpv-hkpi-l">EBITDA</div></div>
@@ -10803,13 +10842,12 @@ window.guardarCambios=guardarCambios;
 /* ─────────────────── Sincronización selectores dashboard ↔ formulario ─────────────────── */
 function _onDashCtxChange(){
   const dp=document.getElementById('dashSelPais');
-  const dm=document.getElementById('dashSelMoneda');
   const fp=document.getElementById('ii_pais');
-  const fm=document.getElementById('ii_moneda');
-  if(dp&&fp){ fp.value=dp.value; }
-  if(dm&&fm){ fm.value=dm.value; }
-  _updateIsrLabel();
-  _updateCurrencySymbols();
+  if(dp&&fp) fp.value=dp.value;
+  // Forzar moneda nativa según nuevo país (ignora lo que el usuario haya elegido en dashSelMoneda)
+  const L=LOCALE[(dp?.value)||'MX']||LOCALE.MX;
+  ['ii_moneda','dashSelMoneda'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=L.moneda; });
+  _updateIsrLabel(); // también llama a _updateCurrencySymbols internamente
   if(typeof calcularYAplicar==='function') calcularYAplicar();
 }
 
@@ -10841,22 +10879,39 @@ function fetchFXRate(){
 
 function _updateFxBadge(){
   const badge=document.getElementById('fxBadge'); if(!badge) return;
-  const moneda=(document.getElementById('ii_moneda')||{}).value||'MXN';
-  if(moneda==='MXN'){ badge.style.display='none'; return; }
+  const pais=(document.getElementById('ii_pais')||{}).value||'MX';
+  const L=LOCALE[pais]||LOCALE.MX;
+  const moneda=(document.getElementById('ii_moneda')||{}).value||L.moneda;
+  // Si la moneda es la nativa del país, no hay conversión que mostrar
+  if(moneda===L.moneda){ badge.style.display='none'; return; }
   const rate=_fxRates[moneda]; if(!rate){ badge.style.display='none'; return; }
   const inv=(1/rate).toFixed(2);
   badge.style.display='';
-  badge.textContent=`1 ${moneda} = $${inv} MXN`;
+  badge.textContent=`1 ${moneda} = ${L.simbolo}${inv} ${L.moneda}`;
+  // FX badge del dashboard (dashCtxFx) — misma lógica
+  const cf=document.getElementById('dashCtxFx');
+  if(cf){ cf.textContent=badge.textContent; cf.style.display=''; }
 }
 
 function _updateCurrencySymbols(){
-  const moneda=(document.getElementById('ii_moneda')||{}).value||'MXN';
-  const sym=moneda==='EUR'?'€':moneda==='USD'?'US$':'$';
-  window._currSym=sym;
-  document.querySelectorAll('.uw-currency').forEach(el=>{ el.textContent=sym; });
+  const pais=(document.getElementById('ii_pais')||{}).value||'MX';
+  const L=LOCALE[pais]||LOCALE.MX;
+  // Forzar moneda nativa del país en ambos selectores
+  ['ii_moneda','dashSelMoneda'].forEach(id=>{ const el=document.getElementById(id); if(el&&el.value!==L.moneda) el.value=L.moneda; });
+  window._currSym=L.simbolo;
+  window._localeNum=L.localeNum;
+  document.querySelectorAll('.uw-currency').forEach(el=>{ el.textContent=L.simbolo; });
+  // Actualizar etiquetas de leyenda de gráficas con la moneda activa
+  const mn=L.moneda;
+  const li=document.getElementById('mainChartLegIng'); if(li) li.textContent='Ingresos ('+mn+' M)';
+  const le=document.getElementById('mainChartLegEbitda'); if(le) le.textContent='EBITDA ('+mn+' M)';
+  const bi=document.getElementById('mainChartBadgeIng'); if(bi) bi.textContent='Ingresos '+mn+' M';
   _updateFxBadge();
   if(!_fxLastFetch) fetchFXRate();
-  // Re-render active view so all monetary values update
+  // Hint fiscal en wizard — tasa IVA dinámica
+  const fh=document.getElementById('uwFiscalHint');
+  if(fh) fh.textContent=`IVA ${pais==='ES'?'repercutido':'trasladado'} = el que cobras a tus clientes (${L.tasaConsumo}% de tus ventas). IVA ${pais==='ES'?'soportado':'acreditable'} = el que pagaste a proveedores (puedes descontarlo).`;
+  // Re-render para que todos los montos adopten el nuevo símbolo
   const calc=window._obbioCalc||(typeof getCalc==='function'&&getCalc());
   if(calc&&typeof renderAllViews==='function') renderAllViews(calc);
 }
@@ -10865,13 +10920,25 @@ function _updateCurrencySymbols(){
 setInterval(fetchFXRate, 600000);
 document.addEventListener('DOMContentLoaded',()=>{ fetchFXRate(); setTimeout(_updateCurrencySymbols, 200); });
 
-/* ─────────────────── ISR vs IS label (España) ─────────────────── */
+/* ─────────────────── ISR vs IS label + sincronización de moneda al cambiar país ─────────────────── */
 function _updateIsrLabel(){
   const pais=(document.getElementById('ii_pais')||{}).value||'MX';
+  const L=LOCALE[pais]||LOCALE.MX;
   const row=document.getElementById('modelIsrRow');
   if(row) row.style.display=pais==='ES'?'none':'';
-  const lbl=document.getElementById('modelIsrLabel'); if(!lbl) return;
-  lbl.textContent='🏛️ Tasa ISR';
+  const lbl=document.getElementById('modelIsrLabel');
+  if(lbl) lbl.textContent='🏛️ Tasa '+L.impuestoUtilidad;
+  // Scenario planner KPI title
+  const scnT=document.getElementById('scnIsrTitle');
+  if(scnT) scnT.textContent=L.impuestoUtilidad+' Estimado';
+  // Tax view static placeholder KPI label
+  const taxKpi=document.getElementById('taxKpiIsrLbl');
+  if(taxKpi) taxKpi.textContent=L.impuestoUtilidad+' Estimado';
+  // Tax view fiscal calendar row
+  const taxCal=document.getElementById('taxCalISR');
+  if(taxCal) taxCal.textContent=pais==='ES'?'Pago a cuenta IS':'Pago Provisional ISR';
+  // Sincronizar moneda al cambiar país
+  _updateCurrencySymbols();
 }
 document.addEventListener('DOMContentLoaded',_updateIsrLabel);
 
@@ -11039,12 +11106,16 @@ window.fetchBenchmark=async function(){
     // ── Fiscal ──
     'ISR Estimado':       'Impuesto Sobre la Renta estimado que deberás pagar al SAT sobre tu utilidad del período. Es un estimado basado en la tasa estándar del 30%.',
     'ISR':                'Impuesto Sobre la Renta estimado que deberás pagar al SAT sobre tu utilidad del período. Es un estimado basado en la tasa estándar del 30%.',
+    'IS Estimado':        'Impuesto de Sociedades estimado que deberás pagar a la AEAT sobre tu base imponible. Estimado basado en el tipo general del 25%.',
+    'IS':                 'Impuesto de Sociedades. Grava el beneficio neto de la sociedad al tipo general del 25%. Gestionado ante la AEAT.',
     'IVA por Enterar':    'Diferencia entre el IVA que cobraste a tus clientes y el que tú pagaste a tus proveedores. Ese saldo es lo que debes entregar al SAT.',
     'IVA Trasladado':     'El IVA que cobraste a tus clientes en tus ventas (16% en México). Este dinero no es tuyo — debes entregarlo al SAT.',
+    'IVA Repercutido':    'El IVA que repercutes a tus clientes en tus facturas (21% tipo general en España). Debes ingresarlo en la AEAT mediante el Modelo 303.',
+    'IVA Soportado':      'El IVA que pagaste en tus compras y gastos. Puedes deducirlo del IVA repercutido, reduciendo la cuota a ingresar en la AEAT.',
     'IVA Acreditable':    'El IVA que tú pagaste en tus compras y gastos. Puedes descontarlo del IVA que cobraste, reduciendo lo que entregas al SAT.',
-    'Carga Fiscal Total': 'El total de impuestos del período (ISR + IVA neto). Representa qué porcentaje de tus ingresos va destinado a obligaciones fiscales.',
-    'Cumplimiento Fiscal':'Indicador de qué tan al día estás con tus obligaciones ante el SAT. Verde = sin alertas visibles. Rojo = revisar declaraciones.',
-    'Riesgo Fiscal':      'Nivel de exposición a problemas con el SAT basado en tus ratios financieros. Un IVA muy alto, márgenes negativos o inconsistencias pueden generar revisiones.',
+    'Carga Fiscal Total': 'El total de impuestos del período (ISR/IS + IVA neto). Representa qué porcentaje de tus ingresos va destinado a obligaciones fiscales.',
+    'Cumplimiento Fiscal':'Indicador de qué tan al día estás con tus obligaciones fiscales (SAT en MX / AEAT en ES). Verde = sin alertas visibles. Rojo = revisar declaraciones.',
+    'Riesgo Fiscal':      'Nivel de exposición a revisiones fiscales basado en tus ratios financieros. Un IVA muy alto, márgenes negativos o inconsistencias pueden generar actuaciones de la autoridad.',
     'Intereses anuales':  'El costo total que pagas cada año por tus deudas. Incluye intereses de créditos, líneas de crédito y otros financiamientos.',
     // ── Score y riesgo ──
     'Score Estratégico':  'Calificación global de la salud financiera de tu empresa (0-100), calculada combinando rentabilidad, liquidez, deuda, cashflow y crecimiento.',
@@ -11533,7 +11604,7 @@ function renderComparativosView(r){
 
   document.querySelectorAll('.comp-pill').forEach(p=>p.classList.toggle('active',p.dataset.mode===_compMode));
 
-  const _m=n=>n==null||isNaN(n)?'—':(n<0?'-':'')+'$'+Math.abs(Math.round(n)).toLocaleString('es-MX');
+  const _m=n=>window._fmtMoney?window._fmtMoney(n):(n==null||isNaN(n))?'—':(n<0?'-':'')+'$'+Math.abs(Math.round(n)).toLocaleString('es-MX');
   const _pp=n=>n==null||isNaN(n)?'—':(n>=0?'+':'')+n.toFixed(1)+'%';
   const _px=n=>n==null?'—':n.toFixed(1)+'x';
   const _pct=n=>n==null||isNaN(n)?'—':n.toFixed(1)+'%';
@@ -12480,7 +12551,7 @@ window.toggleSidebarDesktop=toggleSidebarDesktop;
     const topVol=[...lista].sort((a,b)=>b.unidades-a.unidades)[0];
     return {lista,totalIngreso,totalTx:rows.length,topIng:lista[0],topVol,ticketProm:rows.length?totalIngreso/rows.length:0};
   }
-  const _fm=v=>{if(v>=1e9)return'$'+(v/1e9).toFixed(2)+'B';if(v>=1e6)return'$'+(v/1e6).toFixed(2)+'M';if(v>=1e3)return'$'+(v/1e3).toFixed(1)+'K';return'$'+v.toFixed(0);};
+  const _fm=v=>{const _s=window._currSym||'$';if(v>=1e9)return _s+(v/1e9).toFixed(2)+'B';if(v>=1e6)return _s+(v/1e6).toFixed(2)+'M';if(v>=1e3)return _s+(v/1e3).toFixed(1)+'K';return _s+v.toFixed(0);};
   window.prodRenderView=function(){
     if(!_fRows.length) return;
     const zone=document.getElementById('prod-upload-zone'); if(zone) zone.style.display='none';
