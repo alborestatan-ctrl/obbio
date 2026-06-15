@@ -11665,7 +11665,7 @@ async function sbUpsertEmpresa(dashData){
     // UPDATE: nunca tocar user_id (evita corrupción cuando admin edita datos de un cliente)
     // Solo actualizar nombre si dashData trae uno real (evita sobreescribir con 'Sin nombre')
     const _ts=new Date().toISOString();
-    window._sbMyLastSave=_ts; // para ignorar el eco de realtime en esta misma pestaña
+    window._sbMySaveTime=Date.now(); // ventana de 8s para ignorar eco de realtime
     const updatePayload={data:fullData, updated_at:_ts};
     if(nombre) updatePayload.nombre=nombre;
     const {error}=await _sb.from('empresas').update(updatePayload).eq('id',_sbEmpresaId);
@@ -11878,8 +11878,8 @@ function sbSubscribeRealtime(empresaId){
       event:'UPDATE', schema:'public', table:'empresas'
     }, (payload)=>{
       if(payload.new?.id !== empresaId) return;
-      // Ignorar eco: cambio generado por esta misma pestaña
-      if(payload.new?.updated_at && payload.new.updated_at===window._sbMyLastSave) return;
+      // Ignorar eco: cambio guardado desde esta pestaña hace menos de 8 segundos
+      if(window._sbMySaveTime && Date.now()-window._sbMySaveTime < 8000) return;
       _sbLastUpdated=payload.new?.updated_at||null;
       const d=payload.new?.data;
       if(d) sbApplyEmpresaData(d);
