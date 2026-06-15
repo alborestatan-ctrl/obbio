@@ -11728,8 +11728,11 @@ async function sbRenderAdminSelector(){
         onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--muted)'">🗑️</button>
     </div>`;
   if(empresas?.length){
-    // Mantener la selección actual si todavía existe; si no, usar la primera
-    const keepId=_sbEmpresaId&&empresas.some(e=>e.id===_sbEmpresaId)?_sbEmpresaId:empresas[0].id;
+    // Mantener la selección actual, o restaurar del localStorage, o usar la primera
+    const saved=localStorage.getItem('obbio_admin_empresa');
+    const keepId=(_sbEmpresaId&&empresas.some(e=>e.id===_sbEmpresaId))
+      ? _sbEmpresaId
+      : (saved&&empresas.some(e=>e.id===saved) ? saved : empresas[0].id);
     document.getElementById('sbEmpresaSelect').value=keepId;
     await sbSelectEmpresa(keepId);
   }
@@ -11832,6 +11835,7 @@ async function sbEditarNombreEmpresa(){
 
 async function sbSelectEmpresa(id){
   if(!id) return;
+  try{ localStorage.setItem('obbio_admin_empresa', id); }catch(e){}
   const {data,error}=await _sb.from('empresas').select('id,updated_at,data').eq('id',id).maybeSingle();
   if(error||!data) return;
   _sbEmpresaId=data.id;
