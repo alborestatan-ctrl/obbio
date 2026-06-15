@@ -467,6 +467,10 @@ th[data-tip]{cursor:default;}
   .comp-pill{font-size:11px;padding:6px 10px;}
   .comp-kpi-strip{grid-template-columns:repeat(2,1fr) !important;}
   .comp-kpi{padding:10px 12px;}
+
+  /* Área táctil ampliada para los botones de info (visual igual, toque ~44px) */
+  .kpi-info-btn,.card-info-btn{position:relative;}
+  .kpi-info-btn::after,.card-info-btn::after{content:'';position:absolute;top:50%;left:50%;width:44px;height:44px;transform:translate(-50%,-50%);}
 }
 
 @media(max-width:480px){
@@ -908,7 +912,6 @@ th[data-tip]{cursor:default;}
         <button onclick="showView('financeView',this)"><span class="nav-icon">💰</span>Inteligencia Financiera</button>
         <button id="navAnalyticsBtn" onclick="showView('analyticsView',this)" style="display:none;"><span class="nav-icon">📈</span>Análisis de Desempeño</button>
         <button onclick="showView('productosView',this)"><span class="nav-icon">📦</span>Ventas por Producto</button>
-        <button onclick="showView('comparativosView',this)"><span class="nav-icon">🔁</span>Comparativos</button>
       </div>
     </div>
 
@@ -931,6 +934,7 @@ th[data-tip]{cursor:default;}
         <span><span>🧠</span>Estrategia</span><span class="nav-arrow">▶</span>
       </div>
       <div class="nav-group-items">
+        <button onclick="showView('comparativosView',this)"><span class="nav-icon">🔁</span>Comparativos</button>
         <button onclick="showView('forecastView',this)"><span class="nav-icon">📊</span>Pronóstico y Planeación</button>
         <button onclick="showView('modelView',this)"><span class="nav-icon">🧮</span>Modelo Financiero</button>
         <button onclick="showView('strategyView',this)"><span class="nav-icon">🧠</span>Estrategia Ejecutiva</button>
@@ -3210,281 +3214,6 @@ background:#10B981;
   </div>
 </div>
 
-<!-- ==================== FISCAL INTELLIGENCE ==================== -->
-<div id="taxView" class="view" style="display:none;">
-
-<header class="topbar">
-
-    <div>
-
-        <h2 class="page-title">
-            Inteligencia Fiscal
-        </h2>
-
-        <p class="page-subtitle">
-            Monitoreo fiscal, obligaciones y oportunidades tributarias
-        </p>
-
-    </div>
-
-</header>
-
-<section class="kpi-grid">
-
-    <div class="kpi-card accent-blue">
-
-        <div class="kpi-top">
-            <div class="kpi-label">
-                IVA por Pagar
-            </div>
-
-            <div class="kpi-icon blue">
-                🧾
-            </div>
-        </div>
-
-        <div class="kpi-value">
-            $482K
-        </div>
-
-        <div class="kpi-bottom">
-            <div class="kpi-change neutral">
-                Periodo actual
-            </div>
-        </div>
-
-    </div>
-
-    <div class="kpi-card accent-green">
-
-        <div class="kpi-top">
-            <div class="kpi-label">
-                ISR Estimado
-            </div>
-
-            <div class="kpi-icon green">
-                💰
-            </div>
-        </div>
-
-        <div class="kpi-value">
-            $1.2M
-        </div>
-
-        <div class="kpi-bottom">
-            <div class="kpi-change positive">
-                Proyección anual
-            </div>
-        </div>
-
-    </div>
-
-    <div class="kpi-card accent-yellow">
-
-        <div class="kpi-top">
-            <div class="kpi-label">
-                Retenciones
-            </div>
-
-            <div class="kpi-icon yellow">
-                📊
-            </div>
-        </div>
-
-        <div class="kpi-value">
-            $185K
-        </div>
-
-        <div class="kpi-bottom">
-            <div class="kpi-change neutral">
-                Acumulado
-            </div>
-        </div>
-
-    </div>
-
-    <div class="kpi-card accent-green">
-
-        <div class="kpi-top">
-            <div class="kpi-label">
-                Riesgo Fiscal
-            </div>
-
-            <div class="kpi-icon green">
-                🛡️
-            </div>
-        </div>
-
-        <div class="kpi-value">
-            Bajo
-        </div>
-
-        <div class="kpi-bottom">
-            <div class="kpi-change positive">
-                Sin incidencias
-            </div>
-        </div>
-
-    </div>
-
-</section>
-
-<div class="card">
-
-    <div class="card-header">
-
-        <div class="card-title">
-            Calendario Fiscal
-        </div>
-
-    </div>
-
-    <table class="enterprise-table">
-
-        <thead>
-
-            <tr>
-                <th data-tip="Declaración o pago fiscal que debes presentar ante el SAT (MX) o AEAT (ES)">Obligación</th>
-                <th data-tip="Fecha límite para presentar o pagar. Pasarla genera recargos y multas.">Fecha</th>
-                <th data-tip="✅ Presentada = en orden&#10;⚠️ Pendiente = tienes tiempo&#10;❌ Vencida = hay multa">Estado</th>
-            </tr>
-
-        </thead>
-
-        <tbody>
-
-            <tr>
-                <td>Declaración Mensual IVA</td>
-                <td>17 Mayo</td>
-                <td style="color:var(--success)">Presentada</td>
-            </tr>
-
-            <tr>
-                <td>Pago Provisional ISR</td>
-                <td>17 Mayo</td>
-                <td style="color:var(--success)">Presentado</td>
-            </tr>
-
-            <tr>
-                <td>DIOT</td>
-                <td>31 Mayo</td>
-                <td style="color:var(--warning)">Pendiente</td>
-            </tr>
-
-            <tr>
-                <td>Declaración Anual</td>
-                <td>31 Marzo</td>
-                <td style="color:var(--success)">Completada</td>
-            </tr>
-
-        </tbody>
-
-    </table>
-
-</div>
-
-<div class="briefing-grid">
-
-    <div class="briefing-item positive-border">
-
-        <div class="briefing-title">
-            Recuperación Potencial IVA
-        </div>
-
-        <div class="briefing-text">
-            Se detectan aproximadamente $124K susceptibles de recuperación.
-        </div>
-
-    </div>
-
-    <div class="briefing-item info-border">
-
-        <div class="briefing-title">
-            Deducciones Detectadas
-        </div>
-
-        <div class="briefing-text">
-            Posible optimización fiscal estimada en $310K.
-        </div>
-
-    </div>
-
-    <div class="briefing-item positive-border">
-
-        <div class="briefing-title">
-            Riesgo SAT
-        </div>
-
-        <div class="briefing-text">
-            No se identifican inconsistencias relevantes.
-        </div>
-
-    </div>
-
-    <div class="briefing-item warning-border">
-
-        <div class="briefing-title">
-            Próxima Obligación
-        </div>
-
-        <div class="briefing-text">
-            La DIOT vence en los próximos días.
-        </div>
-
-    </div>
-
-</div>
-
-</div>
-<!-- ==================== ADMIN ==================== -->
-<div id="privacyView" class="view" style="display:none;">
-  <header class="topbar">
-    <div><h2 class="page-title">🔒 Políticas y Avisos de Privacidad</h2><p class="page-subtitle">Marco legal y condiciones de uso del sistema Obbio</p></div>
-  </header>
-  <div class="card">
-    <div class="card-header"><div class="card-title">📋 Aviso de Privacidad</div><span class="card-badge">ARCO · LGPD / RGPD</span></div>
-    <p style="color:var(--muted);font-size:13px;line-height:1.8;margin-bottom:16px;"><strong style="color:var(--text);">Obbio Finance</strong> recopila y procesa únicamente los datos financieros que el usuario introduce de forma voluntaria en el sistema. Estos datos se almacenan localmente en la sesión del navegador (<code>sessionStorage</code>) y <strong>nunca se transmiten a servidores externos</strong>.</p>
-    <p style="color:var(--muted);font-size:13px;line-height:1.8;margin-bottom:16px;">Los datos son eliminados automáticamente al cerrar la sesión o el navegador. El usuario es el único responsable de la veracidad e integridad de la información ingresada. Obbio no almacena datos en la nube ni comparte información con terceros.</p>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-top:16px;">
-      <div style="padding:14px;border-radius:12px;background:var(--card2);border:1px solid var(--border2);"><div style="font-size:11px;font-weight:700;color:var(--success);text-transform:uppercase;margin-bottom:6px;">✅ Datos locales</div><div style="font-size:12px;color:var(--muted);">Todo en sessionStorage del navegador. Sin servidor. Sin cloud.</div></div>
-      <div style="padding:14px;border-radius:12px;background:var(--card2);border:1px solid var(--border2);"><div style="font-size:11px;font-weight:700;color:var(--primary);text-transform:uppercase;margin-bottom:6px;">🔐 Sin transmisión</div><div style="font-size:12px;color:var(--muted);">CSP activa. connect-src: none. Cero llamadas externas con tus datos.</div></div>
-      <div style="padding:14px;border-radius:12px;background:var(--card2);border:1px solid var(--border2);"><div style="font-size:11px;font-weight:700;color:var(--warning);text-transform:uppercase;margin-bottom:6px;">⚠️ Responsabilidad</div><div style="font-size:12px;color:var(--muted);">Los cálculos son orientativos. No sustituyen asesoría profesional. <strong style="color:var(--warning);">Consúltanos.</strong></div></div>
-    </div>
-  </div>
-  <div class="card">
-    <div class="card-header"><div class="card-title">📜 Términos de Uso</div></div>
-    <p style="color:var(--muted);font-size:13px;line-height:1.8;margin-bottom:12px;">El uso de Obbio implica la aceptación de los siguientes términos:</p>
-    <ol style="color:var(--muted);font-size:13px;line-height:2;padding-left:20px;">
-      <li>El sistema es una <strong style="color:var(--text);">herramienta de análisis financiero orientativa</strong>, no un servicio contable ni fiscal certificado.</li>
-      <li>Los resultados (KPIs, scores, proyecciones, recomendaciones) son <strong style="color:var(--text);">estimaciones algorítmicas</strong> basadas exclusivamente en los datos introducidos por el usuario.</li>
-      <li>El usuario es responsable de validar los datos con su contador, CFO o asesor financiero antes de tomar decisiones de negocio.</li>
-      <li>Obbio no asume responsabilidad por decisiones financieras, fiscales o estratégicas derivadas del uso del sistema.</li>
-      <li>Está prohibida la ingeniería inversa, redistribución o uso comercial no autorizado del software.</li>
-    </ol>
-  </div>
-  <div class="card">
-    <div class="card-header"><div class="card-title">📊 Política de Datos Financieros</div></div>
-    <p style="color:var(--muted);font-size:13px;line-height:1.8;margin-bottom:12px;">Los datos financieros ingresados en Obbio:</p>
-    <div class="briefing-grid">
-      <div class="briefing-item positive-border"><div class="briefing-title">Datos del usuario — no simulados</div><div class="briefing-text">Cuando el usuario ingresa datos, todos los módulos del dashboard muestran únicamente cifras derivadas de esos datos reales. No existe modo "demo" activo durante el uso operacional.</div></div>
-      <div class="briefing-item info-border"><div class="briefing-title">Persistencia local</div><div class="briefing-text">Los datos financieros persisten durante la sesión activa. Los datos de Ventas por Producto se guardan en localStorage del navegador para mantenerse entre visitas. Ningún dato se envía a servidores externos.</div></div>
-      <div class="briefing-item warning-border"><div class="briefing-title">Modelos de cálculo</div><div class="briefing-text">ISR, IVA, Impuesto de Sociedades e IRPF son estimaciones basadas en tasas configurables. Para declaraciones oficiales, consultar al SAT (MX) o AEAT (ES).</div></div>
-    </div>
-  </div>
-  <div class="card">
-    <div class="card-header"><div class="card-title">ℹ️ Información Legal del Sistema SaaS</div></div>
-    <table style="width:100%;border-collapse:collapse;font-size:13px;">
-      <tr style="border-bottom:1px solid var(--border2);"><td style="padding:10px 14px;color:var(--muted);width:40%;">Nombre del sistema</td><td style="padding:10px 14px;font-weight:600;">Obbio</td></tr>
-      <tr style="border-bottom:1px solid var(--border2);"><td style="padding:10px 14px;color:var(--muted);">Tipo de aplicación</td><td style="padding:10px 14px;font-weight:600;">SaaS · Single-Page Application (HTML/JS/CSS)</td></tr>
-      <tr style="border-bottom:1px solid var(--border2);"><td style="padding:10px 14px;color:var(--muted);">Almacenamiento de datos</td><td style="padding:10px 14px;font-weight:600;">sessionStorage (navegador local) · Sin base de datos externa</td></tr>
-      <tr style="border-bottom:1px solid var(--border2);"><td style="padding:10px 14px;color:var(--muted);">Jurisdicciones fiscales soportadas</td><td style="padding:10px 14px;font-weight:600;">🇲🇽 México (SAT · IVA · ISR) · 🇪🇸 España (AEAT · IVA · IS)</td></tr>
-      <tr style="border-bottom:1px solid var(--border2);"><td style="padding:10px 14px;color:var(--muted);">Política de cookies</td><td style="padding:10px 14px;font-weight:600;">Sin cookies. Solo sessionStorage de sesión efímera.</td></tr>
-      <tr><td style="padding:10px 14px;color:var(--muted);">Marco normativo de referencia</td><td style="padding:10px 14px;font-weight:600;">LGPD (México) · RGPD (España/UE) · NIF-B (CINIF)</td></tr>
-    </table>
-  </div>
-</div>
-
-
 <!-- ==================== VENTAS POR PRODUCTO ==================== -->
 <div id="productosView" class="view" style="display:none;">
   <header class="topbar">
@@ -4197,6 +3926,9 @@ function showView(viewId, button){
   if(viewId==='riskView'        && typeof renderRiskView==='function')       renderRiskView(r);
   if(viewId==='aiView'          && typeof renderAIView==='function')         renderAIView(r);
   if(viewId==='copilotView'     && typeof renderCopilotView==='function')    renderCopilotView(r);
+  if(viewId==='modelView'       && typeof updateModel==='function'){
+    requestAnimationFrame(()=>{ try{ updateModel(); if(window.modelChartInst) window.modelChartInst.resize(); }catch(e){} });
+  }
   if(viewId==='comparativosView'&& typeof renderComparativosView==='function'){
     _skelShow(el); setTimeout(()=>{ _skelHide(el); renderComparativosView(r); },80);
   }
@@ -6953,13 +6685,13 @@ function downloadTemplate(){
   _boldAll(wsG);
   XLSX.utils.book_append_sheet(wb,wsG,'Gastos (Opcional)');
 
-  const wbout=XLSX.write(wb,{bookType:'xlsx',type:'array',cellStyles:true});
-  const blob=new Blob([wbout],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url; a.download='Plantilla_Obbio_Dashboard.xlsx'; a.click();
-  URL.revokeObjectURL(url);
-  showNotif('✅ Plantilla descargada · empieza por las 2 primeras hojas');
+  try{
+    XLSX.writeFile(wb,'Plantilla_Obbio_Dashboard.xlsx');
+    showNotif('✅ Plantilla descargada · empieza por las 2 primeras hojas');
+  }catch(e){
+    console.error('[Obbio] downloadTemplate:',e);
+    if(typeof showNotif==='function') showNotif('❌ No se pudo descargar la plantilla. Intenta de nuevo.','error',6000);
+  }
 }
 </script>
 
@@ -8292,10 +8024,8 @@ function renderDashboardView(r){
   const ov=document.getElementById('onboardingOverlay');
   if(ov){
     if(!r||!r.ventas){
-      // Show onboarding only if user hasn't dismissed it and has no data
-      const seen=localStorage.getItem('obbio_ob_seen');
-      ov.style.display=seen?'none':'block';
-      document.getElementById('dashboardView').style.position=seen?'':'relative';
+      ov.style.display='block';
+      document.getElementById('dashboardView').style.position='relative';
     } else {
       ov.style.display='none';
     }
@@ -9462,7 +9192,7 @@ function renderTaxView(r){
   <!-- ── DISCLAIMER ESTIMACIÓN FISCAL ── -->
   <div style="padding:10px 16px;border-radius:10px;background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.2);margin-bottom:14px;display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted);">
     <span style="font-size:15px;flex-shrink:0;">ℹ️</span>
-    <span><strong style="color:var(--text);">Información orientativa. No constituye asesoría fiscal oficial.</strong> Los cálculos son estimaciones basadas en tus cifras y tasas configurables. El IVA acreditable se estima solo sobre el costo de ventas (excluye IVA de gastos operativos), por lo que el IVA neto puede estar sobreestimado, especialmente en empresas de servicios. No constituyen declaración fiscal ni dato oficial del ${isMX?'SAT':'AEAT'}. Consulta a tu especialista fiscal.</span>
+    <span><strong style="color:var(--text);">Información orientativa. No constituye asesoría fiscal oficial.</strong> Los cálculos son estimaciones basadas en tus cifras y tasas configurables. El IVA acreditable se estima solo sobre el costo de ventas (excluye IVA de gastos operativos), por lo que el IVA neto puede estar sobreestimado, especialmente en empresas de servicios. No constituyen declaración fiscal ni dato oficial del ${isMX?'SAT':'AEAT'}. Consulta a tu especialista Obbio (si aplica).</span>
   </div>
   <div id="resumen-taxView" class="obbio-resumen" style="display:none;"></div>
   <p id="insight-taxView" class="chart-insight"></p>
@@ -11491,9 +11221,9 @@ window.fetchBenchmark=async function(){
 /* ── Copiloto embebido en aiView ────────────────────────────────── */
 (function(){
   const AI_QUICK_QS=[
-    '¿Cuál es mi EBITDA?','¿Tengo riesgo de liquidez?','¿Cuánto debo en total?',
-    '¿Qué debo mejorar primero?','¿Cuál es mi flujo de caja?','¿Soy rentable?',
-    '¿Cuánto ISR pago?','¿Cuál es mi score financiero?'
+    'Explícame mi hallazgo más importante','¿Cuál es mi mayor riesgo y por qué?',
+    '¿Qué recomendación debo priorizar?','¿Por qué mi margen EBITDA está en ese nivel?',
+    '¿Qué explica mi score financiero?','¿Cómo mejoro mi rentabilidad este año?'
   ];
   const _aiHistory=[];
 
