@@ -3156,7 +3156,7 @@ background:#10B981;
           <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#F59E0B;"></div>Medio 28%</div>
           <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#EF4444;"></div>Alto 10%</div>
         </div>
-        <div class="chart-container small"><canvas id="riskChart" role="img" aria-label="Donut distribución de riesgo"></canvas></div>
+        <div class="chart-container small"><canvas id="riskChartStatic" role="img" aria-label="Donut distribución de riesgo"></canvas></div>
       </div>
     </div>
   </div>
@@ -3874,18 +3874,6 @@ function sparkline(id, data, color){
 /* analyticsChart — inicializado en renderAnalyticsView con datos reales */
 
 
-/* ==================== TRADUCCIONES ==================== */
-const translations = {
-  es:{ title:'Centro de Mando Ejecutivo', subtitle:'Transformando datos en decisiones estratégicas · —' },
-  en:{ title:'Executive Command Center', subtitle:'Transforming data into strategic decisions · —' }
-};
-function changeLanguage(lang, btn){
-  document.getElementById('pageTitle').textContent = translations[lang].title;
-  document.getElementById('pageSubtitle').textContent = translations[lang].subtitle;
-  document.querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('active'));
-  if(btn) btn.classList.add('active');
-}
-
 /* ==================== NAVEGACIÓN ==================== */
 function toggleNavGroup(id){
   const g=document.getElementById(id); if(!g) return;
@@ -4095,28 +4083,6 @@ function exportModelExcel(){
   XLSX.utils.book_append_sheet(wb,ws,'Proyeccion');
   XLSX.writeFile(wb,'Obbio_Financial_Model.xlsx');
   if(typeof showNotif==='function') showNotif('✅ Modelo exportado a Excel');
-}
-
-// Helpers para tablas
-function filterBudgetTable(q){
-  const rows=document.querySelectorAll('#budgetTableBody tr');
-  rows.forEach(r=>{
-    r.style.display=r.textContent.toLowerCase().includes(q.toLowerCase())?'':'none';
-  });
-}
-
-function sortBudgetTable(mode){
-  const tbody=document.getElementById('budgetTableBody');
-  if(!tbody||!mode) return;
-  const rows=[...tbody.querySelectorAll('tr')];
-  rows.sort((a,b)=>{
-    const getVal=(r,col)=>parseFloat(r.cells[col]?.textContent.replace(/[$%M+]/g,'')||0);
-    if(mode==='var_desc')  return getVal(b,4)-getVal(a,4);
-    if(mode==='var_asc')   return getVal(a,4)-getVal(b,4);
-    if(mode==='real_desc') return getVal(b,2)-getVal(a,2);
-    return 0;
-  });
-  rows.forEach(r=>tbody.appendChild(r));
 }
 
 // Init listeners
@@ -5054,7 +5020,7 @@ function calcularYAplicar(){
   if(typeof collectManualOptional==='function') collectManualOptional();
   window._obbioResumenCache={};
   let r;
-  try{ r=calcFinanciero(); }catch(e){ alert('Error en cálculo: '+e.message); return; }
+  try{ r=calcFinanciero(); }catch(e){ showNotif('❌ Error en cálculo: '+e.message,'error',6000); return; }
   mostrarResultados(r);
   switchITab(6);
 
@@ -5130,7 +5096,6 @@ function calcularYAplicar(){
   // Fuente única para Diagnóstico IA, CFO Insights y Reporte PDF
   window._obbioCalc = r;
   try{ sessionStorage.setItem('obbio_calc_v1', JSON.stringify(r)); }catch(e){}
-  try{ localStorage.setItem('obbio_ob_seen','1'); }catch(e){} // mark onboarding done
   if(typeof renderAIView==='function') renderAIView(r);
   if(typeof renderAllViews==='function') renderAllViews(r);
 
@@ -11239,7 +11204,7 @@ window.fetchBenchmark=async function(){
     const d=document.createElement('div');
     d.style.cssText=`display:flex;gap:8px;align-items:flex-start;${isUser?'flex-direction:row-reverse;':''}`;
     const av=`<div style="width:28px;height:28px;border-radius:50%;background:${isUser?'var(--primary)':'rgba(34,197,94,.15)'};border:1px solid ${isUser?'rgba(34,197,94,.5)':'rgba(34,197,94,.3)'};display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;">${isUser?'👤':'🤖'}</div>`;
-    const bub=`<div style="max-width:84%;padding:9px 13px;border-radius:${isUser?'14px 3px 14px 14px':'3px 14px 14px 14px'};background:${isUser?'rgba(34,197,94,.18)':'rgba(255,255,255,.05)'};border:1px solid ${isUser?'rgba(34,197,94,.3)':'rgba(255,255,255,.07)'};font-size:13px;line-height:1.6;color:var(--text);">${html}</div>`;
+    const bub=`<div style="max-width:84%;padding:9px 13px;border-radius:${isUser?'14px 3px 14px 14px':'3px 14px 14px 14px'};background:${isUser?'rgba(34,197,94,.18)':'rgba(255,255,255,.05)'};border:1px solid ${isUser?'rgba(34,197,94,.3)':'rgba(255,255,255,.07)'};font-size:13px;line-height:1.6;color:var(--text);">${isUser?esc(html):_sanitizeBot(html)}</div>`;
     d.innerHTML=av+bub; msgs.appendChild(d); msgs.scrollTop=msgs.scrollHeight;
   }
 
@@ -11825,11 +11790,11 @@ async function sbEliminarCliente(){
   const sel=document.getElementById('sbEmpresaSelect');
   const id=sel?.value;
   const nombre=sel?.options[sel.selectedIndex]?.textContent||'';
-  if(!id){alert('Selecciona un cliente primero.'); return;}
+  if(!id){showNotif('⚠️ Selecciona un cliente primero.','error'); return;}
   if(!confirm(`¿Eliminar permanentemente al cliente "${nombre}"?\nSe borrarán sus datos y acceso.`)) return;
   // Obtener user_id del registro de la empresa
   const {data,error}=await _sb.from('empresas').select('user_id').eq('id',id).maybeSingle();
-  if(error||!data){alert('No se pudo obtener el usuario.'); return;}
+  if(error||!data){showNotif('❌ No se pudo obtener el usuario.','error',5000); return;}
   try{
     const session=await _sb.auth.getSession();
     const token=session.data.session?.access_token;
@@ -11839,16 +11804,16 @@ async function sbEliminarCliente(){
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
       body:JSON.stringify({userId:data.user_id}),
     });
-    if(!res.ok){const j=await res.json(); alert(j.error||'Error al eliminar'); return;}
+    if(!res.ok){const j=await res.json(); showNotif('❌ '+(j.error||'Error al eliminar'),'error',5000); return;}
     // El CASCADE borrará la empresa también; refrescar selector
     await sbRenderAdminSelector();
   }catch(e){
-    alert('Error de red.');
+    showNotif('❌ Error de red. Intenta de nuevo.','error',5000);
   }
 }
 
 async function sbEditarNombreEmpresa(){
-  if(!_sbEmpresaId){ alert('Selecciona una empresa primero.'); return; }
+  if(!_sbEmpresaId){ showNotif('⚠️ Selecciona una empresa primero.','error'); return; }
   const sel=document.getElementById('sbEmpresaSelect');
   const nombreActual=sel?.options[sel.selectedIndex]?.textContent||'';
   const nuevo=prompt('Nombre de la empresa:',nombreActual==='Sin nombre'?'':nombreActual);
@@ -12086,7 +12051,6 @@ window.cgSwitch=cgSwitch;
 
 /* ── Onboarding ─────────────────────────────────────────────────── */
 function _obOnboardingDismiss(){
-  try{ localStorage.setItem('obbio_ob_seen','1'); }catch(e){}
   const ov=document.getElementById('onboardingOverlay');
   if(ov) ov.style.display='none';
 }
