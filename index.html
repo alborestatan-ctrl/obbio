@@ -3997,7 +3997,7 @@ function updateModel(){
   setTxt('projISR',      fmtM(isr));
   setTxt('projMargenNeto', margenN.toFixed(1)+'%');
   const _pais=(document.getElementById('ii_pais')||{}).value||'MX';
-  const _ft=FISCAL_TERMS[_pais]||FISCAL_TERMS.MX;
+  const _ft=(typeof FISCAL_TERMS!=='undefined'?FISCAL_TERMS[_pais]||FISCAL_TERMS.MX:{impuesto:'ISR',iva:'IVA'});
   const elIsrLbl=document.getElementById('modelIsrLabel');
   if(elIsrLbl) elIsrLbl.textContent='🏛️ Tasa '+_ft.impuesto;
   const projISRTitle=document.querySelector('#projISR')?.closest('.fin-kpi')?.querySelector('.fin-kpi-title');
