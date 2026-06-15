@@ -3927,7 +3927,10 @@ function showView(viewId, button){
   if(viewId==='aiView'          && typeof renderAIView==='function')         renderAIView(r);
   if(viewId==='copilotView'     && typeof renderCopilotView==='function')    renderCopilotView(r);
   if(viewId==='modelView'       && typeof updateModel==='function'){
-    requestAnimationFrame(()=>{ try{ updateModel(); if(window.modelChartInst) window.modelChartInst.resize(); }catch(e){} });
+    requestAnimationFrame(()=>{
+      try{ if(window.modelChartInst) window.modelChartInst.resize(); }catch(e){}
+      requestAnimationFrame(()=>{ try{ updateModel(); }catch(e){} });
+    });
   }
   if(viewId==='comparativosView'&& typeof renderComparativosView==='function'){
     _skelShow(el); setTimeout(()=>{ _skelHide(el); renderComparativosView(r); },80);
@@ -6464,6 +6467,7 @@ function handleBalExcelFiles(files){
 }
 
 /* ── PLANTILLA EXCEL 5 HOJAS ── */
+function _boldAll(){}  // XLSX community 0.18.5 no soporta estilos; placeholder
 function downloadTemplate(){
   if(!window.XLSX){ showNotif('❌ Librería no disponible','error'); return; }
   const wb=XLSX.utils.book_new();
