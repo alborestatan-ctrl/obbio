@@ -2,9 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com https://cdn.jsdelivr.net; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.groq.com https://open.er-api.com; worker-src blob:;">
-<meta http-equiv="X-Frame-Options" content="DENY">
-<meta http-equiv="X-Content-Type-Options" content="nosniff">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com https://cdn.jsdelivr.net; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.groq.com https://open.er-api.com https://cdn.jsdelivr.net; worker-src blob:;">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Obbio</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -11666,7 +11664,9 @@ async function sbUpsertEmpresa(dashData){
   if(_sbEmpresaId){
     // UPDATE: nunca tocar user_id (evita corrupción cuando admin edita datos de un cliente)
     // Solo actualizar nombre si dashData trae uno real (evita sobreescribir con 'Sin nombre')
-    const updatePayload={data:fullData, updated_at:new Date().toISOString()};
+    const _ts=new Date().toISOString();
+    window._sbMyLastSave=_ts; // para ignorar el eco de realtime en esta misma pestaña
+    const updatePayload={data:fullData, updated_at:_ts};
     if(nombre) updatePayload.nombre=nombre;
     const {error}=await _sb.from('empresas').update(updatePayload).eq('id',_sbEmpresaId);
     if(error){ console.error('[Obbio] update:',error); if(typeof showNotif==='function') showNotif('❌ No se pudieron guardar los cambios. Revisa tu conexión e intenta de nuevo.','error',6000); return; }
@@ -11860,22 +11860,26 @@ async function sbSelectEmpresa(id){
 window.sbSelectEmpresa = sbSelectEmpresa;
 
 /* ── Realtime: sincronización en vivo + polling de respaldo ────── */
-let _sbLastUpdated=null, _sbPollTimer=null;
+let _sbLastUpdated=null, _sbPollTimer=null, _sbRealtimeEmpId=null;
 
 function sbSubscribeRealtime(empresaId){
   if(!_sb||!empresaId) return;
+  // Evitar suscripciones duplicadas al mismo empresa
+  if(_sbRealtimeEmpId===empresaId && window._sbRealtimeCh?.state==='joined') return;
+  _sbRealtimeEmpId=empresaId;
   // Limpiar suscripción anterior
   if(window._sbRealtimeCh){
     try{ _sb.removeChannel(window._sbRealtimeCh); }catch(e){}
+    window._sbRealtimeCh=null;
   }
-  // Suscripción Realtime (requiere Realtime habilitado en Supabase para tabla empresas)
   window._sbRealtimeCh = _sb
     .channel('empresa_live_'+empresaId)
     .on('postgres_changes',{
       event:'UPDATE', schema:'public', table:'empresas'
-      // Sin filtro server-side — filtrar client-side es más confiable con RLS
     }, (payload)=>{
-      if(payload.new?.id !== empresaId) return; // Ignorar cambios de otras empresas
+      if(payload.new?.id !== empresaId) return;
+      // Ignorar eco: cambio generado por esta misma pestaña
+      if(payload.new?.updated_at && payload.new.updated_at===window._sbMyLastSave) return;
       _sbLastUpdated=payload.new?.updated_at||null;
       const d=payload.new?.data;
       if(d) sbApplyEmpresaData(d);
@@ -11889,7 +11893,7 @@ function sbSubscribeRealtime(empresaId){
       if(status==='SUBSCRIBED') console.log('[Obbio] Realtime conectado ✓');
       else if(status==='CHANNEL_ERROR') console.warn('[Obbio] Realtime error:',err);
     });
-  // Polling de respaldo cada 30 s — funciona aunque Realtime falle
+  // Polling de respaldo cada 30 s
   if(_sbPollTimer) clearInterval(_sbPollTimer);
   _sbPollTimer=setInterval(()=>sbPollEmpresa(empresaId), 30000);
 }
