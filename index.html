@@ -110,8 +110,9 @@
 /* ── Table row hover ── */
 [data-theme="light"] .enterprise-table tbody tr:hover td,
 [data-theme="light"] .comp-tbl tbody tr:hover td{background:rgba(0,0,0,.025);}
-body{background:var(--bg);color:var(--text);overflow-x:hidden;}
-.app{display:flex;min-height:100vh;}
+html{overflow-x:hidden;}
+body{background:var(--bg);color:var(--text);overflow-x:hidden;max-width:100vw;}
+.app{display:flex;min-height:100vh;width:100%;}
 
 /* SIDEBAR */
 .sidebar{width:272px;background:var(--sidebar);border-right:1px solid var(--border);position:fixed;left:0;top:0;bottom:0;padding:0;display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;}
@@ -438,10 +439,11 @@ th[data-tip]{cursor:default;}
   .chart-container.small{height:160px !important;}
   canvas{max-height:220px;}
 
-  /* Tablas con scroll horizontal */
-  table{min-width:520px;}
+  /* Tablas con scroll horizontal — sin min-width global que rompe el layout */
   .table-wrapper,.enterprise-table,
   [style*="overflow-x:auto"]{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  .table-wrapper table,.enterprise-table table{min-width:520px;}
+  .content{max-width:100vw;}
 
   /* Formularios */
   .uw-grid,[style*="grid-template-columns"]{grid-template-columns:1fr !important;}
@@ -473,9 +475,11 @@ th[data-tip]{cursor:default;}
 
 @media(max-width:480px){
   .kpi-grid{grid-template-columns:1fr;}
-  .content{padding:16px 12px;padding-top:64px;}
+  .content{padding:14px 10px;padding-top:62px;}
   .page-title{font-size:18px;}
   .comp-kpi-strip{grid-template-columns:1fr !important;}
+  .card{border-radius:12px;}
+  .kpi-card{border-radius:12px;}
 }
 
 /* ══ CHATBOT FLOTANTE ══ */
@@ -761,11 +765,11 @@ th[data-tip]{cursor:default;}
     </div>
     <div style="display:flex;gap:10px;margin-bottom:20px;">
       <div style="flex:1;">
-        <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:6px;">Año</label>
+        <label for="nutrirSelYear" style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:6px;">Año</label>
         <select id="nutrirSelYear" style="width:100%;padding:10px 12px;background:var(--card2);border:1px solid var(--border);border-radius:9px;color:var(--text);font-size:13px;outline:none;cursor:pointer;"></select>
       </div>
       <div style="flex:1;">
-        <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:6px;">Mes</label>
+        <label for="nutrirSelMes" style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:6px;">Mes</label>
         <select id="nutrirSelMes" style="width:100%;padding:10px 12px;background:var(--card2);border:1px solid var(--border);border-radius:9px;color:var(--text);font-size:13px;outline:none;cursor:pointer;">
           <option value="01">Enero</option><option value="02">Febrero</option><option value="03">Marzo</option>
           <option value="04">Abril</option><option value="05">Mayo</option><option value="06">Junio</option>
@@ -840,14 +844,14 @@ th[data-tip]{cursor:default;}
     </div>
     <div id="sbLoginError" style="display:none;padding:10px 14px;background:rgba(244,92,92,.09);border:1px solid rgba(244,92,92,.3);border-radius:9px;color:var(--danger);font-size:12px;margin-bottom:16px;"></div>
     <div style="margin-bottom:14px;">
-      <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px;">Correo electrónico</label>
+      <label for="sbEmail" style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px;">Correo electrónico</label>
       <input id="sbEmail" type="email" autocomplete="email" placeholder="tu@empresa.com"
         style="width:100%;padding:11px 14px;background:var(--card2);border:1px solid var(--border);border-radius:9px;color:var(--text);font-size:13px;outline:none;transition:border .2s;"
         onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'"
         onkeydown="if(event.key==='Enter')document.getElementById('sbPassword').focus()">
     </div>
     <div style="margin-bottom:16px;">
-      <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px;">Contraseña</label>
+      <label for="sbPassword" style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px;">Contraseña</label>
       <input id="sbPassword" type="password" autocomplete="current-password" placeholder="••••••••"
         style="width:100%;padding:11px 14px;background:var(--card2);border:1px solid var(--border);border-radius:9px;color:var(--text);font-size:13px;outline:none;transition:border .2s;"
         onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'"
@@ -3421,38 +3425,38 @@ background:#10B981;
 
       <div class="uw-section-sep">Ingresos</div>
       <div class="uw-field full">
-        <label class="uw-label">Ventas netas *</label>
+        <label class="uw-label" for="ii_ventas">Ventas netas *</label>
         <div class="uw-input-hint">Total de ingresos del año, SIN IVA. Suma todo lo que facturaste.</div>
         <div class="uw-input-money"><span class="uw-currency">$</span><input class="uw-input" id="ii_ventas" type="number" min="0" placeholder="12,800,000" oninput="previewCalc();uwLivePrev()"></div>
       </div>
 
       <div class="uw-section-sep">Costo de ventas</div>
       <div class="uw-field full">
-        <label class="uw-label">Costo de ventas (COGS) *</label>
+        <label class="uw-label" for="ii_cogs">Costo de ventas (COGS) *</label>
         <div class="uw-input-hint">Lo que te cuesta producir o entregar: materiales, mano de obra directa, servicios subcontratados.</div>
         <div class="uw-input-money"><span class="uw-currency">$</span><input class="uw-input" id="ii_cogs" type="number" min="0" placeholder="7,100,000" oninput="previewCalc();uwLivePrev()"></div>
       </div>
 
       <div class="uw-section-sep">Gastos operativos</div>
       <div class="uw-field full">
-        <label class="uw-label">Gastos de administración *</label>
+        <label class="uw-label" for="ii_gadmin">Gastos de administración *</label>
         <div class="uw-input-hint">Sueldos administrativos, renta de oficina, servicios (luz, internet), contabilidad.</div>
         <div class="uw-input-money"><span class="uw-currency">$</span><input class="uw-input" id="ii_gadmin" type="number" min="0" placeholder="1,500,000" oninput="previewCalc();uwLivePrev()"></div>
       </div>
       <div class="uw-field full">
-        <label class="uw-label">Gastos de ventas <span class="uw-opt">opcional</span></label>
+        <label class="uw-label" for="ii_gventas">Gastos de ventas <span class="uw-opt">opcional</span></label>
         <div class="uw-input-hint">Comisiones a vendedores, publicidad, marketing, ferias, viáticos comerciales.</div>
         <div class="uw-input-money"><span class="uw-currency">$</span><input class="uw-input" id="ii_gventas" type="number" min="0" placeholder="900,000" oninput="previewCalc();uwLivePrev()"></div>
       </div>
       <div class="uw-field full">
-        <label class="uw-label">Depreciación <span class="uw-opt">opcional</span></label>
+        <label class="uw-label" for="ii_depreciacion">Depreciación <span class="uw-opt">opcional</span></label>
         <div class="uw-input-hint">Desgaste de equipo y activos fijos. Déjalo vacío si no lo tienes — el sistema lo estimará.</div>
         <div class="uw-input-money"><span class="uw-currency">$</span><input class="uw-input" id="ii_depreciacion" type="number" min="0" placeholder="320,000" oninput="previewCalc()"></div>
       </div>
 
       <div class="uw-section-sep">Gastos financieros</div>
       <div class="uw-field full">
-        <label class="uw-label">Gastos financieros <span class="uw-opt">opcional</span></label>
+        <label class="uw-label" for="ii_gfin">Gastos financieros <span class="uw-opt">opcional</span></label>
         <div class="uw-input-hint">Intereses pagados a bancos o acreedores. Solo intereses, no abonos a capital.</div>
         <div class="uw-input-money"><span class="uw-currency">$</span><input class="uw-input" id="ii_gfin" type="number" min="0" placeholder="480,000" oninput="previewCalc();uwLivePrev()"></div>
       </div>
@@ -3482,24 +3486,24 @@ background:#10B981;
 
         <div class="uw-section-sep">Activos circulantes</div>
         <div class="uw-field full">
-          <label class="uw-label">Caja y bancos</label>
+          <label class="uw-label" for="ii_caja">Caja y bancos</label>
           <div class="uw-input-hint">Efectivo en caja más saldos en todas tus cuentas bancarias al día de cierre.</div>
           <div class="uw-input-money"><span class="uw-currency">$</span><input class="uw-input" id="ii_caja" type="number" min="0" placeholder="4,100,000" oninput="updateBalPreview();uwLivePrev()"></div>
         </div>
         <div class="uw-field full">
-          <label class="uw-label">Cuentas por cobrar</label>
+          <label class="uw-label" for="ii_cxc">Cuentas por cobrar</label>
           <div class="uw-input-hint">Lo que tus clientes te deben y aún no han pagado (facturas pendientes).</div>
           <div class="uw-input-money"><span class="uw-currency">$</span><input class="uw-input" id="ii_cxc" type="number" min="0" placeholder="3,200,000" oninput="updateBalPreview()"></div>
         </div>
         <div class="uw-field full">
-          <label class="uw-label">Inventario</label>
+          <label class="uw-label" for="ii_inventario">Inventario</label>
           <div class="uw-input-hint">Valor del producto en bodega. Pon 0 si tu empresa ofrece solo servicios.</div>
           <div class="uw-input-money"><span class="uw-currency">$</span><input class="uw-input" id="ii_inventario" type="number" min="0" placeholder="2,400,000" oninput="updateBalPreview()"></div>
         </div>
 
         <div class="uw-section-sep">Activos fijos</div>
         <div class="uw-field full">
-          <label class="uw-label">Activo fijo neto</label>
+          <label class="uw-label" for="ii_activo_fijo">Activo fijo neto</label>
           <div class="uw-input-hint">Equipo, maquinaria, vehículos, inmuebles — valor neto descontada la depreciación acumulada.</div>
           <div class="uw-input-money"><span class="uw-currency">$</span><input class="uw-input" id="ii_activo_fijo" type="number" min="0" placeholder="14,100,000" oninput="updateBalPreview()"></div>
         </div>
@@ -3510,26 +3514,26 @@ background:#10B981;
 
           <div class="uw-section-sep">Pasivos circulantes</div>
           <div class="uw-field full">
-            <label class="uw-label">Cuentas por pagar</label>
+            <label class="uw-label" for="ii_cxp">Cuentas por pagar</label>
             <div class="uw-input-hint">Lo que debes a tus proveedores (facturas pendientes de pago).</div>
             <div class="uw-input-money"><span class="uw-currency">$</span><input class="uw-input" id="ii_cxp" type="number" min="0" placeholder="1,800,000" oninput="updateBalPreview()"></div>
           </div>
           <div class="uw-field full">
-            <label class="uw-label">Pasivo corto plazo</label>
+            <label class="uw-label" for="ii_pasivo_cp">Pasivo corto plazo</label>
             <div class="uw-input-hint">Créditos y deudas que vencen en menos de 12 meses.</div>
             <div class="uw-input-money"><span class="uw-currency">$</span><input class="uw-input" id="ii_pasivo_cp" type="number" min="0" placeholder="3,200,000" oninput="updateBalPreview()"></div>
           </div>
 
           <div class="uw-section-sep">Pasivos largo plazo</div>
           <div class="uw-field full">
-            <label class="uw-label">Pasivo largo plazo</label>
+            <label class="uw-label" for="ii_pasivo_lp">Pasivo largo plazo</label>
             <div class="uw-input-hint">Créditos bancarios o deudas con vencimiento mayor a 12 meses.</div>
             <div class="uw-input-money"><span class="uw-currency">$</span><input class="uw-input" id="ii_pasivo_lp" type="number" min="0" placeholder="4,800,000" oninput="updateBalPreview()"></div>
           </div>
 
           <div class="uw-section-sep">Capital contable <span style="font-size:11px;font-weight:400;color:var(--muted);">(opcional — si tu balance cuadra, déjalo vacío)</span></div>
           <div class="uw-field full">
-            <label class="uw-label">Capital / Patrimonio neto</label>
+            <label class="uw-label" for="ii_capital">Capital / Patrimonio neto</label>
             <div class="uw-input-hint">Suma de capital social + utilidades retenidas. Si lo ingresas, el sistema valida que tu balance cuadre.</div>
             <div class="uw-input-money"><span class="uw-currency">$</span><input class="uw-input" id="ii_capital" type="number" min="0" placeholder="0" oninput="updateBalPreview()"></div>
           </div>
@@ -3631,7 +3635,7 @@ background:#10B981;
       <div class="uw-section-sep" style="margin-top:0;">CAPEX / Inversión en activos</div>
       <div class="uw-fields" style="margin-bottom:18px;">
         <div class="uw-field">
-          <label class="uw-label">Flujo de inversión (CAPEX anual) <span class="uw-opt">opcional · usa negativo si compraste activos</span></label>
+          <label class="uw-label" for="ii_flujo_inv">Flujo de inversión (CAPEX anual) <span class="uw-opt">opcional · usa negativo si compraste activos</span></label>
           <div class="uw-input-hint">Compra neta de activo fijo en el período. Ingresa negativo si fue salida de caja (lo normal). Ej: −3,500,000</div>
           <div class="uw-input-money"><span class="uw-currency">$</span><input class="uw-input" id="ii_flujo_inv" type="number" placeholder="ej. -500000 (compra de activos)" oninput="previewCalc()"></div>
         </div>
@@ -3705,18 +3709,18 @@ background:#10B981;
     <div class="uw-card">
       <div class="uw-fields">
         <div class="uw-field full">
-          <label class="uw-label">Nombre de la empresa <span class="uw-opt">opcional</span></label>
+          <label class="uw-label" for="ii_empresa">Nombre de la empresa <span class="uw-opt">opcional</span></label>
           <input class="uw-input" id="ii_empresa" placeholder="Ej: Grupo Industrial del Norte S.A.">
         </div>
         <div class="uw-field">
-          <label class="uw-label">País y régimen fiscal</label>
+          <label class="uw-label" for="ii_pais">País y régimen fiscal</label>
           <select class="uw-input" id="ii_pais" onchange="previewCalc();_updateIsrLabel();">
             <option value="MX">🇲🇽 México · IVA 16% / ISR 30%</option>
             <option value="ES">🇪🇸 España · IVA 21% / IS 25%</option>
           </select>
         </div>
         <div class="uw-field">
-          <label class="uw-label">Moneda <span id="fxBadge" style="font-size:10px;font-weight:700;background:rgba(34,197,94,.15);color:var(--primary);border:1px solid rgba(34,197,94,.3);border-radius:5px;padding:1px 7px;margin-left:6px;cursor:pointer;" onclick="fetchFXRate()" title="Clic para actualizar tipo de cambio"></span></label>
+          <label class="uw-label" for="ii_moneda">Moneda <span id="fxBadge" style="font-size:10px;font-weight:700;background:rgba(34,197,94,.15);color:var(--primary);border:1px solid rgba(34,197,94,.3);border-radius:5px;padding:1px 7px;margin-left:6px;cursor:pointer;" onclick="fetchFXRate()" title="Clic para actualizar tipo de cambio"></span></label>
           <select class="uw-input" id="ii_moneda" onchange="previewCalc();_updateCurrencySymbols();">
             <option value="MXN">🇲🇽 MXN · Pesos mexicanos</option>
             <option value="EUR">🇪🇺 EUR · Euros</option>
@@ -3724,7 +3728,7 @@ background:#10B981;
           </select>
         </div>
         <div class="uw-field">
-          <label class="uw-label">Giro del negocio</label>
+          <label class="uw-label" for="ii_giro">Giro del negocio</label>
           <select class="uw-input" id="ii_giro">
             <option value="servicios">Servicios</option>
             <option value="comercial">Comercial / Retail</option>
@@ -3738,13 +3742,13 @@ background:#10B981;
           </select>
         </div>
         <div class="uw-field">
-          <label class="uw-label">Año fiscal</label>
+          <label class="uw-label" for="ii_anio">Año fiscal</label>
           <select class="uw-input" id="ii_anio">
             <option>2027</option><option selected>2026</option><option>2025</option><option>2024</option><option>2023</option><option>2022</option>
           </select>
         </div>
         <div class="uw-field">
-          <label class="uw-label">Clientes activos <span class="uw-opt">opcional</span></label>
+          <label class="uw-label" for="ii_clientes">Clientes activos <span class="uw-opt">opcional</span></label>
           <input class="uw-input" id="ii_clientes" type="number" min="0" placeholder="Ej: 450">
         </div>
       </div>
@@ -4652,10 +4656,10 @@ function addDebtRow(){
   row.id='debt_row_'+i;
   row.style.cssText='display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:10px;margin-bottom:10px;align-items:end;';
   row.innerHTML=`
-    <div><label class="ilabel">Nombre del crédito</label><input class="iinput" id="dr_nombre_${i}" placeholder="Ej: Crédito Bancario A" oninput="updateDebtPreview()"></div>
-    <div><label class="ilabel">Saldo ($)</label><div style="position:relative;"><span style="position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted2);font-size:12px;">$</span><input class="iinput" id="dr_saldo_${i}" type="number" min="0" placeholder="1,500,000" style="padding-left:22px;" oninput="updateDebtPreview()"></div></div>
-    <div><label class="ilabel">Tasa anual</label><div style="position:relative;"><input class="iinput" id="dr_tasa_${i}" type="number" min="0" max="100" placeholder="12" style="padding-right:30px;" oninput="updateDebtPreview()"><span style="position:absolute;right:11px;top:50%;transform:translateY(-50%);color:var(--muted2);font-size:12px;">%</span></div></div>
-    <div><label class="ilabel">Vence (año)</label><input class="iinput" id="dr_vence_${i}" type="number" min="2020" max="2040" placeholder="2027" oninput="updateDebtPreview()"></div>
+    <div><span class="ilabel">Nombre del crédito</span><input class="iinput" id="dr_nombre_${i}" placeholder="Ej: Crédito Bancario A" oninput="updateDebtPreview()"></div>
+    <div><span class="ilabel">Saldo ($)</span><div style="position:relative;"><span style="position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted2);font-size:12px;">$</span><input class="iinput" id="dr_saldo_${i}" type="number" min="0" placeholder="1,500,000" style="padding-left:22px;" oninput="updateDebtPreview()"></div></div>
+    <div><span class="ilabel">Tasa anual</span><div style="position:relative;"><input class="iinput" id="dr_tasa_${i}" type="number" min="0" max="100" placeholder="12" style="padding-right:30px;" oninput="updateDebtPreview()"><span style="position:absolute;right:11px;top:50%;transform:translateY(-50%);color:var(--muted2);font-size:12px;">%</span></div></div>
+    <div><span class="ilabel">Vence (año)</span><input class="iinput" id="dr_vence_${i}" type="number" min="2020" max="2040" placeholder="2027" oninput="updateDebtPreview()"></div>
     <div style="padding-bottom:2px;"><button onclick="removeDebtRow(${i})" style="padding:10px 12px;border-radius:9px;border:1px solid rgba(244,92,92,.3);background:rgba(244,92,92,.1);color:var(--danger);cursor:pointer;font-size:14px;transition:.15s;" onmouseover="this.style.background='rgba(244,92,92,.2)'" onmouseout="this.style.background='rgba(244,92,92,.1)'">✕</button></div>
   `;
   cont.appendChild(row);
@@ -6194,7 +6198,7 @@ function _showAiConfirm(){
   if(!cont) return;
   const pn=k=>{ const v=parseFloat(String(d[k]||'').replace(/[$,\s]/g,'')); return isNaN(v)||v===0?'':Math.round(v); };
   const fld=(id,label,val)=>`<div>
-    <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:5px;">${label}</label>
+    <label for="aicf_${id}" style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:5px;">${label}</label>
     <input id="aicf_${id}" type="${id==='empresa'||id==='periodo'?'text':'number'}" value="${esc(val)}" style="width:100%;padding:9px 12px;border-radius:9px;border:1px solid var(--border);background:var(--card2);color:var(--text);font-size:13px;font-weight:600;outline:none;box-sizing:border-box;" />
   </div>`;
   cont.innerHTML=`
@@ -9562,21 +9566,21 @@ function renderForecastView(r){
     fg.insertAdjacentHTML('beforebegin',
       `<div id="forecastSliders" style="background:var(--card-bg);border:1px solid var(--border2);border-radius:10px;padding:18px;margin-bottom:18px;display:grid;grid-template-columns:repeat(3,1fr);gap:18px;">
         <div>
-          <label style="font-size:11px;font-weight:700;color:var(--muted2);text-transform:uppercase;display:block;margin-bottom:6px;">📈 Crecimiento Base</label>
+          <span style="font-size:11px;font-weight:700;color:var(--muted2);text-transform:uppercase;display:block;margin-bottom:6px;">📈 Crecimiento Base</span>
           <div style="display:flex;align-items:center;gap:10px;">
             <input type="range" id="slCrecBase" min="-20" max="40" step="1" value="${yoyPct}" oninput="document.getElementById('lblCrecBase').textContent=this.value+'%';updateForecastSliders()" style="flex:1;accent-color:var(--primary);">
             <span id="lblCrecBase" style="font-size:13px;font-weight:700;min-width:36px;text-align:right;">${yoyPct}%</span>
           </div>
         </div>
         <div>
-          <label style="font-size:11px;font-weight:700;color:var(--muted2);text-transform:uppercase;display:block;margin-bottom:6px;">🚀 Delta Optimista</label>
+          <span style="font-size:11px;font-weight:700;color:var(--muted2);text-transform:uppercase;display:block;margin-bottom:6px;">🚀 Delta Optimista</span>
           <div style="display:flex;align-items:center;gap:10px;">
             <input type="range" id="slDeltaOpt" min="1" max="25" step="1" value="12" oninput="document.getElementById('lblDeltaOpt').textContent='+'+this.value+'%';updateForecastSliders()" style="flex:1;accent-color:#10B981;">
             <span id="lblDeltaOpt" style="font-size:13px;font-weight:700;min-width:36px;text-align:right;">+12%</span>
           </div>
         </div>
         <div>
-          <label style="font-size:11px;font-weight:700;color:var(--muted2);text-transform:uppercase;display:block;margin-bottom:6px;">🛡️ Delta Conservador</label>
+          <span style="font-size:11px;font-weight:700;color:var(--muted2);text-transform:uppercase;display:block;margin-bottom:6px;">🛡️ Delta Conservador</span>
           <div style="display:flex;align-items:center;gap:10px;">
             <input type="range" id="slDeltaCons" min="1" max="25" step="1" value="13" oninput="document.getElementById('lblDeltaCons').textContent='-'+this.value+'%';updateForecastSliders()" style="flex:1;accent-color:#F59E0B;">
             <span id="lblDeltaCons" style="font-size:13px;font-weight:700;min-width:36px;text-align:right;">-13%</span>
