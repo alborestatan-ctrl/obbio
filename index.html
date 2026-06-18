@@ -11783,6 +11783,7 @@ async function sbUpsertEmpresa(dashData){
     // Solo actualizar nombre si dashData trae uno real (evita sobreescribir con 'Sin nombre')
     const _ts=new Date().toISOString();
     window._sbMySaveTime=Date.now(); // ventana de 8s para ignorar eco de realtime
+    _sbLastUpdated=_ts; // el poll no re-aplica tu propio guardado
     const updatePayload={data:fullData, updated_at:_ts};
     if(nombre) updatePayload.nombre=nombre;
     const {error}=await _sb.from('empresas').update(updatePayload).eq('id',_sbEmpresaId);
@@ -11975,6 +11976,7 @@ async function sbSelectEmpresa(id){
     window._obbioMonthlyByYear=null;
     window._obbioClienteMap=null;
     window._obbioRegionMap=null;
+    window._obbioCalc=null;
     sbApplyEmpresaData(data.data);
   }
   sbSubscribeRealtime(_sbEmpresaId);
@@ -12004,7 +12006,7 @@ function sbSubscribeRealtime(empresaId){
       if(window._sbMySaveTime && Date.now()-window._sbMySaveTime < 8000) return;
       _sbLastUpdated=payload.new?.updated_at||null;
       const d=payload.new?.data;
-      if(d) sbApplyEmpresaData(d);
+      if(d) sbApplyEmpresaData(d,{fromSync:true});
       const nombre=payload.new?.nombre;
       if(nombre){
         const opt=document.querySelector(`#sbEmpresaSelect option[value="${empresaId}"]`);
@@ -12032,7 +12034,7 @@ async function sbPollEmpresa(empresaId){
     // Solo aplicar si hay cambio real
     if(data.updated_at&&data.updated_at===_sbLastUpdated) return;
     _sbLastUpdated=data.updated_at;
-    if(data.data) sbApplyEmpresaData(data.data);
+    if(data.data) sbApplyEmpresaData(data.data,{fromSync:true});
   }catch(e){}
 }
 
@@ -12045,18 +12047,26 @@ function sbStopSync(){
 }
 
 /* ── Helpers ──────────────────────────────────────────────────── */
-function sbApplyEmpresaData(d){
+function sbApplyEmpresaData(d, opts){
+  opts=opts||{};
   if(!d||!Object.keys(d).length) return;
   if(typeof applyData==='function')    applyData(d);
   const _activeView=document.querySelector('.view[style*="block"]');
   const _inIngreso=_activeView&&_activeView.id==='ingresodatosView';
-  if(typeof populateForm==='function'&&!_inIngreso) populateForm(d);
+  if(typeof populateForm==='function'&&!(opts.fromSync&&_inIngreso)) populateForm(d);
   // Restaurar períodos cargados (flujo Nutrir) y renderizar administrador
   if(d.periodos&&Object.keys(d.periodos).length){
     window._nutrirLoadedPeriodos=d.periodos;
     if(typeof _renderPeriodManager==='function') _renderPeriodManager();
   }
-  const calc=d._calc||window._obbioCalc;
+  // Restaurar globales por-empresa desde el blob (REEMPLAZO, no fusion)
+  window._obbioHistorico    = Array.isArray(d.historico) ? d.historico : [];
+  window._obbioMonthlyByYear = d.monthlyByYear || null;
+  window._obbioClienteMap   = d.clienteMap || null;
+  window._obbioRegionMap    = d.regionMap || null;
+  // Preferir calc cacheado (completo). Si falta, recalcular del formulario. NUNCA el global viejo.
+  let calc=d._calc;
+  if(!calc && typeof calcFinanciero==='function'){ try{ calc=calcFinanciero(); }catch(e){ console.error('[Obbio] recalc:',e); } }
   if(calc){
     window._obbioCalc=calc;
     if(!document.querySelector('.view[style*="block"]')){
