@@ -158,6 +158,12 @@ body{background:var(--bg);color:var(--text);overflow-x:hidden;max-width:100vw;}
     #deskSidebarToggle::before{content:'‹';}
     body.sidebar-collapsed #deskSidebarToggle::before{content:'›';}
   }
+  /* Modo presentacion (cosmetico): esconde controles de edicion para demos */
+  body.obbio-present #topbar-save-btn,
+  body.obbio-present #topbar-clear-btn,
+  body.obbio-present #dash-clear-btn,
+  body.obbio-present .nav button[onclick*="ingresodatosView"],
+  body.obbio-present #ingresodatosView{ display:none !important; }
 .view{display:none;animation:fadeIn .25s ease;}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
 @keyframes shimmer{0%{background-position:-400px 0;}100%{background-position:400px 0;}}
@@ -454,8 +460,8 @@ th[data-tip]{cursor:default;}
   .itab-btn{font-size:11px;padding:8px 10px;white-space:nowrap;}
 
   /* Chatbot flotante */
-  #chatbotBubble{bottom:16px;right:16px;}
-  #chatbotWindow{width:calc(100vw - 24px) !important;right:0 !important;bottom:70px !important;max-height:65vh !important;}
+  #chatFab{bottom:16px;right:16px;}
+  #chatPanel{width:calc(100vw - 24px) !important;right:0 !important;bottom:70px !important;max-height:65vh !important;}
 
   /* Login overlay */
   #sbLoginOverlay > div{padding:32px 24px;margin:16px;}
@@ -991,6 +997,9 @@ th[data-tip]{cursor:default;}
     <div style="display:flex;gap:6px;margin-top:6px;margin-bottom:4px;">
       <button onclick="openChatbot()" style="flex:1;padding:7px;background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.25);border-radius:9px;color:#a78bfa;font-size:11px;font-weight:700;cursor:pointer;transition:background .15s;" onmouseover="this.style.background='rgba(167,139,250,.18)'" onmouseout="this.style.background='rgba(167,139,250,.08)'">🤖 Copiloto</button>
       <button onclick="showView('privacyView',null)" style="flex:1;padding:7px;background:rgba(255,255,255,.03);border:1px solid var(--border2);border-radius:9px;color:var(--muted2);font-size:11px;cursor:pointer;" onmouseover="this.style.background='rgba(255,255,255,.07)'" onmouseout="this.style.background='rgba(255,255,255,.03)'">🔒 Privacidad</button>
+    </div>
+    <div style="display:flex;gap:6px;margin-top:6px;margin-bottom:4px;">
+      <button id="present-toggle-btn" onclick="obbioTogglePresent()" style="flex:1;padding:7px;background:rgba(255,255,255,.03);border:1px solid var(--border2);border-radius:9px;color:var(--muted2);font-size:11px;font-weight:700;cursor:pointer;transition:background .15s;">🎬 Modo presentación</button>
     </div>
     <div id="sidebarFooterText" style="margin-top:6px;">Obbio · Datos al cierre de —</div>
   </div>
@@ -3236,7 +3245,7 @@ background:#10B981;
   <div id="prod-upload-zone" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:64px 24px;text-align:center;border:1.5px dashed var(--border2);border-radius:16px;margin-bottom:20px;">
     <div style="font-size:44px;margin-bottom:16px;opacity:.35;">📦</div>
     <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px;">Sin datos de ventas por producto</div>
-    <div style="font-size:13px;color:var(--muted);max-width:380px;line-height:1.65;">Carga tu Excel en <strong style="color:var(--primary);cursor:pointer;" onclick="document.querySelector('.nav button')&&showView('ingresarView',document.querySelector('.nav button'))">⚡ Ingresar / Actualizar Datos</strong> con una hoja <strong>Ventas</strong> que incluya columnas de producto y precio. Los datos aparecerán aquí automáticamente.</div>
+    <div style="font-size:13px;color:var(--muted);max-width:380px;line-height:1.65;">Carga tu Excel en <strong style="color:var(--primary);cursor:pointer;" onclick="showView('ingresodatosView',document.querySelector('[onclick*=ingresodatosView]'))">⚡ Ingresar / Actualizar Datos</strong> con una hoja <strong>Ventas</strong> que incluya columnas de producto y precio. Los datos aparecerán aquí automáticamente.</div>
   </div>
 
   <div id="prod-files-summary" style="display:none;">
@@ -3809,6 +3818,32 @@ background:#10B981;
 
 </div><!-- /ingresodatosView -->
 
+<div id="privacyView" class="view" style="display:none;">
+  <div style="max-width:720px;margin:0 auto;padding:40px 24px 60px;">
+    <h2 style="font-size:22px;font-weight:800;color:var(--text);margin:0 0 6px;">🔒 Privacidad y Datos</h2>
+    <p style="color:var(--muted);font-size:13px;margin:0 0 32px;">Última actualización: junio 2025</p>
+
+    <div style="display:flex;flex-direction:column;gap:20px;">
+      <div style="background:var(--card);border:1px solid var(--border2);border-radius:14px;padding:22px 24px;">
+        <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:8px;">Tus datos son tuyos</div>
+        <p style="font-size:13px;color:var(--muted);line-height:1.7;margin:0;">Toda la información financiera que ingresas en Obbio se almacena de forma cifrada en tu cuenta personal. Jamás compartimos ni vendemos tu información a terceros.</p>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--border2);border-radius:14px;padding:22px 24px;">
+        <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:8px;">Almacenamiento seguro</div>
+        <p style="font-size:13px;color:var(--muted);line-height:1.7;margin:0;">Los datos se guardan en Supabase con cifrado en tránsito (TLS) y en reposo. El acceso está restringido a tu cuenta mediante autenticación segura.</p>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--border2);border-radius:14px;padding:22px 24px;">
+        <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:8px;">Inteligencia Artificial</div>
+        <p style="font-size:13px;color:var(--muted);line-height:1.7;margin:0;">El análisis con IA (CFO Copilot) procesa tus datos únicamente para generar la respuesta solicitada. Las consultas no se usan para entrenar modelos externos.</p>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--border2);border-radius:14px;padding:22px 24px;">
+        <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:8px;">Eliminación de datos</div>
+        <p style="font-size:13px;color:var(--muted);line-height:1.7;margin:0;">Puedes solicitar la eliminación de todos tus datos en cualquier momento escribiendo a <strong style="color:var(--primary);">privacidad@teralyx.com</strong>. Los datos se borran permanentemente en un plazo de 30 días.</p>
+      </div>
+    </div>
+  </div>
+</div><!-- /privacyView -->
+
 <!-- ==================== DATA INPUT ==================== -->
 
 </main>
@@ -3883,6 +3918,13 @@ function toggleNavGroup(id){
 }
 window.toggleNavGroup=toggleNavGroup;
 
+function obbioTogglePresent(){
+  const on=document.body.classList.toggle('obbio-present');
+  const b=document.getElementById('present-toggle-btn');
+  if(b){ b.textContent = on?'✖ Salir de presentación':'🎬 Modo presentación'; b.style.background = on?'rgba(34,197,94,.18)':'rgba(255,255,255,.03)'; b.style.color = on?'#22c55e':'var(--muted2)'; }
+  if(on){ try{ showView('dashboardView', document.querySelector('.nav button')); }catch(e){} }
+}
+window.obbioTogglePresent=obbioTogglePresent;
 function showView(viewId, button){
   if(window.innerWidth<=860) closeSidebar();
   document.querySelectorAll('.view').forEach(v=>v.style.display='none');
@@ -4022,7 +4064,7 @@ function updateModel(){
     {lbl:'📉 Margen EBITDA',  vals:yrs.map(()=>eMarg),                                isPct:true, color:'var(--muted)',bold:false},
     {lbl:'🏢 Enterprise Value',vals:yrs.map(y=>sales*Math.pow(1+gRate/100,y)*(eMarg/100)*multVal), color:'var(--purple)',bold:true},
   ];
-  yrs.forEach(y=>{const h=document.getElementById('mth_'+y);if(h)h.textContent=baseYear+1+y;});
+  yrs.forEach(y=>{const h=document.getElementById('mth_'+y);if(h)h.textContent=baseYear+y;});
   const tbody=document.getElementById('modelTableBody');
   if(tbody){
     tbody.innerHTML=tRows.map((r,ri)=>`
@@ -4035,7 +4077,7 @@ function updateModel(){
 
   // Actualizar gráfica
   if(window.modelChartInst){
-    window.modelChartInst.data.labels = yrs.map(y=>baseYear+1+y);
+    window.modelChartInst.data.labels = yrs.map(y=>baseYear+y);
     window.modelChartInst.data.datasets[0].data = tRows[0].vals.map(v=>+v.toFixed(2));
     window.modelChartInst.data.datasets[1].data = tRows[1].vals.map(v=>+v.toFixed(2));
     window.modelChartInst.data.datasets[2].data = tRows[5].vals.map(v=>+v.toFixed(2));
@@ -4197,18 +4239,18 @@ function updateChartsFromData(d){
   const arr=s=>String(s||'').split(',').map(x=>parseFloat(x)).filter(x=>!isNaN(x));
   const upd=(inst,fn)=>{ try{ if(inst&&inst.data){ fn(inst); inst.update(); } }catch(e){} };
   // Gráfica principal: Ingresos + EBITDA mensual (M)
-  upd(window.mainChartInst,c=>{
+  upd(_charts['mainChart'],c=>{
     const ing=arr(d.ing_mensual), eb=arr(d.ebitda_mensual);
     if(ing.length) c.data.datasets[0].data=ing;
     if(eb.length && c.data.datasets[1]) c.data.datasets[1].data=eb;
   });
   // Flujo de caja mensual (M)
-  upd(window.cashFlowChartInst,c=>{
+  upd(_charts['cashFlowChart'],c=>{
     const cf=arr(d.cf_mensual);
     if(cf.length) c.data.datasets[0].data=cf;
   });
   // Deuda: Largo Plazo vs Corto Plazo (M)
-  upd(window.debtChartInst,c=>{
+  upd(_charts['debtChart'],c=>{
     if(d._pasivoLp_m!=null || d._pasivoCp_m!=null)
       c.data.datasets[0].data=[+(d._pasivoLp_m||0).toFixed(2), +(d._pasivoCp_m||0).toFixed(2)];
   });
@@ -4808,7 +4850,7 @@ function calcFinanciero(){
   const cobIntereses = er.gfin?ebitda/er.gfin:null;
   const apalancamiento = totalActivos>0?totalPasivos/totalActivos*100:null;
   // Debt/Equity: capital negativo = insolvencia técnica → no dividir
-  const debtEquity   = capital>0?deudaTotal/capital:(capital<0?null:null);
+  const debtEquity   = capital>0?deudaTotal/capital:null;
   const capitalNegativo = capital<0&&deudaTotal>0;
 
   // Ratios operativos — null cuando no hay dato
@@ -5421,6 +5463,16 @@ function parseExcelWorkbook(wb){
       if(hit!==undefined&&row[hit]!=='') return String(row[hit]).trim();
     } return '';
   };
+  // Importe de una fila de ventas: usa columna de importe directa; si no hay, deriva precio×cantidad.
+  const rowImporte=row=>{
+    let v=col(row,'importe','monto','venta','ingreso','ventas','subtotal');
+    if(v===0){
+      const p=col(row,'precio','price','tarifa','pvp');
+      const c=col(row,'cantidad','qty','unidades','units','uds','piezas');
+      if(p>0) v=p*(c>0?c:1);
+    }
+    return v;
+  };
   const monthOf=v=>{
     if(!v) return -1;
     if(typeof v==='number'&&v>40000){ const d=new Date(Date.UTC(1899,11,30)+v*86400000); return d.getUTCMonth(); }
@@ -5493,6 +5545,17 @@ function parseExcelWorkbook(wb){
       } return '';
     };
     const kvN=(m,...keys)=>parseFloat(kvGet(m,...keys))||0;
+    // Ventas/ingresos robusto: prioriza etiquetas específicas; si no, acepta 'ventas'/'ingresos'
+    // a secas EXCLUYENDO costos y gastos (evita leer "Costo de Ventas" como si fueran ventas).
+    const _ventasStr=m=>{
+      const esp=kvGet(m,'ventas netas','ventas totales','ingresos netos','ingresos totales','total de ingresos','cifra de negocio','importe neto de la cifra','ingresos de explotaci','ingresos por venta','net revenue','net sales','revenue','facturaci');
+      if(esp) return esp;
+      if(!m||typeof m!=='object') return '';
+      const EXC=['costo','coste','gasto','compras','aprovision'];
+      const hit=Object.keys(m).find(h=>(h.includes('ventas')||h.includes('ingresos')||h==='venta'||h==='ingreso')&&!EXC.some(e=>h.startsWith(e)));
+      return hit?m[hit]:'';
+    };
+    const _ventasN=m=>parseFloat(_ventasStr(m))||0;
 
     const erResult=parseKV(getSheet('estado')||getSheet('resultado'));
     const balResult=parseKV(getSheet('balance'));
@@ -5512,19 +5575,19 @@ function parseExcelWorkbook(wb){
     if(mostRecent) data.periodo=String(mostRecent);
 
     // Estado de Resultados (current year)
-    data.ventas       = kvGet(erMap,'ventas netas','ventas totales','ingresos netos','ingresos totales','total de ingresos','net revenue','net sales','revenue','facturaci','ingresos');
-    data.cogs         = kvGet(erMap,'costo de venta','costo de lo vendido','costo de produc','costos de produc','costo directo','coste de venta','cost of goods','cogs');
+    data.ventas       = _ventasStr(erMap);
+    data.cogs         = kvGet(erMap,'costo de venta','costo de lo vendido','costo de produc','costos de produc','costo directo','coste de venta','coste de las venta','aprovisionamiento','cost of goods','cogs');
     data.gadmin       = kvGet(erMap,'gastos de administraci','gasto de administraci','gastos administrativ','administrativ','gastos admin','sg&a','sga','gastos generales','gastos de operaci');
     data.gventas      = kvGet(erMap,'gastos de venta','gasto de venta','gastos comercial','gasto comercial','comercializaci','marketing y venta','gastos de distribuci','selling expense');
     data.depreciacion = kvGet(erMap,'depreci','amortiz','d&a');
     data.gfin         = kvGet(erMap,'gastos financiero','gasto financiero','intereses pagado','costo financiero','interest expense');
 
     // Balance General (current year)
-    data.caja         = kvGet(balMap,'caja','efectivo','bancos');
-    data.cxc          = kvGet(balMap,'cuentas por cobrar','trade receivable','accounts receivable','cartera','clientes');
+    data.caja         = kvGet(balMap,'caja','efectivo','bancos','tesoreria');
+    data.cxc          = kvGet(balMap,'cuentas por cobrar','trade receivable','accounts receivable','cartera','clientes','deudores');
     data.inventario   = kvGet(balMap,'inventario','existencia','stock');
     data.activo_fijo  = kvGet(balMap,'activo fijo','activo no circul','activo no corriente','propiedad planta','pp&e','ppe','inmovilizado');
-    data.cxp          = kvGet(balMap,'cuentas por pagar','accounts payable','trade payable','proveedores');
+    data.cxp          = kvGet(balMap,'cuentas por pagar','accounts payable','trade payable','proveedores','acreedores');
     data.pasivo_cp    = kvGet(balMap,'pasivo a corto','pasivo corto','pasivo circul','pasivos corrientes','deuda a corto','deuda corto','obligaciones a corto','obligaciones corto','obligaciones cp');
     data.pasivo_lp    = kvGet(balMap,'pasivo a largo','pasivo largo','pasivo no circul','pasivo no corriente','deuda a largo','deuda largo','obligaciones a largo');
     data.capital      = kvGet(balMap,'capital contable','patrimonio neto','patrimonio','equity','fondos propios','capital');
@@ -5534,9 +5597,9 @@ function parseExcelWorkbook(wb){
     const histMap={}; // year → combined object
     histYears.forEach(yr=>{
       const er=erResult.byYear[yr]||{}, bal=balResult.byYear[yr]||{};
-      const v=kvN(er,'ventas netas','ventas totales','net revenue','net sales','revenue','facturaci','ingresos');
+      const v=_ventasN(er);
       if(v>0||Object.keys(bal).length>0){
-        const _hcg=kvN(er,'costo de venta','costo de lo vendido','costo de produc','cogs'),_hga=kvN(er,'gastos de administraci','gastos administrativ','administrativ'),_hgv=kvN(er,'gastos de venta','gasto de venta','gastos comercial','comercializaci'),_hdep=kvN(er,'depreci','amortiz');
+        const _hcg=kvN(er,'costo de venta','costo de lo vendido','costo de produc','coste de venta','coste de las venta','aprovisionamiento','cogs'),_hga=kvN(er,'gastos de administraci','gastos administrativ','administrativ'),_hgv=kvN(er,'gastos de venta','gasto de venta','gastos comercial','comercializaci'),_hdep=kvN(er,'depreci','amortiz');
         histMap[yr]={anio:yr,ventas:v,ebitda:v>0?v-_hcg-_hga-_hgv+_hdep:0,cogs:_hcg,gadmin:_hga,gventas:_hgv,dep:_hdep,gfin:kvN(er,'gastos financiero','intereses'),caja:kvN(bal,'caja','efectivo'),cxc:kvN(bal,'cuentas por cobrar'),inventario:kvN(bal,'inventario'),activo_fijo:kvN(bal,'activo fijo'),cxp:kvN(bal,'cuentas por pagar'),pasivo_cp:kvN(bal,'pasivo a corto','pasivo corto','pasivo circul'),pasivo_lp:kvN(bal,'pasivo a largo','pasivo largo','pasivo no circul'),capital:kvN(bal,'capital contable','patrimonio','capital')};
       }
     });
@@ -5546,15 +5609,16 @@ function parseExcelWorkbook(wb){
     const mV=new Array(12).fill(0); const clSet=new Set(); let sumV=0;
     const clienteMapV={}, regionMapV={};
     rV.forEach(r=>{
-      const v=col(r,'ventas','venta','ingreso','importe','monto');
-      const cliente=colStr(r,'cliente','client');
-      const region=colStr(r,'region','zona','sucursal','sector','segmento','division','canal','plaza','tienda','unidad','branch','area','territorio');
-      const fecStr=colStr(r,'fecha','date');
+      const v=rowImporte(r);
+      const cliente=colStr(r,'cliente','client','customer','razon social','cuenta','socio');
+      const region=colStr(r,'region','zona','sucursal','sector','segmento','division','canal','plaza','tienda','unidad','branch','area','territorio','local','centro','establecimiento','sede');
+      const fecStr=colStr(r,'fecha','date','periodo','mes');
       const m=monthOf(fecStr); const rowYr=yearOf(fecStr);
-      sumV+=v;
-      if(cliente){ clSet.add(cliente.toLowerCase()); if(v>0) clienteMapV[cliente]=(clienteMapV[cliente]||0)+v; }
-      if(region&&v>0) regionMapV[region]=(regionMapV[region]||0)+v;
-      if(m>=0&&m<12&&(rowYr<0||!mostRecent||rowYr===mostRecent)) mV[m]+=v;
+      const esBase=(rowYr<0||!mostRecent||rowYr===mostRecent);
+      if(esBase) sumV+=v;
+      if(esBase&&cliente){ clSet.add(cliente.toLowerCase()); if(v>0) clienteMapV[cliente]=(clienteMapV[cliente]||0)+v; }
+      if(esBase&&region&&v>0) regionMapV[region]=(regionMapV[region]||0)+v;
+      if(esBase&&m>=0&&m<12) mV[m]+=v;
     });
     if(clSet.size>0) data.clientes=String(clSet.size);
     if(Object.keys(clienteMapV).length>0) data.clienteMap=clienteMapV;
@@ -5563,9 +5627,9 @@ function parseExcelWorkbook(wb){
     if(mV.some(x=>x>0)) data.m_ventas=mV.map(Math.round).join(',');
     // Group ventas by year+month for monthly comparisons
     const mByYear={};
-    rV.forEach(r=>{ const v=col(r,'ventas','venta','ingreso','importe','monto'); const fStr=colStr(r,'fecha','date'); const ym=fStr.match(/(\d{4})/); const yr=ym?parseInt(ym[1]):null; const m=monthOf(fStr); if(yr&&m>=0&&m<12&&v>0){ if(!mByYear[yr]) mByYear[yr]=new Array(12).fill(0); mByYear[yr][m]+=v; } });
+    rV.forEach(r=>{ const v=rowImporte(r); const fStr=colStr(r,'fecha','date','periodo','mes'); const ym=fStr.match(/(\d{4})/); const yr=ym?parseInt(ym[1]):null; const m=monthOf(fStr); if(yr&&m>=0&&m<12&&v>0){ if(!mByYear[yr]) mByYear[yr]=new Array(12).fill(0); mByYear[yr][m]+=v; } });
     if(Object.keys(mByYear).length>0) data.monthlyByYear=mByYear;
-    if(rV.length) data._ventasRows=rV.map(r=>({fecha:colStr(r,'fecha','date'),producto:colStr(r,'producto','product','item','articulo','descripcion','nombre','concepto')||'(sin nombre)',cantidad:1,precio:col(r,'ventas','venta','ingreso','importe','monto'),sucursal:colStr(r,'sucursal','branch','tienda','sede'),fuente:'Ventas (Opcional)'})).filter(r=>r.producto!=='(sin nombre)'||r.precio>0);
+    if(rV.length) data._ventasRows=rV.map(r=>({fecha:colStr(r,'fecha','date','periodo','mes'),producto:colStr(r,'producto','product','item','articulo','descripcion','nombre','concepto','servicio','sku')||'(sin nombre)',cantidad:1,precio:rowImporte(r),sucursal:colStr(r,'sucursal','branch','tienda','sede','local','centro','establecimiento'),fuente:'Ventas (Opcional)'})).filter(r=>r.producto!=='(sin nombre)'&&r.precio>0);
 
     // Optional Deuda sheet
     const rD=parseRows(getSheet('deuda'),['saldo','credito','fecha']);
@@ -6803,6 +6867,28 @@ function downloadTemplate(){
     if(r.activoFijo>0 && r.dep < r.activoFijo*0.03)
       add('Fiscal','baja','Aprovechar la depreciación','Registras poca depreciación frente a tu activo fijo ('+_m(r.activoFijo)+'). La depreciación es un gasto deducible que reduce la base gravable del '+_fi.etiquetaImpuesto+' sin salida de efectivo.','Deducción potencial','Próxima declaración','Escudo fiscal');
 
+    // ── Alertas temporales (proactivas): comparan los 2 ultimos periodos del historico ──
+    // Honestidad: solo disparan con >=2 periodos reales; nunca sobre huecos.
+    const _hT=window._obbioHistorico;
+    if(Array.isArray(_hT)&&_hT.length>=2){
+      const cur=_hT[_hT.length-1], prev=_hT[_hT.length-2];
+      const dso=h=>(h.ventas>0&&h.cxc>0)?h.cxc/h.ventas*365:null;
+      const liq=h=>(h.pasivo_cp>0)?(h.caja+h.cxc+h.inventario)/h.pasivo_cp:null;
+      const mb =h=>(h.ventas>0)?(h.ventas-h.cogs)/h.ventas:null;
+      const deuda=h=>(h.pasivo_cp||0)+(h.pasivo_lp||0);
+      const d0=dso(prev), d1=dso(cur);
+      if(d0!=null&&d1!=null&&(d1-d0)>=7)
+        add('Operativa','alta','⏱ Tu cobranza se está alargando','Tus días de cobro pasaron de ~'+Math.round(d0)+' a ~'+Math.round(d1)+' días (+'+Math.round(d1-d0)+'). Cada día de más deja caja atrapada en cartera.','≈ '+_m((cur.ventas/365)*(d1-d0))+' inmovilizados','Atender este período','Recuperar liquidez');
+      const l0=liq(prev), l1=liq(cur);
+      if(l0!=null&&l1!=null&&l1<l0&&(l0-l1)>=0.15)
+        add('Financiera','alta','💧 Tu liquidez está cayendo','Tu razón corriente bajó de '+_x(l0)+' a '+_x(l1)+'. Menos colchón para cubrir obligaciones de corto plazo.','Riesgo de tensión de caja','Inmediata','Continuidad operativa');
+      const m0=mb(prev), m1=mb(cur);
+      if(m0!=null&&m1!=null&&m0>0&&(m0-m1)>=0.03)
+        add('Operativa','media','📉 Tu margen bruto se está erosionando','Tu margen bruto bajó de '+_pp(m0*100)+' a '+_pp(m1*100)+' ('+_pp((m0-m1)*100)+' menos). Revisa costos de venta y precios.','≈ '+_m(cur.ventas*(m0-m1))+' de utilidad bruta perdida','Atender en 60 días','Proteger rentabilidad');
+      const db0=deuda(prev), db1=deuda(cur);
+      if(db0>0&&db1>db0&&(db1-db0)/db0>=0.25)
+        add('Financiera','media','📊 Tu deuda creció de forma marcada','Tu deuda total pasó de '+_m(db0)+' a '+_m(db1)+' (+'+_pp((db1/db0-1)*100)+'). Verifica que el servicio de deuda no apriete el flujo.','Mayor presión de intereses','Revisar al cierre','Flujo bajo control');
+    }
     const ord={alta:0,media:1,baja:2};
     ins.sort((a,b)=>ord[a.prioridad]-ord[b.prioridad]);
     return ins;
