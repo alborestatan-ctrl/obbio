@@ -3021,9 +3021,6 @@ background:#10B981;
 
 </div>
 
-<div class="chart-container">
-<canvas id="financialCenterChart"></canvas>
-</div>
 
 </div>
 
@@ -3150,8 +3147,8 @@ background:#10B981;
     </div>
   </section>
 
-  <div class="card">
-    <div class="card-header"><div class="card-title">Análisis de Riesgo</div></div>
+  <div class="card" id="riskClientesCard">
+    <div class="card-header"><div class="card-title">Análisis de Riesgo</div><span class="card-badge" id="riskPlaceholderBadge" style="background:rgba(245,158,11,.12);color:#f59e0b;font-size:11px;">Datos de ejemplo</span></div>
     <div class="analytics-grid">
       <div>
         <div class="mini-title">Top clientes en riesgo</div>
@@ -3167,7 +3164,6 @@ background:#10B981;
           <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#F59E0B;"></div>Medio 28%</div>
           <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#EF4444;"></div>Alto 10%</div>
         </div>
-        <div class="chart-container small"><canvas id="riskChartStatic" role="img" aria-label="Donut distribución de riesgo"></canvas></div>
       </div>
     </div>
   </div>
@@ -4258,7 +4254,7 @@ function updateChartsFromData(d){
 
 function applyData(d){
   if(!d) return;
-  const set=(id,val)=>{if(val===undefined||val===null||val==='')return;const el=document.getElementById(id);if(el)el.innerHTML=val;};
+  const set=(id,val)=>{if(val===undefined||val===null||val==='')return;const el=document.getElementById(id);if(el)el.textContent=val;};
 
   // KPI cards principales
   set('fcSales',  d.ingresos);
@@ -7305,7 +7301,7 @@ function downloadTemplate(){
       ['11','Graficas y Visualizaciones','Tendencias de ingresos y forecast'],
       ['12','Executive Strategy','Prioridades estrategicas e impacto financiero'],
       ['13','Diagnostico Financiero','Fortalezas, riesgos y recomendaciones'],
-      ['14','Acciones Prioritarias CFO','Iniciativas de alto impacto tabuladas'],
+      ['14','Plan de Accion','Acciones priorizadas: que hacer, impacto y plazo'],
       ['15','Proyecciones y Forecast','3 escenarios para el proximo ejercicio'],
       ['16','Analisis de Riesgos','Exposicion financiera y plan de mitigacion'],
       ['17','Conclusiones y Plan 90 Dias','Sintesis ejecutiva y proximos pasos'],
@@ -7767,10 +7763,30 @@ function downloadTemplate(){
     diagBlock(d.recomendaciones,'Que hacer en los proximos 30 dias',C.card,C.slate);
 
     // ── 14. ACCIONES CFO ──
-    if(ins.length){PB(120);SEC('Acciones Prioritarias CFO','Iniciativas de alto impacto','14');
-      TABLE(['#','Area','Iniciativa','Impacto','Urgencia'],
-        ins.slice(0,10).map((x,i)=>[i+1,_t((x.categoria||'N/D').slice(0,13)),_t((x.titulo||'N/D').slice(0,32)),_t((x.impacto||'N/D').slice(0,20)),_t((x.prioridad||'MEDIA').toUpperCase().slice(0,5))]),
-        {widths:[20,80,184,118,92]});}
+    if(ins.length){PB(140);SEC('Plan de Accion','Que hacer, su impacto y para cuando','14');
+      const PCOL={alta:C.red,media:C.amber,baja:C.green}, PLBL={alta:'ALTA',media:'MEDIA',baja:'BAJA'};
+      ins.slice(0,8).forEach((x,i)=>{
+        const col=PCOL[x.prioridad]||C.amber;
+        const desc=_t(x.descripcion||x.titulo||'');
+        doc.setFont('helvetica','normal');doc.setFontSize(8.5);
+        const dLines=doc.splitTextToSize(desc,CW-24);
+        const benef=_t([x.impacto,x.urgencia].filter(Boolean).join('   -   '));
+        const bH=30+dLines.length*11+(benef?16:0);
+        ensure(bH+8);
+        const y0=y;
+        sf(...C.card);doc.roundedRect(ML,y0,CW,bH,5,5,'F');
+        sf(...col);doc.rect(ML,y0,3,bH,'F');
+        doc.setFont('helvetica','bold');doc.setFontSize(10);sc(...C.ink);
+        doc.text(_t((i+1)+'. '+(x.titulo||'').slice(0,46)),ML+12,y0+17);
+        const bl=PLBL[x.prioridad]||'MEDIA';doc.setFontSize(6.5);const bw=doc.getTextWidth(bl)+14;
+        sf(...col);doc.roundedRect(W-MR-bw-8,y0+7,bw,13,3,3,'F');
+        doc.setFont('helvetica','bold');doc.setFontSize(6.5);sc(...C.white);doc.text(bl,W-MR-bw-8+bw/2,y0+16,{align:'center'});
+        let yy=y0+31;
+        doc.setFont('helvetica','normal');doc.setFontSize(8.5);sc(...C.slate);
+        dLines.forEach(ln=>{doc.text(ln,ML+12,yy);yy+=11;});
+        if(benef){doc.setFont('helvetica','bold');doc.setFontSize(7.5);sc(...col);doc.text(benef,ML+12,yy+4);}
+        y=y0+bH+8;
+      });}
 
     // ── 15. FORECAST ──
     PB(260);SEC('Proyecciones y Forecast','3 escenarios para el proximo ejercicio','15');
@@ -8273,6 +8289,12 @@ function renderDashboardView(r){
     mkChart('spark4',{type:'bar',data:{labels:_histD.map(h=>String(h.anio)),datasets:[{data:_histD.map(h=>h.ventas>0?+((h.ebitda||0)/h.ventas*100).toFixed(1):0),backgroundColor:'rgba(245,166,35,.6)',borderRadius:2}]},options:_spkO});
   } else {
     if(_charts['spark4']){try{_charts['spark4'].destroy();}catch(e){}delete _charts['spark4'];}
+  }
+  // spark5: clientes activos histórico
+  if(_histD.length>=2&&_histD.some(h=>h.clientes>0)){
+    mkChart('spark5',{type:'bar',data:{labels:_histD.map(h=>String(h.anio)),datasets:[{data:_histD.map(h=>h.clientes||0),backgroundColor:'rgba(139,92,246,.6)',borderRadius:2}]},options:_spkO});
+  } else {
+    if(_charts['spark5']){try{_charts['spark5'].destroy();}catch(e){}delete _charts['spark5'];}
   }
   // Distribución mensual para categoryChart (donut) y regionChart (barras)
   // Fallback: 12 meses reales — más útil y granular que trimestres
@@ -9510,6 +9532,7 @@ function renderTaxView(r){
 /* ─────────────────── FINANCIAL CENTER VIEW ─────────────────── */
 function renderFinancialCenterView(r){
   const el=document.getElementById('financialCenterView'); if(!el) return;
+  const _activeTabId=(()=>{const vis=['incomeStatement','balanceSheet','cashFlowStatement','ratiosView'].find(id=>{const t=document.getElementById(id);return t&&t.style.display!=='none';});return vis||'incomeStatement';})();
   if(!r||!r.ventas){
     el.innerHTML=`<header class="topbar"><div><h2 class="page-title">📑 Centro Financiero</h2><p class="page-subtitle">Estados financieros completos y análisis ejecutivo</p></div></header>`
       +noDataHtml('📑','Sin estados financieros','Ingresa tus datos para generar los estados financieros completos.');
@@ -9635,6 +9658,7 @@ function renderFinancialCenterView(r){
     {label:'Utilidad Neta',value:r.utilNeta!=null?_m(r.utilNeta):null},
     {label:'Score financiero',value:r.score+'/100'},
   ],'resumen-financialCenterView');
+  if(typeof showFinancialTab==='function') showFinancialTab(_activeTabId);
 }
 
 /* ─────────────────── FORECAST VIEW ─────────────────── */
@@ -10793,6 +10817,8 @@ function renderAllViews(r){
   else if(id==='aiView')          { if(typeof renderAIView==='function') renderAIView(r); }
   else if(id==='copilotView')     renderCopilotView(r);
   else if(id==='comparativosView') renderComparativosView(r);
+  else if(id==='modelView')     { if(typeof renderModelView==='function') renderModelView(r); }
+  else if(id==='productosView') { if(typeof renderProductosView==='function') renderProductosView(r); }
   // Siempre renderizar dashboard (KPIs globales)
   if(id!=='dashboardView') renderDashboardView(r);
 }
@@ -11717,6 +11743,7 @@ async function sbGuardarNombre(){
     // Leer data actual y fusionar empresa para mantener sincronía
     const {data:cur}=await _sb.from('empresas').select('data').eq('id',_sbEmpresaId).maybeSingle();
     const mergedData={...(cur?.data||{}), empresa:nombre};
+    window._sbMySaveTime=Date.now();
     await _sb.from('empresas').update({nombre, data:mergedData, updated_at:new Date().toISOString()}).eq('id',_sbEmpresaId);
   } else {
     const {data,error}=await _sb.from('empresas')
@@ -11782,6 +11809,7 @@ async function sbSaveProdRows(rows, files){
     const {data:cur,error}=await _sb.from('empresas').select('data').eq('id',_sbEmpresaId).maybeSingle();
     if(error||!cur) return;
     const updated={...(cur.data||{}), _prodRows:rows, _prodFiles:files};
+    window._sbMySaveTime=Date.now();
     await _sb.from('empresas').update({data:updated, updated_at:new Date().toISOString()}).eq('id',_sbEmpresaId);
   }catch(e){ console.error('[Obbio] sbSaveProdRows:',e); }
 }
@@ -11943,6 +11971,10 @@ async function sbSelectEmpresa(id){
     if(typeof uwShow==='function') uwShow('uw0');
     showNotif('Esta empresa aún no tiene datos ingresados','warning');
   } else {
+    window._obbioHistorico=null;
+    window._obbioMonthlyByYear=null;
+    window._obbioClienteMap=null;
+    window._obbioRegionMap=null;
     sbApplyEmpresaData(data.data);
   }
   sbSubscribeRealtime(_sbEmpresaId);
@@ -12016,13 +12048,15 @@ function sbStopSync(){
 function sbApplyEmpresaData(d){
   if(!d||!Object.keys(d).length) return;
   if(typeof applyData==='function')    applyData(d);
-  if(typeof populateForm==='function') populateForm(d);
+  const _activeView=document.querySelector('.view[style*="block"]');
+  const _inIngreso=_activeView&&_activeView.id==='ingresodatosView';
+  if(typeof populateForm==='function'&&!_inIngreso) populateForm(d);
   // Restaurar períodos cargados (flujo Nutrir) y renderizar administrador
   if(d.periodos&&Object.keys(d.periodos).length){
     window._nutrirLoadedPeriodos=d.periodos;
     if(typeof _renderPeriodManager==='function') _renderPeriodManager();
   }
-  const calc=d._calc;
+  const calc=d._calc||window._obbioCalc;
   if(calc){
     window._obbioCalc=calc;
     if(!document.querySelector('.view[style*="block"]')){
