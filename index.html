@@ -10458,6 +10458,11 @@ function switchTaxPais(pais){
     r.margenNeto=r.ventas>0?r.utilNeta/r.ventas*100:null;
     window._obbioCalc=r;
     try{sessionStorage.setItem('obbio_calc_v1',JSON.stringify(r));}catch(e){}
+    try{
+      const _sk='obbio_data_'+(window._sbUser?.id||'local');
+      const _sb=JSON.parse(sessionStorage.getItem(_sk)||'null');
+      if(_sb){if(_sb._rawInputs){_sb._rawInputs.pais=pais;_sb._rawInputs.moneda=L.moneda;}_sb._calc=r;if(typeof saveData==='function')saveData(_sb);}
+    }catch(e){}
     if(typeof renderAllViews==='function') renderAllViews(r);
   } else if(typeof calcularYAplicar==='function') calcularYAplicar();
 }
@@ -10706,6 +10711,11 @@ function _onDashCtxChange(){
     r.margenNeto=r.ventas>0?r.utilNeta/r.ventas*100:null;
     window._obbioCalc=r;
     try{sessionStorage.setItem('obbio_calc_v1',JSON.stringify(r));}catch(e){}
+    try{
+      const _sk='obbio_data_'+(window._sbUser?.id||'local');
+      const _sb=JSON.parse(sessionStorage.getItem(_sk)||'null');
+      if(_sb){if(_sb._rawInputs){_sb._rawInputs.pais=pais;_sb._rawInputs.moneda=L.moneda;}_sb._calc=r;if(typeof saveData==='function')saveData(_sb);}
+    }catch(e){}
     if(typeof renderAllViews==='function') renderAllViews(r);
   } else if(typeof calcularYAplicar==='function') calcularYAplicar();
 }
