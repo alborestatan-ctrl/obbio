@@ -5140,7 +5140,7 @@ function calcularYAplicar(){
   if(typeof renderAIView==='function') renderAIView(r);
   if(typeof renderAllViews==='function') renderAllViews(r);
 
-  showNotif('✅ Dashboard actualizado con los datos de '+( r.empresa||'la empresa'));
+  if(r&&r.ventas>0) showNotif('✅ Dashboard actualizado con los datos de '+(r.empresa||'la empresa'));
 }
 
 /* ── SUCURSALES ── */
@@ -11981,7 +11981,8 @@ async function sbSelectEmpresa(id){
   if(error||!data) return;
   _sbEmpresaId=data.id;
   _sbLastUpdated=data.updated_at||null;
-  const tieneData=data.data&&Object.keys(data.data).length>0;
+  const _dd=data.data;
+  const tieneData=_dd&&(Number(_dd.ventas)>0||Number(_dd._rawInputs?.ventas)>0||(_dd._calc&&Number(_dd._calc.ventas)>0));
   if(!tieneData){
     // Empresa sin datos — limpiar UI sin tocar Supabase
     window._obbioCalc=null;
