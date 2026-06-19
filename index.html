@@ -10447,17 +10447,19 @@ function switchTaxPais(pais){
   const L=LOCALE[pais]||LOCALE.MX;
   const sel=document.getElementById('ii_pais'); if(sel) sel.value=pais;
   const dp=document.getElementById('dashSelPais'); if(dp) dp.value=pais;
-  // Forzar moneda nativa del nuevo país
   ['ii_moneda','dashSelMoneda'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=L.moneda; });
-  _updateIsrLabel(); // sincroniza moneda y símbolo
-  if(typeof calcFinanciero==='function'){
-    try{
-      const r=calcFinanciero();
-      window._obbioCalc=r;
-      try{sessionStorage.setItem('obbio_calc_v1',JSON.stringify(r));}catch(e){}
-      if(typeof renderAllViews==='function') renderAllViews(r);
-    }catch(e){ if(typeof calcularYAplicar==='function') calcularYAplicar(); }
-  }
+  _updateIsrLabel();
+  const base=window._obbioCalc||(typeof getCalc==='function'?getCalc():null);
+  if(base&&base.ventas>0){
+    const r=Object.assign({},base,{pais});
+    r.fiscal=typeof motorFiscal==='function'?motorFiscal(pais,r.uai||0,r.ventas||0,r.cogs||0):{impuesto:0};
+    r.isr=r.fiscal.impuesto||0;
+    r.utilNeta=(r.uai||0)-r.isr;
+    r.margenNeto=r.ventas>0?r.utilNeta/r.ventas*100:null;
+    window._obbioCalc=r;
+    try{sessionStorage.setItem('obbio_calc_v1',JSON.stringify(r));}catch(e){}
+    if(typeof renderAllViews==='function') renderAllViews(r);
+  } else if(typeof calcularYAplicar==='function') calcularYAplicar();
 }
 window.switchTaxPais=switchTaxPais;
 
@@ -10691,11 +10693,21 @@ function _onDashCtxChange(){
   const dp=document.getElementById('dashSelPais');
   const fp=document.getElementById('ii_pais');
   if(dp&&fp) fp.value=dp.value;
-  // Forzar moneda nativa según nuevo país (ignora lo que el usuario haya elegido en dashSelMoneda)
-  const L=LOCALE[(dp?.value)||'MX']||LOCALE.MX;
+  const pais=(dp?.value)||'MX';
+  const L=LOCALE[pais]||LOCALE.MX;
   ['ii_moneda','dashSelMoneda'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=L.moneda; });
-  _updateIsrLabel(); // también llama a _updateCurrencySymbols internamente
-  if(typeof calcularYAplicar==='function') calcularYAplicar();
+  _updateIsrLabel();
+  const base=window._obbioCalc||(typeof getCalc==='function'?getCalc():null);
+  if(base&&base.ventas>0){
+    const r=Object.assign({},base,{pais});
+    r.fiscal=typeof motorFiscal==='function'?motorFiscal(pais,r.uai||0,r.ventas||0,r.cogs||0):{impuesto:0};
+    r.isr=r.fiscal.impuesto||0;
+    r.utilNeta=(r.uai||0)-r.isr;
+    r.margenNeto=r.ventas>0?r.utilNeta/r.ventas*100:null;
+    window._obbioCalc=r;
+    try{sessionStorage.setItem('obbio_calc_v1',JSON.stringify(r));}catch(e){}
+    if(typeof renderAllViews==='function') renderAllViews(r);
+  } else if(typeof calcularYAplicar==='function') calcularYAplicar();
 }
 
 // Mantener selects del dashboard sincronizados cuando se vuelve al dashboard
