@@ -10443,6 +10443,33 @@ window.copilotSend=copilotSend;
 window.copilotAsk=copilotAsk;
 window.copilotClear=copilotClear;
 
+/* Persiste el cambio de país en sessionStorage y Supabase.
+   Usa dos rutas: (1) blob en sessionStorage si existe; (2) fetch async desde Supabase. */
+function _savePaisChange(pais, moneda, calc){
+  // Ruta 1: blob cacheado en sessionStorage
+  try{
+    const _bk='obbio_data_'+(window._sbUser?.id||'local');
+    const _lc=JSON.parse(sessionStorage.getItem(_bk)||'null');
+    if(_lc){
+      if(_lc._rawInputs){_lc._rawInputs.pais=pais;_lc._rawInputs.moneda=moneda;}
+      _lc._calc=calc;
+      if(typeof saveData==='function') saveData(_lc);
+      return;
+    }
+  }catch(e){}
+  // Ruta 2: fetch async desde Supabase (cuando data vino directo de la BD sin pasar por sessionStorage)
+  if(typeof _sb!=='undefined'&&_sb&&typeof _sbEmpresaId!=='undefined'&&_sbEmpresaId){
+    _sb.from('empresas').select('data').eq('id',_sbEmpresaId).maybeSingle()
+      .then(({data:_cur,error})=>{
+        if(error||!_cur?.data) return;
+        const _blob=_cur.data;
+        if(_blob._rawInputs){_blob._rawInputs.pais=pais;_blob._rawInputs.moneda=moneda;}
+        _blob._calc=calc;
+        if(typeof saveData==='function') saveData(_blob);
+      }).catch(()=>{});
+  }
+}
+
 function switchTaxPais(pais){
   const L=LOCALE[pais]||LOCALE.MX;
   const sel=document.getElementById('ii_pais'); if(sel) sel.value=pais;
@@ -10458,11 +10485,7 @@ function switchTaxPais(pais){
     r.margenNeto=r.ventas>0?r.utilNeta/r.ventas*100:null;
     window._obbioCalc=r;
     try{sessionStorage.setItem('obbio_calc_v1',JSON.stringify(r));}catch(e){}
-    try{
-      const _sk='obbio_data_'+(window._sbUser?.id||'local');
-      const _sb=JSON.parse(sessionStorage.getItem(_sk)||'null');
-      if(_sb){if(_sb._rawInputs){_sb._rawInputs.pais=pais;_sb._rawInputs.moneda=L.moneda;}_sb._calc=r;if(typeof saveData==='function')saveData(_sb);}
-    }catch(e){}
+    _savePaisChange(pais,L.moneda,r);
     if(typeof renderAllViews==='function') renderAllViews(r);
   } else if(typeof calcularYAplicar==='function') calcularYAplicar();
 }
@@ -10711,11 +10734,7 @@ function _onDashCtxChange(){
     r.margenNeto=r.ventas>0?r.utilNeta/r.ventas*100:null;
     window._obbioCalc=r;
     try{sessionStorage.setItem('obbio_calc_v1',JSON.stringify(r));}catch(e){}
-    try{
-      const _sk='obbio_data_'+(window._sbUser?.id||'local');
-      const _sb=JSON.parse(sessionStorage.getItem(_sk)||'null');
-      if(_sb){if(_sb._rawInputs){_sb._rawInputs.pais=pais;_sb._rawInputs.moneda=L.moneda;}_sb._calc=r;if(typeof saveData==='function')saveData(_sb);}
-    }catch(e){}
+    _savePaisChange(pais,L.moneda,r);
     if(typeof renderAllViews==='function') renderAllViews(r);
   } else if(typeof calcularYAplicar==='function') calcularYAplicar();
 }
