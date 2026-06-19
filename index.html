@@ -10760,7 +10760,8 @@ function _updateCurrencySymbols(){
   if(fh) fh.textContent=`IVA ${pais==='ES'?'repercutido':'trasladado'} = el que cobras a tus clientes (${L.tasaConsumo}% de tus ventas). IVA ${pais==='ES'?'soportado':'acreditable'} = el que pagaste a proveedores (puedes descontarlo).`;
   // Re-render para que todos los montos adopten el nuevo símbolo
   const calc=window._obbioCalc||(typeof getCalc==='function'&&getCalc());
-  if(calc&&typeof renderAllViews==='function') renderAllViews(calc);
+  const _curPais=(document.getElementById('ii_pais')||{}).value||'MX';
+  if(calc&&(calc.pais||'MX')===_curPais&&typeof renderAllViews==='function') renderAllViews(calc);
 }
 
 // Auto-refresh tipo de cambio cada 10 minutos
