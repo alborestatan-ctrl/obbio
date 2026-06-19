@@ -4826,7 +4826,8 @@ function calcFinanciero(){
   // Flag de desbalance: si ingresaron capital Y difiere >5% del derivado
   const balanceDesbalanceado = capitalIngresado>0&&totalActivos>0
     &&Math.abs(capitalIngresado-capitalDerivado)/totalActivos>0.05;
-  const capTrabNeto  = activoCirc-pasivoCp;
+  const pasivoCorriente = pasivoCp+cxp;
+  const capTrabNeto  = activoCirc-pasivoCorriente;
 
   // Flujo
   const flujoOp  = utilNeta+dep;
@@ -4836,8 +4837,8 @@ function calcFinanciero(){
   const flujoNeto= flujoOp+flujoInv+flujoFin;
 
   // Ratios liquidez
-  const razCorriente = pasivoCp?activoCirc/pasivoCp:null;
-  const pruebaAcida  = pasivoCp?(activoCirc-inventario)/pasivoCp:null;
+  const razCorriente = pasivoCorriente?activoCirc/pasivoCorriente:null;
+  const pruebaAcida  = pasivoCorriente?(activoCirc-inventario)/pasivoCorriente:null;
 
   // Ratios deuda
   const deudaTotal   = totalPasivos;
@@ -5385,9 +5386,11 @@ function handleExcelFiles(fileList){
           const _pn=v=>parseFloat(String(v||'').replace(/[$,\s]/g,''))||0;
           const ventasFound=_pn(data.ventas)>0;
           const cogsFound=_pn(data.cogs)>0;
-          const gastosFound=_pn(data.gadmin)>0||_pn(data.gventas)>0;
-          if(!ventasFound||(ventasFound&&!cogsFound&&!gastosFound)){
-            showNotif('🤖 Formato libre detectado — analizando con IA...','info',6000);
+          const gadminFound=_pn(data.gadmin)>0;
+          const gventasFound=_pn(data.gventas)>0;
+          const missingFields=[!cogsFound&&'COGS',!gadminFound&&'G.Admin',!gventasFound&&'G.Ventas'].filter(Boolean);
+          if(!ventasFound||(ventasFound&&missingFields.length>0)){
+            showNotif(`🤖 ${!ventasFound?'Formato libre detectado':'Campos faltantes: '+missingFields.join(', ')} — analizando con IA...`,'info',6000);
             try{
               const aiData=await _aiMapExcel(wb);
               // Fusionar: AI solo rellena lo que el parser local no encontró
@@ -5683,6 +5686,19 @@ function parseExcelWorkbook(wb){
     data._rows_bal=String(Object.keys(balMap).length);
     data._rows_v=String(rV.length);
     data._rows_d=String(rD.length);
+
+    // Datos Generales sheet — empresa/pais/moneda/giro (texto; solo rellena si vacío)
+    const _dgWs=getSheet('datos')||getSheet('general');
+    if(_dgWs){
+      const _dgRaw=XLSX.utils.sheet_to_json(_dgWs,{header:1,defval:''});
+      const _dgMap={};
+      _dgRaw.forEach(row=>{const k=norm(String(row[0]||''));const v=String(row[1]||'').trim();if(k&&v)_dgMap[k]=v;});
+      const _dgGet=(...keys)=>{for(const k of keys){const kn=norm(k);const hit=Object.keys(_dgMap).find(h=>h.includes(kn));if(hit)return _dgMap[hit];}return '';};
+      if(!data.empresa){const _e=_dgGet('empresa','company','razon social');if(_e)data.empresa=_e;}
+      if(!data.pais){const _p=norm(_dgGet('pais','country'));if(_p.includes('espa'))data.pais='ES';else if(_p.includes('mex'))data.pais='MX';}
+      if(!data.moneda){const _m=_dgGet('moneda','currency','divisa');if(_m)data.moneda=_m;}
+      if(!data.giro){const _g=_dgGet('giro','sector','industria');if(_g)data.giro=_g;}
+    }
 
   } else if(isTransactional){
     // ── TRANSACTIONAL FORMAT (legacy: Ventas+Gastos+Bancos sheets) ──
@@ -10434,8 +10450,14 @@ function switchTaxPais(pais){
   // Forzar moneda nativa del nuevo país
   ['ii_moneda','dashSelMoneda'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=L.moneda; });
   _updateIsrLabel(); // sincroniza moneda y símbolo
-  if(typeof calcularYAplicar==='function') calcularYAplicar();
-  else { const r=getCalc(); if(r){ r.pais=pais; r.fiscal=motorFiscal(pais,r.uai,r.ventas,r.cogs); window._obbioCalc=r; renderTaxView(r); } }
+  if(typeof calcFinanciero==='function'){
+    try{
+      const r=calcFinanciero();
+      window._obbioCalc=r;
+      try{sessionStorage.setItem('obbio_calc_v1',JSON.stringify(r));}catch(e){}
+      if(typeof renderAllViews==='function') renderAllViews(r);
+    }catch(e){ if(typeof calcularYAplicar==='function') calcularYAplicar(); }
+  }
 }
 window.switchTaxPais=switchTaxPais;
 
