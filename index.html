@@ -11754,6 +11754,12 @@ window.sbRefrescarSesion=sbRefrescarSesion;
 /* ── Post-login ───────────────────────────────────────────────── */
 async function sbAfterLogin(){
   sbHideOverlay();
+  // Mostrar dashboard con onboarding inmediatamente para evitar pantalla negra
+  // mientras Supabase responde con los datos de la empresa
+  const _ldDash=document.getElementById('dashboardView');
+  if(_ldDash&&!document.querySelector('.view[style*="block"]')) _ldDash.style.display='block';
+  const _ldOv=document.getElementById('onboardingOverlay');
+  if(_ldOv) _ldOv.style.display='block';
   const nick=(_sbUser.email||'').split('@')[0];
   const av=document.getElementById('sidebarAvatar');
   const su=document.getElementById('sidebarUser');
@@ -12145,6 +12151,17 @@ function sbApplyEmpresaData(d, opts){
     if(typeof renderAllViews==='function') renderAllViews(calc);
     const dcb=document.getElementById('dash-clear-btn');
     if(dcb) dcb.style.display='';
+  } else {
+    // calc sigue null tras todos los intentos — nunca dejar pantalla negra
+    if(!document.querySelector('.view[style*="block"]')){
+      const dashEl=document.getElementById('dashboardView');
+      if(dashEl) dashEl.style.display='block';
+      const dashBtn=document.querySelector('.nav button[onclick*="dashboardView"]');
+      document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
+      if(dashBtn) dashBtn.classList.add('active');
+    }
+    const ov=document.getElementById('onboardingOverlay');
+    if(ov) ov.style.display='block';
   }
   // Restaurar productos si existen en Supabase
   if(d._prodRows&&d._prodRows.length>0&&typeof window.prodSetRows==='function'){
