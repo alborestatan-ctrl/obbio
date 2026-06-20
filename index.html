@@ -3360,10 +3360,6 @@ background:#10B981;
   </div>
 </header>
 
-<div style="margin:0 0 18px 0;padding:10px 16px;border-radius:10px;background:rgba(255,204,0,.08);border:1px solid rgba(255,204,0,.25);color:#b8860b;font-size:12px;display:flex;align-items:center;gap:8px;">
-  <span style="font-size:15px;">⚠️</span>
-  <span>Para asegurar que los cambios fueron realizados, le recomendamos <strong>cerrar sesión y volver a iniciar</strong> después de cada modificación.</span>
-</div>
 
 <!-- NEW UPLOAD WIZARD -->
 <div class="uw-shell">
@@ -4218,6 +4214,11 @@ function showFinancialTab(tabId){
 function saveData(data){
   try{ sessionStorage.setItem('obbio_data_'+(_sbUser?.id||'local'), JSON.stringify(data)); }catch(e){}
   if(typeof sbUpsertEmpresa==='function' && window._sbUser) sbUpsertEmpresa(data);
+  const _now=Date.now();
+  if(typeof showNotif==='function' && (!window._lastSaveNotif || _now-window._lastSaveNotif>1500)){
+    window._lastSaveNotif=_now;
+    showNotif('✓ Guardado','success',2000);
+  }
 }
 
 function loadData(){
@@ -6025,9 +6026,14 @@ function _showNutrirPreview(data,filename){
   if(!cont) return;
   const fmtM=n=>_fmtMoney(parseFloat(n||0));
   const v=parseFloat(data.ventas||0),c=parseFloat(data.cogs||0);
-  const detected=_detectPeriodKey(data);
-  const periodoLabel=detected?_formatPeriodKey(detected):'Sin detectar';
-  const periodoColor=detected?'var(--success)':'var(--warning)';
+  let detected=_detectPeriodKey(data);
+  // Si no se detectó el período, usar mes/año actual como default
+  if(!detected){
+    const _now=new Date();
+    detected=`${_now.getFullYear()}-${String(_now.getMonth()+1).padStart(2,'0')}`;
+  }
+  const periodoLabel=_formatPeriodKey(detected);
+  const periodoColor='var(--success)';
   cont.innerHTML=`
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;padding:14px 18px;border-radius:14px;background:rgba(167,139,250,.06);border:1px solid rgba(167,139,250,.2);">
       <div style="font-size:26px;">➕</div>
@@ -6048,14 +6054,13 @@ function _showNutrirPreview(data,filename){
       </div>
     </div>
     <div style="padding:14px 16px;border-radius:12px;background:var(--card2);border:1px solid var(--border2);margin-bottom:20px;">
-      <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;margin-bottom:8px;">Período detectado</div>
+      <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;margin-bottom:8px;">Período</div>
       <div style="font-size:16px;font-weight:800;color:${periodoColor};">${periodoLabel}</div>
-      ${!detected?'<div style="font-size:12px;color:var(--warning);margin-top:4px;">No se pudo determinar el mes. Deberás seleccionarlo manualmente.</div>':''}
+      <div style="font-size:11px;color:var(--muted);margin-top:4px;">Puedes cambiar el período antes de confirmar.</div>
     </div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;">
-      ${detected
-        ?`<button onclick="_nutrirCheckAndSave('${detected}')" style="flex:1;min-width:200px;padding:14px 20px;border-radius:13px;border:none;background:rgba(167,139,250,.85);color:#07080A;font-weight:800;font-size:14px;cursor:pointer;">➕ Agregar ${periodoLabel}</button>`
-        :`<button onclick="_showNutrirPeriodPicker()" style="flex:1;min-width:200px;padding:14px 20px;border-radius:13px;border:none;background:var(--warning);color:#07080A;font-weight:800;font-size:14px;cursor:pointer;">📅 Seleccionar período</button>`}
+      <button onclick="_nutrirCheckAndSave('${detected}')" style="flex:1;min-width:200px;padding:14px 20px;border-radius:13px;border:none;background:rgba(167,139,250,.85);color:#07080A;font-weight:800;font-size:14px;cursor:pointer;">➕ Agregar ${periodoLabel}</button>
+      <button onclick="_showNutrirPeriodPicker()" style="padding:14px 16px;border-radius:13px;border:1px solid var(--border);background:none;color:var(--muted);font-weight:700;font-size:13px;cursor:pointer;">📅 Cambiar período</button>
     </div>`;
 }
 
@@ -12136,13 +12141,15 @@ function sbApplyEmpresaData(d, opts){
   window._obbioMonthlyByYear = d.monthlyByYear || null;
   window._obbioClienteMap   = d.clienteMap || null;
   window._obbioRegionMap    = d.regionMap || null;
-  // Preferir calc cacheado (completo). Si falta, recalcular del formulario. NUNCA el global viejo.
+  // Preferir calc cacheado (completo). Si falta, intentar sessionStorage, luego recalcular.
   let calc=d._calc;
+  if(!calc){ try{ const _raw=sessionStorage.getItem('obbio_calc_v1'); if(_raw) calc=JSON.parse(_raw); }catch(e){} }
   if(!calc && typeof calcFinanciero==='function'){ try{ calc=calcFinanciero(); }catch(e){ console.error('[Obbio] recalc:',e); } }
+  // Activar dashboard si ninguna vista tiene display:block visible (excluye sub-paneles sin clase .view)
+  const _noViewOpen=!document.querySelector('.view[style*="block"]');
   if(calc){
     window._obbioCalc=calc;
-    if(!document.querySelector('.view[style*="block"]')){
-      // On reload no view has an inline style yet — activate dashboard explicitly
+    if(_noViewOpen){
       const dashEl=document.getElementById('dashboardView');
       if(dashEl) dashEl.style.display='block';
       const dashBtn=document.querySelector('.nav button[onclick*="dashboardView"]');
@@ -12153,14 +12160,12 @@ function sbApplyEmpresaData(d, opts){
     const dcb=document.getElementById('dash-clear-btn');
     if(dcb) dcb.style.display='';
   } else {
-    // calc sigue null tras todos los intentos — nunca dejar pantalla negra
-    if(!document.querySelector('.view[style*="block"]')){
-      const dashEl=document.getElementById('dashboardView');
-      if(dashEl) dashEl.style.display='block';
-      const dashBtn=document.querySelector('.nav button[onclick*="dashboardView"]');
-      document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
-      if(dashBtn) dashBtn.classList.add('active');
-    }
+    // Todos los intentos fallaron — mostrar dashboard + onboarding, nunca pantalla negra
+    const dashEl=document.getElementById('dashboardView');
+    if(dashEl) dashEl.style.display='block';
+    const dashBtn=document.querySelector('.nav button[onclick*="dashboardView"]');
+    document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
+    if(dashBtn) dashBtn.classList.add('active');
     const ov=document.getElementById('onboardingOverlay');
     if(ov) ov.style.display='block';
   }
