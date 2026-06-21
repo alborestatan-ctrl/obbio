@@ -237,7 +237,7 @@ body{background:var(--bg);color:var(--text);overflow-x:hidden;max-width:100vw;}
 .card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
 .card-title{font-size:16px;font-weight:700;letter-spacing:-.2px;}
 .card-badge{font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;background:var(--primary-dim);color:var(--primary);}
-.badge-est{display:inline-block;font-size:10px;font-weight:700;padding:1px 5px;border-radius:4px;background:rgba(245,166,35,.13);color:#F5A623;border:1px solid rgba(245,166,35,.3);margin-left:4px;vertical-align:middle;cursor:help;letter-spacing:.3px;}
+.badge-est{display:inline-block;font-size:11px;font-weight:600;margin-left:5px;vertical-align:middle;cursor:help;color:var(--muted,#9AACC2);opacity:.7;line-height:1;}
 .card-badge.success{background:var(--success-dim);color:var(--success);}
 .card-badge.warning{background:var(--warning-dim);color:var(--warning);}
 
@@ -5004,7 +5004,24 @@ function badgeEstimado(metaCampo){
   if(!metaCampo||metaCampo.origen==='capturado'||metaCampo.origen==='derivado') return '';
   if(metaCampo.origen==='sin_dato') return '';
   const tip=metaCampo.supuesto?` · ${metaCampo.supuesto}`:'';
-  return `<span class="badge-est" title="Estimado${tip}">~est</span>`;
+  return `<span class="badge-est" title="Estimado${tip}" aria-label="Estimado">ⓘ</span>`;
+}
+
+/* Nota visible de datos faltantes para Flujo de Caja (usa los supuesto del motor) */
+function notaEstimadosFlujo(meta){
+  if(!meta) return '';
+  const map=[['flujoOp','Flujo operativo'],['flujoInv','Flujo de inversión'],['flujoFin','Flujo financiero']];
+  const items=[];
+  map.forEach(function(par){
+    const k=par[0], lbl=par[1], m=meta[k];
+    if(m && (m.origen==='estimado'||m.origen==='sin_dato') && m.supuesto){
+      items.push('<li style="margin:3px 0;"><span style="color:var(--muted);">'+lbl+':</span> '+m.supuesto+'</li>');
+    }
+  });
+  if(!items.length) return '';
+  return '<div data-nota-est="1" style="margin:10px 0 4px;padding:10px 14px;border:1px solid var(--border2,rgba(255,255,255,.08));border-radius:10px;background:rgba(94,234,212,.05);font-size:12.5px;line-height:1.5;">'
+    +'<div style="font-weight:600;color:var(--muted);margin-bottom:4px;">ⓘ Para el cálculo exacto faltan datos:</div>'
+    +'<ul style="margin:0;padding-left:18px;">'+items.join('')+'</ul></div>';
 }
 
 /* ── Briefings automáticos por umbrales ── */
@@ -8815,6 +8832,7 @@ function renderAnalyticsView(r){
 function renderCashflowView(r){
   const el=document.getElementById('cashflowView'); if(!el) return;
   el.querySelectorAll('[data-nodata]').forEach(n=>n.remove());
+  el.querySelectorAll('[data-nota-est]').forEach(n=>n.remove());
   if(!r){
     const g=el.querySelector('.kpi-grid'); if(g) g.insertAdjacentHTML('beforebegin',noDataHtml('💧','Sin datos de flujo de caja','Ingresa los datos del balance para ver el flujo real.'));
     return;
@@ -8824,6 +8842,12 @@ function renderCashflowView(r){
   if(kpis[1]) kpis[1].innerHTML=_m(r.flujoInv)+badgeEstimado(r._meta?.flujoInv);
   if(kpis[2]) kpis[2].innerHTML=_m(r.flujoFin)+badgeEstimado(r._meta?.flujoFin);
   if(kpis[3]) kpis[3].innerHTML=_m(r.caja);
+  // Nota de datos faltantes bajo las tarjetas KPI
+  (function(){
+    const _ng=el.querySelector('.kpi-grid');
+    const _html=notaEstimadosFlujo(r._meta);
+    if(_ng && _html) _ng.insertAdjacentHTML('afterend', _html);
+  })();
   // subtítulos kpi-change
   const chg=el.querySelectorAll('.kpi-change');
   if(chg[0]){ chg[0].innerHTML=r.flujoOp>=0?'Operación genera caja':'Operación consume caja'; chg[0].className='kpi-change '+(r.flujoOp>=0?'positive':'negative'); }
