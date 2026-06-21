@@ -6606,24 +6606,23 @@ const _OBTC = {
   line:'FFE6EBF1', zebra:'FFF7FAFB', white:'FFFFFFFF', ejemplo:'FF94A3B5',
 };
 
-/* SVG (texto) → PNG dataURL, rasterizado por el navegador (sin IA, sin red) */
+/* SVG (texto) → PNG dataURL, rasterizado por el navegador (sin IA, sin red).
+   Usamos data: URL en vez de blob: para respetar CSP "img-src 'self' data:". */
 function _obtSvgToPng(svg, w, h){
   return new Promise(function(resolve, reject){
     try{
       const img = new Image();
-      const blob = new Blob([svg], {type:'image/svg+xml;charset=utf-8'});
-      const url = URL.createObjectURL(blob);
+      const url = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
       img.onload = function(){
         try{
           const cv = document.createElement('canvas');
           cv.width = w; cv.height = h;
           const ctx = cv.getContext('2d');
           ctx.drawImage(img, 0, 0, w, h);
-          URL.revokeObjectURL(url);
           resolve(cv.toDataURL('image/png'));
-        }catch(e){ URL.revokeObjectURL(url); reject(e); }
+        }catch(e){ reject(e); }
       };
-      img.onerror = function(e){ URL.revokeObjectURL(url); reject(e); };
+      img.onerror = function(){ reject(new Error('No se pudo rasterizar el SVG')); };
       img.src = url;
     }catch(e){ reject(e); }
   });
