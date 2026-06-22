@@ -1415,12 +1415,12 @@ th[data-tip]{cursor:default;}
     </div>
   </div>
 
-  <!-- ── Benchmark Sectorial IA ── -->
+  <!-- ── Benchmark Sectorial ── -->
   <div class="card" id="fin-benchmark-card">
     <div class="card-header">
-      <div class="card-title">📊 Benchmark Sectorial IA</div>
+      <div class="card-title">📊 Benchmark Sectorial</div>
       <span class="card-badge" id="fin-bm-sector-badge" style="display:none;">—</span>
-      <button id="fin-bm-btn" onclick="fetchBenchmark()" style="padding:7px 14px;border-radius:9px;border:1px solid rgba(34,197,94,.4);background:rgba(34,197,94,.08);color:var(--primary);font-size:12px;font-weight:700;cursor:pointer;">Generar Benchmark IA</button>
+      <button id="fin-bm-btn" onclick="fetchBenchmark()" style="padding:7px 14px;border-radius:9px;border:1px solid rgba(34,197,94,.4);background:rgba(34,197,94,.08);color:var(--primary);font-size:12px;font-weight:700;cursor:pointer;">Ver Benchmark del Sector</button>
     </div>
     <div id="fin-bm-body" style="min-height:56px;display:flex;align-items:center;color:var(--muted);font-size:13px;">
       Ingresa datos y presiona <strong style="color:var(--primary);margin-left:4px;">Generar Benchmark IA</strong> para comparar tu empresa vs el sector.
@@ -4802,6 +4802,26 @@ function motorFiscal(pais, uai, ventas, cogs){
            etiquetaImpuesto:'ISR', etiquetaIVA:'IVA (16%)', organismoFiscal:'SAT' };
 }
 
+/* ── Tarjeta de ajustes por empresa · config vive en data.config (sin tabla nueva) ── */
+const _OBBIO_CONFIG_DEFAULT={
+  plan:'basico',
+  modulosVisibles:null,   // null = todos los modulos visibles, sin restriccion de plan
+  moneda:null,            // null = usa el campo moneda del formulario / LOCALE por pais
+  ivaTasa:null,           // null = usa la tasa de motorFiscal segun pais
+  umbrales:{margenEbitdaMin:null,razCorrienteMin:null,debtEbitdaMax:null,dsoMax:null}, // null = usa getBM (referente sectorial)
+};
+function getEmpresaConfig(){
+  const d=window._obbioConfig||{};
+  return {
+    plan:d.plan||_OBBIO_CONFIG_DEFAULT.plan,
+    modulosVisibles:d.modulosVisibles||_OBBIO_CONFIG_DEFAULT.modulosVisibles,
+    moneda:d.moneda||_OBBIO_CONFIG_DEFAULT.moneda,
+    ivaTasa:(d.ivaTasa!=null)?d.ivaTasa:_OBBIO_CONFIG_DEFAULT.ivaTasa,
+    umbrales:{..._OBBIO_CONFIG_DEFAULT.umbrales,...(d.umbrales||{})},
+  };
+}
+window.getEmpresaConfig=getEmpresaConfig;
+
 function calcFinanciero(){
   const er=getERData();
   const pais=($('ii_pais')||{}).value||'MX';
@@ -4844,11 +4864,26 @@ function calcFinanciero(){
   const pasivoCorriente = pasivoCp+cxp;
   const capTrabNeto  = activoCirc-pasivoCorriente;
 
-  // Flujo
-  const flujoOp  = utilNeta+dep;
+  // Flujo — método indirecto cuando hay balance del período anterior (window._obbioHistorico);
+  // si no hay histórico real, cae al estimado anterior (utilNeta+dep, sin Δcapital de trabajo).
+  const _anioActual=parseInt((($('ii_anio')||{}).value)||new Date().getFullYear());
+  const _histPrev=(Array.isArray(window._obbioHistorico)?window._obbioHistorico:[])
+    .filter(h=>h.anio<_anioActual).sort((a,b)=>b.anio-a.anio)[0]||null;
   const _capexIngresado = num('ii_flujo_inv');
-  const flujoInv = _capexIngresado!==0 ? _capexIngresado : 0;
-  const flujoFin = 0; // los intereses ya están en utilNeta→flujoOp; el principal de deuda no se captura
+  let flujoOp, flujoInv, flujoFin, _flujoMetodo;
+  if(_histPrev){
+    const dCxC=cxc-(_histPrev.cxc||0), dInv=inventario-(_histPrev.inventario||0), dCxP=cxp-(_histPrev.cxp||0);
+    const dWC=dCxC+dInv-dCxP;
+    flujoOp  = utilNeta+dep-dWC;
+    flujoInv = _capexIngresado!==0 ? _capexIngresado : -(activoFijo-(_histPrev.activo_fijo||0));
+    flujoFin = (pasivoCp-(_histPrev.pasivo_cp||0))+(pasivoLp-(_histPrev.pasivo_lp||0));
+    _flujoMetodo='indirecto';
+  } else {
+    flujoOp  = utilNeta+dep;
+    flujoInv = _capexIngresado!==0 ? _capexIngresado : 0;
+    flujoFin = 0; // los intereses ya están en utilNeta→flujoOp; el principal de deuda no se captura
+    _flujoMetodo='estimado';
+  }
   const flujoNeto= flujoOp+flujoInv+flujoFin;
 
   // Ratios liquidez
@@ -4955,9 +4990,15 @@ function calcFinanciero(){
                     supuesto:'solo COGS × tasa IVA; excluye IVA acreditable de gastos operativos'},
     ivaTrasladado :{origen:'estimado',
                    supuesto:'100% de ventas gravadas a tasa general; puede haber ventas exentas o tasa 0%'},
-    flujoInv:{origen:_capexIngresado!==0?'capturado':'estimado',supuesto:_capexIngresado!==0?null:'CAPEX = 0 asumido; ingresa el flujo de inversión en el paso 3 (tab Deuda)'},
-    flujoOp:{origen:'estimado',supuesto:'utilidad neta + depreciación; no incluye cambios en capital de trabajo (ΔCxC, ΔInventario, ΔCxP)'},
-    flujoFin:{origen:'sin_dato',supuesto:'no disponible: requiere movimientos de principal de deuda (nuevos créditos − amortizaciones), que no se capturan. Los intereses ya están reflejados en la utilidad neta.'},
+    flujoInv:_flujoMetodo==='indirecto'
+      ?{origen:_capexIngresado!==0?'capturado':'derivado',supuesto:_capexIngresado!==0?null:'método indirecto: Δactivo fijo vs el período anterior'}
+      :{origen:_capexIngresado!==0?'capturado':'estimado',supuesto:_capexIngresado!==0?null:'CAPEX = 0 asumido; ingresa el flujo de inversión en el paso 3 (tab Deuda)'},
+    flujoOp:_flujoMetodo==='indirecto'
+      ?{origen:'derivado',supuesto:'método indirecto: utilidad neta + depreciación − Δcapital de trabajo (ΔCxC+ΔInventario−ΔCxP) vs el período anterior'}
+      :{origen:'estimado',supuesto:'utilidad neta + depreciación; no incluye cambios en capital de trabajo (ΔCxC, ΔInventario, ΔCxP) por falta de período anterior'},
+    flujoFin:_flujoMetodo==='indirecto'
+      ?{origen:'derivado',supuesto:'método indirecto: Δdeuda (corto + largo plazo) vs el período anterior'}
+      :{origen:'sin_dato',supuesto:'no disponible: requiere un período anterior guardado para derivar el movimiento de deuda. Los intereses ya están reflejados en la utilidad neta.'},
     isr     :{origen:'estimado',supuesto:'tasa sobre UAI sin deducciones específicas ni regímenes especiales'},
   };
   // ─────────────────────────────────────────────────────────────────────────
@@ -4968,13 +5009,14 @@ function calcFinanciero(){
     margenBruto,margenOp,margenEbitda,margenNeto,
     caja,cxc,inventario,activoFijo,activoCirc,totalActivos,
     pasivoCp,pasivoLp,cxp,totalPasivos,capital,capTrabNeto,capitalNegativo,balanceDesbalanceado,
-    flujoOp,flujoInv,flujoFin,flujoNeto,
+    flujoOp,flujoInv,flujoFin,flujoNeto,flujoMetodo:_flujoMetodo,
     razCorriente,pruebaAcida,debtEbitda,debtEbitdaCritical,cobIntereses,deudaTotal,
     apalancamiento,debtEquity,roa,roe,
     diasCobro,diasPago,diasInv,ccc,
     yoy,concentracion,score,scoreFactores:_factCount,
     briefings,
     ingMensual,ebitdaMensual,cfMensual,
+    config:getEmpresaConfig(),
     empresa:($('ii_empresa')||{}).value||'',
     anio:($('ii_anio')||{}).value||String(new Date().getFullYear()),
     giro:($('ii_giro')||{}).value||'comercial',
@@ -5100,6 +5142,7 @@ function calcularYAplicar(){
 
   const sign=n=>n>=0?'▲ ':'▼ ';
   const dashData={
+    config:r.config,
     ingresos:fmt(r.ventas), ebitda:fmt(r.ebitda), flujo:fmt(r.flujoNeto),
     margen:fmtPct(r.margenEbitda), clientes:r.clientes?r.clientes.toLocaleString():'',
     score:r.score!=null?String(r.score):'—',
@@ -5162,6 +5205,22 @@ function calcularYAplicar(){
     tiene_inventario:($('ii_tiene_inventario')||{}).checked?'1':'0',
     modo_sucursales:($('ii_modo_sucursales')||{}).checked?'1':'0',
   };
+  // Persistencia de balance por periodo (flujo principal) — reusa el motor de Nutrir
+  // para que timeline/alertas proactivas funcionen sin depender de la carga periodica de Excel.
+  if(r.ventas>0){
+    const _pKey=(r.anio||new Date().getFullYear())+'-ANUAL';
+    const _pEntry={ventas:r.ventas||0,cogs:r.cogs||0,gadmin:r.gadmin||0,gventas:r.gventas||0,gfin:r.gfin||0,dep:r.dep||0,
+      caja:r.caja||0,cxc:r.cxc||0,inventario:r.inventario||0,activo_fijo:r.activoFijo||0,
+      pasivo_cp:r.pasivoCp||0,pasivo_lp:r.pasivoLp||0,cxp:r.cxp||0,capital:r.capital||0};
+    const _periodos={...(window._nutrirLoadedPeriodos||{}),[_pKey]:_pEntry};
+    if(typeof _periodosToHistorico==='function'){
+      const {historico:_hist,monthlyByYear:_mby}=_periodosToHistorico(_periodos);
+      if(_hist.length) window._obbioHistorico=_hist;
+      if(Object.keys(_mby).length) window._obbioMonthlyByYear={...(window._obbioMonthlyByYear||{}),..._mby};
+    }
+    window._nutrirPeriodosToMerge=_periodos;
+    window._nutrirLoadedPeriodos=_periodos;
+  }
   saveData({...dashData, _rawInputs:rawInputs, _calc:r});
   applyData(dashData);
   populateForm(dashData);
@@ -5376,7 +5435,7 @@ async function _aiMapExcel(wb){
   const sheets=_extractSheetsForAI(wb);
   const h=window.location.hostname;
   const ep=(h==='localhost'||h==='127.0.0.1')?'http://localhost:3001/map-excel':'/api/map-excel';
-  const res=await fetch(ep,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sheets})});
+  const res=await fetch(ep,{method:'POST',headers:await window._authHeaders(),body:JSON.stringify({sheets})});
   if(!res.ok) throw new Error('AI mapper '+res.status);
   const ai=await res.json();
   // Normalizar al formato que espera applyExcelData / parseExcelWorkbook
@@ -6156,19 +6215,9 @@ function _nutrirDupReplace(){
 
 // ── Helper compartido: aplica periodos → form + historico + monthly + recalc + save ──
 // Llamado por _nutrirSave (agregar) y _deletePeriodo (borrar individual).
-function _nutrirApplyPeriodos(periodos){
-  const root=_recalcRootFromPeriodos(periodos);
-  const _s=(id,v)=>{const el=document.getElementById(id);if(el&&v!=null)el.value=v;};
-  _s('ii_ventas',root.ventas||''); _s('ii_cogs',root.cogs||'');
-  _s('ii_gadmin',root.gadmin||''); _s('ii_gventas',root.gventas||'');
-  _s('ii_gfin',root.gfin||''); _s('ii_depreciacion',root.dep||'');
-  _s('ii_caja',root.caja||''); _s('ii_cxc',root.cxc||'');
-  _s('ii_inventario',root.inventario||''); _s('ii_activo_fijo',root.activo_fijo||'');
-  _s('ii_pasivo_cp',root.pasivo_cp||''); _s('ii_pasivo_lp',root.pasivo_lp||'');
-  _s('ii_cxp',root.cxp||''); if(root.anio) _s('ii_anio',root.anio);
-
-  // PARTE 2 — Construir window._obbioHistorico agrupando períodos por año
-  // → permite que las gráficas de tendencia rendericen cuando hay 2+ años
+// Agrega periodos{} -> {historico anual, series mensuales}. Sin tocar el DOM
+// ni recalcular — la usan tanto Nutrir como el guardado del flujo principal.
+function _periodosToHistorico(periodos){
   const byYear={};
   for(const [k,v] of Object.entries(periodos)){
     const yr=parseInt(k.slice(0,4)); if(!yr||isNaN(yr)) continue;
@@ -6182,12 +6231,11 @@ function _nutrirApplyPeriodos(periodos){
       if(Number(v[f])) h[f]=Number(v[f]);
     });
   }
-  const hist=Object.values(byYear)
+  const historico=Object.values(byYear)
     .map(h=>({...h,ebitda:h.ventas>0?h.ventas-h.cogs-h.gadmin-h.gventas+h.dep:0}))
     .filter(h=>h.ventas>0).sort((a,b)=>a.anio-b.anio);
-  if(hist.length) window._obbioHistorico=hist;
 
-  // Construir series mensuales para períodos tipo 'YYYY-MM' (e.g. '2025-01')
+  // Series mensuales solo para claves 'YYYY-MM' (excluye periodos anuales tipo 'YYYY-ANUAL')
   const mby={};
   for(const [k,v] of Object.entries(periodos)){
     const m=k.match(/^(\d{4})-(\d{2})$/); if(!m) continue;
@@ -6195,6 +6243,25 @@ function _nutrirApplyPeriodos(periodos){
     if(!mby[yr]) mby[yr]=new Array(12).fill(0);
     if(mo>=0&&mo<12) mby[yr][mo]=Number(v.ventas)||0;
   }
+  return {historico, monthlyByYear:mby};
+}
+window._periodosToHistorico=_periodosToHistorico;
+
+function _nutrirApplyPeriodos(periodos){
+  const root=_recalcRootFromPeriodos(periodos);
+  const _s=(id,v)=>{const el=document.getElementById(id);if(el&&v!=null)el.value=v;};
+  _s('ii_ventas',root.ventas||''); _s('ii_cogs',root.cogs||'');
+  _s('ii_gadmin',root.gadmin||''); _s('ii_gventas',root.gventas||'');
+  _s('ii_gfin',root.gfin||''); _s('ii_depreciacion',root.dep||'');
+  _s('ii_caja',root.caja||''); _s('ii_cxc',root.cxc||'');
+  _s('ii_inventario',root.inventario||''); _s('ii_activo_fijo',root.activo_fijo||'');
+  _s('ii_pasivo_cp',root.pasivo_cp||''); _s('ii_pasivo_lp',root.pasivo_lp||'');
+  _s('ii_cxp',root.cxp||''); if(root.anio) _s('ii_anio',root.anio);
+
+  // PARTE 2 — Construir window._obbioHistorico agrupando períodos por año
+  // → permite que las gráficas de tendencia rendericen cuando hay 2+ años
+  const {historico:hist, monthlyByYear:mby}=_periodosToHistorico(periodos);
+  if(hist.length) window._obbioHistorico=hist;
   if(Object.keys(mby).length) window._obbioMonthlyByYear={...(window._obbioMonthlyByYear||{}),...mby};
 
   // Persistir y recalcular
@@ -6906,6 +6973,17 @@ async function downloadTemplate(){
       if(db0>0&&db1>db0&&(db1-db0)/db0>=0.25)
         add('Financiera','media','📊 Tu deuda creció de forma marcada','Tu deuda total pasó de '+_m(db0)+' a '+_m(db1)+' (+'+_pp((db1/db0-1)*100)+'). Verifica que el servicio de deuda no apriete el flujo.','Mayor presión de intereses','Revisar al cierre','Flujo bajo control');
     }
+    // ── Alertas por umbral configurado (tarjeta de ajustes, opt-in por empresa) ──
+    // Solo disparan si el cliente definio un umbral propio; null = funcionalidad inactiva.
+    const _um=(r.config&&r.config.umbrales)||{};
+    if(_um.margenEbitdaMin!=null && r.margenEbitda!=null && r.margenEbitda<_um.margenEbitdaMin)
+      add('Financiera','alta','🔔 Margen EBITDA bajo tu umbral','Tu margen EBITDA es '+_pp(r.margenEbitda)+', debajo del umbral que configuraste ('+_um.margenEbitdaMin+'%).','Rentabilidad operativa en riesgo','Inmediata','Volver al umbral objetivo');
+    if(_um.razCorrienteMin!=null && r.razCorriente!=null && r.razCorriente<_um.razCorrienteMin)
+      add('Financiera','alta','🔔 Liquidez bajo tu umbral','Tu razón corriente es '+_x(r.razCorriente)+', debajo del umbral que configuraste ('+_x(_um.razCorrienteMin)+').','Riesgo de cubrir pasivos CP','Inmediata','Restaurar colchón de liquidez');
+    if(_um.debtEbitdaMax!=null && r.debtEbitda!=null && r.debtEbitda>_um.debtEbitdaMax)
+      add('Financiera','media','🔔 Apalancamiento sobre tu umbral','Tu Deuda/EBITDA es '+_x(r.debtEbitda)+', sobre el umbral que configuraste ('+_x(_um.debtEbitdaMax)+').','Mayor riesgo financiero','Revisar al cierre','Desapalancamiento controlado');
+    if(_um.dsoMax!=null && r.diasCobro!=null && r.diasCobro>_um.dsoMax)
+      add('Operativa','media','🔔 Cobranza sobre tu umbral','Tu DSO es '+Math.round(r.diasCobro)+' días, sobre el umbral que configuraste ('+_um.dsoMax+' días).','Caja atrapada en cartera','Revisar este período','Acelerar cobranza');
     const ord={alta:0,media:1,baja:2};
     ins.sort((a,b)=>ord[a.prioridad]-ord[b.prioridad]);
     return ins;
@@ -7048,7 +7126,7 @@ async function downloadTemplate(){
           'Tono: directo y claro. Sin saludos ni despedidas.'+_metaEstimadosLine(r,true),
         history:[]
       };
-      const _fetchP=fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_cPayload)}).then(re=>re.json());
+      const _fetchP=fetch('/api/chat',{method:'POST',headers:await window._authHeaders(),body:JSON.stringify(_cPayload)}).then(re=>re.json());
       const _timeoutP=new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),9000));
       const _result=await Promise.race([_fetchP,_timeoutP]);
       if(_result&&_result.text) commentaryParagraphs=_result.text.split('|||').map(p=>p.trim()).filter(p=>p.length>0);
@@ -8038,7 +8116,7 @@ async function _obbioResumen(moduleId,lines,containerId){
   const sysPrompt='Eres un analista financiero. Se te dan cifras reales de un módulo de dashboard.\nEscribe EXACTAMENTE 2-3 viñetas breves con los hallazgos más importantes.\nREGLAS: solo usa cifras que te proporcionan explícitamente. Nunca inventes números ni porcentajes. Sin introducción ni cierre. Solo viñetas con • al inicio. Máximo 20 palabras por viñeta. Añade interpretación, no solo repitas los datos.';
   const question=`Módulo "${moduleId}" — datos reales:\n${valid.map(l=>`${l.label}: ${l.value}`).join('\n')}\n\n¿Cuáles son los 2-3 hallazgos más importantes?`;
   try{
-    const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question,financialContext:sysPrompt,history:[]})});
+    const r=await fetch('/api/chat',{method:'POST',headers:await window._authHeaders(),body:JSON.stringify({question,financialContext:sysPrompt,history:[]})});
     const j=await r.json();
     const t=j.text||'No se pudo generar el resumen.';
     window._obbioResumenCache[ck]=t;
@@ -8092,6 +8170,21 @@ function renderDiagEjecutivo(r){
       acciones.push('Desapalancamiento urgente — riesgo de insolvencia si continúa la tendencia.');}
     else if(r.debtEbitda>2.5){hallazgos.push({t:'warn',txt:`Apalancamiento elevado — D/EBITDA ${r.debtEbitda.toFixed(1)}x`});
       acciones.push('Evitar nueva deuda. Meta: reducir D/EBITDA por debajo de 2.5x.');}
+  }
+  // ── Timeline financiero — "¿qué cambió vs el período anterior?" (sin que el usuario pregunte) ──
+  // Honestidad: solo con >=2 periodos reales en _obbioHistorico (anual o por carga periodica).
+  const _tlH=window._obbioHistorico;
+  if(Array.isArray(_tlH)&&_tlH.length>=2){
+    const cur=_tlH[_tlH.length-1], prev=_tlH[_tlH.length-2];
+    const mb=h=>h.ventas>0?(h.ventas-h.cogs)/h.ventas*100:null;
+    const me=h=>h.ventas>0?(h.ventas-h.cogs-h.gadmin-h.gventas+h.dep)/h.ventas*100:null;
+    const rc=h=>{const pc=(h.pasivo_cp||0)+(h.cxp||0); return pc>0?(h.caja+h.cxc+h.inventario)/pc:null;};
+    const mb0=mb(prev),mb1=mb(cur); if(mb0!=null&&mb1!=null&&Math.abs(mb1-mb0)>=0.5)
+      hallazgos.push({t:mb1>=mb0?'pos':'warn',txt:`📊 Margen bruto: ${mb0.toFixed(1)}% → ${mb1.toFixed(1)}% vs período anterior (${mb1>=mb0?'+':''}${(mb1-mb0).toFixed(1)}pp)`});
+    const me0=me(prev),me1=me(cur); if(me0!=null&&me1!=null&&Math.abs(me1-me0)>=0.5)
+      hallazgos.push({t:me1>=me0?'pos':'warn',txt:`📊 Margen EBITDA: ${me0.toFixed(1)}% → ${me1.toFixed(1)}% vs período anterior (${me1>=me0?'+':''}${(me1-me0).toFixed(1)}pp)`});
+    const rc0=rc(prev),rc1=rc(cur); if(rc0!=null&&rc1!=null&&Math.abs(rc1-rc0)>=0.1)
+      hallazgos.push({t:rc1>=rc0?'pos':'warn',txt:`📊 Razón corriente: ${rc0.toFixed(2)}x → ${rc1.toFixed(2)}x vs período anterior`});
   }
   // Priorizar severity: danger → warn → info → pos
   const _sev={danger:0,warn:1,info:2,pos:3};
@@ -10131,6 +10224,20 @@ function _copilotEndpoint(){
   return '/api/chat';
 }
 
+// /api/chat requiere sesion valida (JWT) — headers con Authorization si hay usuario logueado.
+async function _authHeaders(){
+  const h={'Content-Type':'application/json'};
+  try{
+    if(window._sb){
+      const session=await window._sb.auth.getSession();
+      const token=session.data.session?.access_token;
+      if(token) h['Authorization']='Bearer '+token;
+    }
+  }catch(e){}
+  return h;
+}
+window._authHeaders=_authHeaders;
+
 function copilotAsk(q){
   const inp=document.getElementById('copilot_input'); if(inp) inp.value=q;
   copilotSend();
@@ -10160,7 +10267,7 @@ async function copilotSend(){
   try{
     const res=await fetch(_copilotEndpoint(),{
       method:'POST',
-      headers:{'Content-Type':'application/json'},
+      headers:await _authHeaders(),
       body:JSON.stringify({
         question:q,
         financialContext:_buildCFOSystemPrompt(r),
@@ -10909,11 +11016,10 @@ window.renderRiskView=renderRiskView;
 window.renderCopilotView=renderCopilotView;
 
 /* ══════════════════════════════════════════════
-   BENCHMARK SECTORIAL IA
+   BENCHMARK SECTORIAL — referente único (OBBIO_BENCHMARKS / getBM), sin llamada a IA
    ══════════════════════════════════════════════ */
-window.fetchBenchmark=async function(){
+window.fetchBenchmark=function(){
   const r=typeof getCalc==='function'?getCalc():null;
-  const btn=document.getElementById('fin-bm-btn');
   const body=document.getElementById('fin-bm-body');
   const fuente=document.getElementById('fin-bm-fuente');
   const badge=document.getElementById('fin-bm-sector-badge');
@@ -10923,40 +11029,35 @@ window.fetchBenchmark=async function(){
   }
   const giro=r.giro||($('ii_giro')||{}).value||'comercial';
   const pais=r.pais||'MX';
-  if(btn){btn.disabled=true;btn.textContent='Consultando IA...';}
-  if(body) body.innerHTML='<span style="color:var(--muted);">⏳ Generando benchmark para <strong>'+giro+'</strong>...</span>';
-  try{
-    const h=window.location.hostname;
-    const ep=(h==='localhost'||h==='127.0.0.1')?'http://localhost:3001/benchmark':'/api/benchmark';
-    const res=await fetch(ep,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({giro,pais,ventas:r.ventas,margenEbitda:r.margenEbitda,margenBruto:r.margenBruto,diasCobro:r.diasCobro,score:r.score})});
-    const d=await res.json();
-    if(!res.ok) throw new Error(d.error||'error '+res.status);
-    if(badge){badge.textContent=d.sector||giro;badge.style.display='';}
-    // Build comparison rows
-    const fmt=v=>v==null?'—':typeof v==='number'?v.toFixed(1):v;
-    const kpiMap={margenBruto:{label:'Margen Bruto',tu:r.margenBruto,unit:'%'},margenEbitda:{label:'Margen EBITDA',tu:r.margenEbitda,unit:'%'},margenNeto:{label:'Margen Neto',tu:r.margenNeto,unit:'%'},diasCobro:{label:'Días de Cobro (DSO)',tu:r.diasCobro,unit:'días'},diasPago:{label:'Días de Pago (DPO)',tu:r.diasPago,unit:'días'},score:{label:'Score Financiero',tu:r.score,unit:'pts'}};
-    const bm=d.benchmarks||{};
-    const rows=Object.entries(kpiMap).filter(([k])=>bm[k]).map(([k,info])=>{
-      const b=bm[k];
-      const tuVal=info.tu!=null?+info.tu.toFixed(1):null;
-      const medVal=b.med!=null?b.med:null;
-      const isBetter=(k==='diasCobro'||k==='diasPago')?(tuVal!=null&&medVal!=null&&tuVal<medVal):(tuVal!=null&&medVal!=null&&tuVal>medVal);
-      const color=tuVal==null?'var(--muted)':isBetter?'var(--success)':'var(--warning)';
-      const icon=tuVal==null?'—':isBetter?'↑':'↓';
-      return `<tr>
-        <td style="padding:9px 12px;color:var(--muted);">${info.label}</td>
-        <td style="padding:9px 12px;text-align:right;font-weight:700;color:${color};">${tuVal!=null?tuVal+' '+info.unit:'—'} <span style="font-size:11px;">${icon}</span></td>
-        <td style="padding:9px 12px;text-align:right;color:var(--muted2);">${fmt(b.min)}–${fmt(b.med)}–${fmt(b.max)} ${b.unit||''}</td>
-      </tr>`;
-    }).join('');
-    const insH=d.insights&&d.insights.length?'<div style="margin-top:14px;display:flex;flex-direction:column;gap:6px;">'+d.insights.map(i=>`<div style="font-size:12px;color:var(--muted);padding:7px 10px;background:var(--card2);border-radius:8px;border-left:3px solid var(--primary);">${i}</div>`).join('')+'</div>':'';
-    if(body) body.innerHTML=`<div style="overflow-x:auto;width:100%;"><table style="width:100%;border-collapse:collapse;"><thead><tr style="border-bottom:1px solid var(--border2);"><th style="padding:9px 12px;text-align:left;font-size:11px;color:var(--muted2);font-weight:700;text-transform:uppercase;letter-spacing:.6px;">KPI</th><th style="padding:9px 12px;text-align:right;font-size:11px;color:var(--muted2);font-weight:700;text-transform:uppercase;letter-spacing:.6px;">Tu empresa</th><th style="padding:9px 12px;text-align:right;font-size:11px;color:var(--muted2);font-weight:700;text-transform:uppercase;letter-spacing:.6px;">Sector (mín–med–máx)</th></tr></thead><tbody>${rows}</tbody></table></div>${insH}`;
-    if(fuente){fuente.textContent=d.fuente||'Referencia orientativa — no dato oficial';fuente.style.display='';}
-  }catch(e){
-    if(body) body.innerHTML='<span style="color:var(--danger);">❌ '+e.message+'</span>';
-  }finally{
-    if(btn){btn.disabled=false;btn.textContent='Actualizar Benchmark';}
+  const bm=(window.getBM&&window.getBM(giro,pais))||null;
+  if(!bm){
+    if(body) body.innerHTML='<span style="color:var(--danger);">❌ Referente sectorial no disponible.</span>';
+    return;
   }
+  if(badge){badge.textContent=giro;badge.style.display='';}
+  // Solo KPIs que OBBIO_BENCHMARKS realmente cubre — sin inventar margenBruto/DPO/score por sector.
+  const fmt=v=>v==null?'—':typeof v==='number'?v.toFixed(1):v;
+  const kpiMap={
+    margenEbitda:{label:'Margen EBITDA',tu:r.margenEbitda,ref:bm.margenEbitda,unit:'%',mejorSi:'mayor'},
+    margenNeto:  {label:'Margen Neto',  tu:r.margenNeto,  ref:bm.margenNeto,  unit:'%',mejorSi:'mayor'},
+    diasCobro:   {label:'Días de Cobro (DSO)',tu:r.diasCobro,ref:bm.dso,unit:'días',mejorSi:'menor'},
+    razCorriente:{label:'Razón Corriente',tu:r.razCorriente,ref:bm.razCorriente,unit:'x',mejorSi:'mayor'},
+    debtEbitda:  {label:'Deuda/EBITDA',  tu:r.debtEbitda,  ref:bm.debtEbitda,  unit:'x',mejorSi:'menor'},
+    roe:         {label:'ROE',           tu:r.roe,         ref:bm.roe,         unit:'%',mejorSi:'mayor'},
+  };
+  const rows=Object.values(kpiMap).filter(info=>info.ref!=null).map(info=>{
+    const tuVal=info.tu!=null?+info.tu.toFixed(1):null;
+    const isBetter=tuVal!=null&&(info.mejorSi==='mayor'?tuVal>info.ref:tuVal<info.ref);
+    const color=tuVal==null?'var(--muted)':isBetter?'var(--success)':'var(--warning)';
+    const icon=tuVal==null?'—':isBetter?'↑':'↓';
+    return `<tr>
+      <td style="padding:9px 12px;color:var(--muted);">${info.label}</td>
+      <td style="padding:9px 12px;text-align:right;font-weight:700;color:${color};">${tuVal!=null?tuVal+' '+info.unit:'—'} <span style="font-size:11px;">${icon}</span></td>
+      <td style="padding:9px 12px;text-align:right;color:var(--muted2);">${fmt(info.ref)} ${info.unit}</td>
+    </tr>`;
+  }).join('');
+  if(body) body.innerHTML=`<div style="overflow-x:auto;width:100%;"><table style="width:100%;border-collapse:collapse;"><thead><tr style="border-bottom:1px solid var(--border2);"><th style="padding:9px 12px;text-align:left;font-size:11px;color:var(--muted2);font-weight:700;text-transform:uppercase;letter-spacing:.6px;">KPI</th><th style="padding:9px 12px;text-align:right;font-size:11px;color:var(--muted2);font-weight:700;text-transform:uppercase;letter-spacing:.6px;">Tu empresa</th><th style="padding:9px 12px;text-align:right;font-size:11px;color:var(--muted2);font-weight:700;text-transform:uppercase;letter-spacing:.6px;">Referente del sector</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  if(fuente){fuente.textContent=bm._fuente?bm._fuente+' · '+(bm._fecha||''):'Referencia orientativa — no dato oficial';fuente.style.display='';}
 };
 
 /* ══════════════════════════════════════════════
@@ -11300,7 +11401,7 @@ window.fetchBenchmark=async function(){
       const endpoint = (typeof _copilotEndpoint==='function') ? _copilotEndpoint() : '/api/chat';
       const res = await fetch(endpoint, {
         method:'POST',
-        headers:{'Content-Type':'application/json'},
+        headers: await window._authHeaders(),
         body: JSON.stringify({
           question: q,
           financialContext: (typeof _buildCFOSystemPrompt==='function') ? _buildCFOSystemPrompt(r) : '',
@@ -11431,7 +11532,7 @@ window.fetchBenchmark=async function(){
     const lid='ail_'+Date.now(); _aiAppendLoading(lid);
     try{
       const endpoint=(typeof _copilotEndpoint==='function')?_copilotEndpoint():'/api/chat';
-      const res=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},
+      const res=await fetch(endpoint,{method:'POST',headers:await window._authHeaders(),
         body:JSON.stringify({question:q,financialContext:(typeof _buildCFOSystemPrompt==='function')?_buildCFOSystemPrompt(r):'',history:histSnap})});
       const data=await res.json();
       if(!res.ok) throw new Error(data.error||'error');
@@ -12137,6 +12238,7 @@ function sbApplyEmpresaData(d, opts){
   window._obbioMonthlyByYear = d.monthlyByYear || null;
   window._obbioClienteMap   = d.clienteMap || null;
   window._obbioRegionMap    = d.regionMap || null;
+  window._obbioConfig       = d.config || null;
   // Preferir calc cacheado (completo). Si falta, intentar sessionStorage, luego recalcular.
   let calc=d._calc;
   if(!calc){ try{ const _raw=sessionStorage.getItem('obbio_calc_v1'); if(_raw) calc=JSON.parse(_raw); }catch(e){} }
