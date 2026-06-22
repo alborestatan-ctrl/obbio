@@ -186,6 +186,7 @@ body{background:var(--bg);color:var(--text);overflow-x:hidden;max-width:100vw;}
 /* ===== KPI CARDS MEJORADAS ===== */
 .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px;}
 .kpi-card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:20px 22px;position:relative;overflow:visible;transition:.2s;cursor:default;}
+#dashboardView .kpi-card{cursor:pointer;}
 .kpi-card:hover{border-color:rgba(255,255,255,.15);transform:translateY(-1px);}
 .kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:18px 18px 0 0;}
 .kpi-card.accent-blue::before{background:linear-gradient(90deg,var(--primary),var(--indigo));}
@@ -1109,6 +1110,14 @@ th[data-tip]{cursor:default;}
       <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Acciones recomendadas</div>
       <div id="diag-acciones-list" style="display:flex;flex-direction:column;gap:6px;"></div>
     </div>
+  </div>
+
+  <!-- LO QUE OBBIO DETECTÓ -->
+  <div id="obbioDetecta" style="display:none;margin-bottom:20px;padding:18px 20px;background:var(--card);border:1px solid var(--border);border-radius:16px;"></div>
+
+  <!-- MODAL TRAZABILIDAD KPI -->
+  <div id="kpiModal" onclick="if(event.target===this)this.style.display='none'" style="display:none;position:fixed;inset:0;background:rgba(10,13,20,.55);z-index:9999;align-items:center;justify-content:center;padding:20px;">
+    <div id="kpiModalCard" style="background:var(--card);border:1px solid var(--border);border-radius:20px;max-width:520px;width:100%;padding:24px 26px;box-shadow:0 20px 60px rgba(0,0,0,.35);max-height:85vh;overflow:auto;"></div>
   </div>
 
   <!-- KPI GRID MEJORADO -->
@@ -5138,6 +5147,90 @@ function notaEstimadosFlujo(meta){
 }
 
 /* ── Briefings automáticos por umbrales ── */
+/* ── Lo que Obbio detectó: hallazgos de cruce y temporales (solo si hay dato real) ── */
+/* ── Trazabilidad de KPI: de qué datos del cliente sale (sin fórmulas) ── */
+const KPI_DETALLE={
+  'Ingresos':{sig:'Ventas totales del período, sin IVA.',comp:[{l:'Tus ventas registradas',v:r=>r.ventas,tag:'tu'}]},
+  'EBITDA':{sig:'Lo que genera tu operación antes de intereses, impuestos y depreciación.',comp:[{l:'Ganancia operativa',v:r=>r.ebit,tag:'calc'},{l:'Depreciación',v:r=>r.dep,meta:'dep'}],bm:'margenEbitda',bmLabel:'margen',pctSelf:r=>r.margenEbitda},
+  'Flujo de Caja':{sig:'Efectivo que generó o consumió tu operación en el período.',comp:[{l:'Flujo operativo',v:r=>r.flujoOp,meta:'flujoOp'},{l:'Flujo de inversión',v:r=>r.flujoInv,meta:'flujoInv'},{l:'Flujo financiero',v:r=>r.flujoFin,meta:'flujoFin'}]},
+  'Margen EBITDA':{sig:'De cada peso que vendes, cuánto se vuelve ganancia operativa.',comp:[{l:'Tu EBITDA',v:r=>r.ebitda,tag:'calc'},{l:'Tus ventas',v:r=>r.ventas,tag:'tu'}],bm:'margenEbitda',bmLabel:'margen',pctSelf:r=>r.margenEbitda},
+  'Score Estratégico':{sig:'Salud financiera global de 0 a 100: combina rentabilidad, liquidez, deuda y crecimiento.',comp:[],nota:'Es una metodología propia de Obbio.'}
+};
+function showKpiDetalle(key){
+  const d=KPI_DETALLE[key]; if(!d) return;
+  const r=window._obbioCalc; if(!r) return;
+  const _m=(typeof fmtMoney==='function')?fmtMoney:(x=>'$'+Math.round(x||0).toLocaleString('es-MX'));
+  function tagHtml(c){
+    let origen=c.tag||'tu', sup='';
+    if(c.meta && r._meta && r._meta[c.meta]){ origen=r._meta[c.meta].origen; sup=r._meta[c.meta].supuesto||''; }
+    if(origen==='estimado'||origen==='sin_dato') return '<span style="color:var(--warning);font-size:12px;">Estimado'+(sup?' · '+sup:'')+'</span>';
+    if(origen==='calc'||origen==='derivado') return '<span style="color:var(--muted);font-size:12px;">Calculado de tus datos</span>';
+    return '<span style="color:var(--success);font-size:12px;">Tu dato</span>';
+  }
+  const comps=d.comp.map(c=>'<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;background:var(--card2);margin-bottom:8px;"><div><div style="font-size:14px;color:var(--text);">'+c.l+'</div>'+tagHtml(c)+'</div><div style="font-weight:700;color:var(--text);white-space:nowrap;">'+_m(c.v(r))+'</div></div>').join('');
+  let bm='';
+  if(d.bm && typeof getBM==='function' && d.pctSelf){
+    const b=getBM(r.giro,r.pais)||{};
+    if(b[d.bm]!=null){ const self=d.pctSelf(r);
+      bm='<div style="margin-top:10px;padding:12px 14px;border-radius:10px;background:var(--card2);font-size:13px;color:var(--muted);">Tu sector ronda <b style="color:var(--text);">'+b[d.bm]+'% de '+d.bmLabel+'</b> · tú estás en <b style="color:var(--success);">'+(self!=null?self.toFixed(0):'—')+'%</b></div>'; }
+  }
+  document.getElementById('kpiModalCard').innerHTML=
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><span style="font-size:18px;font-weight:800;color:var(--text);">'+key+'</span><span onclick="document.getElementById(\'kpiModal\').style.display=\'none\'" style="cursor:pointer;color:var(--muted);font-size:24px;line-height:1;">&times;</span></div>'
+    +'<div style="font-size:13.5px;color:var(--muted);margin-bottom:18px;">'+d.sig+'</div>'
+    +(d.comp.length?'<div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:10px;">Se forma con tus datos</div>'+comps:'')
+    +bm
+    +(d.nota?'<div style="margin-top:10px;font-size:12px;color:var(--muted);font-style:italic;">'+d.nota+'</div>':'')
+    +'<div style="margin-top:14px;font-size:11px;color:var(--muted);font-style:italic;">Nunca se muestra la fórmula — solo de qué datos tuyos sale.</div>';
+  document.getElementById('kpiModal').style.display='flex';
+}
+document.addEventListener('click',function(e){
+  const card=e.target.closest&&e.target.closest('#dashboardView .kpi-card'); if(!card) return;
+  const lbl=card.querySelector('.kpi-label'); if(!lbl) return;
+  const key=lbl.textContent.trim();
+  if(KPI_DETALLE[key]) showKpiDetalle(key);
+});
+function obbioDetecta(r){
+  const f=[]; const _m=x=>'$'+Math.round(x).toLocaleString('es-MX');
+  if(r.diasCobro>0 && r.diasPago>0 && r.diasCobro>r.diasPago+10 && r.cxc>0){
+    const atrapado=r.cxc*((r.diasCobro-r.diasPago)/r.diasCobro);
+    f.push({sev:'warn',t:'Cobras lento y pagas rápido',
+      d:`Cobras a ${Math.round(r.diasCobro)} días y pagas a ${Math.round(r.diasPago)}. Eso son ~${_m(atrapado)} atrapados que podrías tener en caja.`});
+  }
+  if(r.clienteMap){
+    const vals=Object.values(r.clienteMap).filter(v=>v>0); const tot=vals.reduce((a,b)=>a+b,0);
+    if(tot>0){ const pct=Math.round(Math.max(...vals)/tot*100);
+      if(pct>=30) f.push({sev:'warn',t:'Dependes demasiado de un cliente',
+        d:`Tu cliente principal es el ${pct}% de tus ventas. Si se va, pierdes una parte grande de tu ingreso.`}); }
+  } else if(r.concentracion!=null && r.concentracion<=3){
+    f.push({sev:'warn',t:'Riesgo de concentración',
+      d:`${r.concentracion} clientes generan el 80% de tus ingresos. Alta dependencia.`});
+  }
+  if(r.ccc!=null && r.ccc>60){
+    f.push({sev:'warn',t:'Tu dinero tarda en dar la vuelta',
+      d:`Tu ciclo de efectivo es de ${Math.round(r.ccc)} días: desde que pagas hasta que cobras. Acortarlo libera caja.`});
+  }
+  if(r.yoy!=null){
+    if(r.yoy>=10) f.push({sev:'pos',t:'Vienes creciendo fuerte',
+      d:`Tus ventas subieron +${r.yoy.toFixed(1)}% vs el año pasado. Buen momento para aprovechar el impulso.`});
+    else if(r.yoy<0) f.push({sev:'danger',t:'Tus ventas cayeron vs el año pasado',
+      d:`Bajaron ${Math.abs(r.yoy).toFixed(1)}% vs el año anterior. Revisa qué cambió antes de que se vuelva tendencia.`});
+  }
+  return f;
+}
+function renderObbioDetecta(r){
+  const el=document.getElementById('obbioDetecta'); if(!el) return;
+  const f=(typeof obbioDetecta==='function')?obbioDetecta(r):[];
+  if(!f.length){ el.style.display='none'; el.innerHTML=''; return; }
+  const bc={pos:'positive-border',warn:'warning-border',danger:'danger-border',info:'info-border'};
+  el.style.display='';
+  el.innerHTML=
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">'
+    +'<span style="font-size:14px;font-weight:800;color:var(--text);">🔍 Lo que Obbio detectó</span>'
+    +'<span style="padding:4px 12px;border-radius:14px;font-size:11.5px;font-weight:700;background:var(--card2);color:var(--success);">'+f.length+' '+(f.length===1?'hallazgo':'hallazgos')+' · al instante</span>'
+    +'</div><div class="briefing-grid">'
+    +f.map(x=>'<div class="briefing-item '+bc[x.sev]+'"><div class="briefing-title">'+x.t+'</div><div class="briefing-text">'+x.d+'</div></div>').join('')
+    +'</div>';
+}
 function generarBriefings(r){
   const B=[];
   const BM=(window.getBM&&window.getBM(r.giro, r.pais))||{margenEbitda:15,razCorriente:1.5,debtEbitda:3};
@@ -6038,7 +6131,7 @@ function showExcelPreview(data,filename){
 
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:20px;">
         ${kpi('Ventas',v>0?fmtM(v):'—','del período',v>0?colGood:null)}
-        ${kpi('Margen bruto',v>0&&c>0?fmtPct(margenBruto):'—',c>0?'Ventas − COGS':'solo con COGS',margenBruto>=40?colGood:margenBruto>=25?colWarn:colDanger)}
+        ${kpi('Margen bruto',v>0&&c>0?fmtPct(margenBruto):'—',c>0?'Ganancia sobre ventas':'solo con COGS',margenBruto>=40?colGood:margenBruto>=25?colWarn:colDanger)}
         ${kpi('EBITDA',v>0?fmtM(ebitda):'—',v>0?fmtPct(margenEbitda)+' margen':null,ebitda>=0?colGood:colDanger)}
         ${caja>0?kpi('Caja y bancos',fmtM(caja),'al cierre',colGood):''}
         ${deuda>0?kpi('Deuda total',fmtM(deuda),'pasivos LP',colWarn):''}
@@ -8282,6 +8375,7 @@ function renderDiagEjecutivo(r){
 }
 
 function renderDashboardView(r){
+  if(typeof renderObbioDetecta==='function') renderObbioDetecta(r);
   _syncDashSelects();
   const ov=document.getElementById('onboardingOverlay');
   if(ov){
