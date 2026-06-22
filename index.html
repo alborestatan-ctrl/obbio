@@ -3748,6 +3748,11 @@ background:#10B981;
           <select class="uw-input" id="ii_anio">
             <option>2027</option><option selected>2026</option><option>2025</option><option>2024</option><option>2023</option><option>2022</option>
           </select>
+          <script>(function(){
+            const _selAnio=document.getElementById('ii_anio');
+            const _yNow=new Date().getFullYear();
+            _selAnio.innerHTML=[1,0,-1,-2,-3,-4].map(d=>'<option'+(d===0?' selected':'')+'>'+(_yNow+d)+'</option>').join('');
+          })();</script>
         </div>
         <div class="uw-field">
           <label class="uw-label" for="ii_clientes">Clientes activos <span class="uw-opt">opcional</span></label>
@@ -4047,7 +4052,7 @@ function updateModel(){
   setTxt('sc_pes_val',  _sym+(baseSales*0.9).toFixed(1)+'M');
 
   // Tabla 5 años
-  const baseYear = parseInt((document.getElementById('ii_anio')||{value:'2024'}).value)||2024;
+  const baseYear = parseInt((document.getElementById('ii_anio')||{}).value)||new Date().getFullYear();
   const yrs=[0,1,2,3,4];
   const tRows=[
     {lbl:'💰 Ventas',         vals:yrs.map(y=>sales*Math.pow(1+gRate/100,y)),         color:'var(--primary)',   bold:true},
@@ -4418,7 +4423,7 @@ function uwAddRow(tableId, type){
   const cols=defs[type]||[];
   const tr=document.createElement('tr');
   tr.innerHTML=cols.map(c=>`<td><input class="uw-tinput" type="${c.num?'number':'text'}" placeholder="${c.ph}" ${c.num?'min="0"':''} ${c.w?'style="min-width:'+c.w+'px"':''}></td>`).join('')
-    +`<td><button class="uw-rm-row" onclick="this.closest('tr').remove()">×</button></td>`;
+    +`<td><button class="uw-rm-row" onclick="this.closest('tr').remove()" aria-label="Eliminar fila">×</button></td>`;
   tbody.appendChild(tr);
 }
 
@@ -4971,7 +4976,7 @@ function calcFinanciero(){
     briefings,
     ingMensual,ebitdaMensual,cfMensual,
     empresa:($('ii_empresa')||{}).value||'',
-    anio:($('ii_anio')||{}).value||'2024',
+    anio:($('ii_anio')||{}).value||String(new Date().getFullYear()),
     giro:($('ii_giro')||{}).value||'comercial',
     clientes:num('ii_clientes')||0,
     moneda:($('ii_moneda')||{}).value||'MXN',
@@ -5027,23 +5032,24 @@ function notaEstimadosFlujo(meta){
 /* ── Briefings automáticos por umbrales ── */
 function generarBriefings(r){
   const B=[];
+  const BM=(window.getBM&&window.getBM(r.giro, r.pais))||{margenEbitda:15,razCorriente:1.5,debtEbitda:3};
   if(r.margenEbitda==null)    { /* sin ventas — no mostrar briefing de EBITDA */ }
-  else if(r.margenEbitda>20)  B.push({tipo:'pos',titulo:'EBITDA sobresaliente',texto:`Margen EBITDA de ${r.margenEbitda.toFixed(1)}% supera el benchmark del sector. Eficiencia operativa en punto óptimo.`});
-  else if(r.margenEbitda>10)  B.push({tipo:'pos',titulo:'EBITDA saludable',texto:`Margen EBITDA de ${r.margenEbitda.toFixed(1)}%. La operación genera valor de forma consistente.`});
-  else if(r.margenEbitda>0)   B.push({tipo:'warn',titulo:'Margen EBITDA bajo',texto:`El margen EBITDA de ${r.margenEbitda.toFixed(1)}% está por debajo del benchmark. Revisar estructura de costos.`});
+  else if(r.margenEbitda>BM.margenEbitda*1.3)  B.push({tipo:'pos',titulo:'EBITDA sobresaliente',texto:`Margen EBITDA de ${r.margenEbitda.toFixed(1)}% supera el referente del sector (${BM.margenEbitda}%). Eficiencia operativa en punto óptimo.`});
+  else if(r.margenEbitda>BM.margenEbitda*0.7)  B.push({tipo:'pos',titulo:'EBITDA saludable',texto:`Margen EBITDA de ${r.margenEbitda.toFixed(1)}%, cerca del referente del sector (${BM.margenEbitda}%). La operación genera valor de forma consistente.`});
+  else if(r.margenEbitda>0)   B.push({tipo:'warn',titulo:'Margen EBITDA bajo',texto:`El margen EBITDA de ${r.margenEbitda.toFixed(1)}% está por debajo del referente del sector (${BM.margenEbitda}%). Revisar estructura de costos.`});
   else                        B.push({tipo:'danger',titulo:'EBITDA negativo',texto:'La operación está generando pérdidas a nivel EBITDA. Acción correctiva urgente.'});
 
   if(r.razCorriente!=null){
-    if(r.razCorriente>=2)     B.push({tipo:'pos',titulo:'Liquidez sólida',texto:`Razón corriente de ${r.razCorriente.toFixed(2)}x. Amplia cobertura para obligaciones de corto plazo.`});
+    if(r.razCorriente>=BM.razCorriente*1.3)     B.push({tipo:'pos',titulo:'Liquidez sólida',texto:`Razón corriente de ${r.razCorriente.toFixed(2)}x, sobre el referente del sector (${BM.razCorriente}x). Amplia cobertura para obligaciones de corto plazo.`});
     else if(r.razCorriente>=1)B.push({tipo:'info',titulo:'Liquidez adecuada',texto:`Razón corriente de ${r.razCorriente.toFixed(2)}x. Monitorear de cerca el capital de trabajo.`});
     else                      B.push({tipo:'danger',titulo:'Alerta de liquidez',texto:`Razón corriente de ${r.razCorriente.toFixed(2)}x. Pasivos corrientes superan activos corrientes. Riesgo de iliquidez.`});
   }
 
   if(r.debtEbitdaCritical)    B.push({tipo:'danger',titulo:'Deuda crítica — EBITDA negativo',texto:`Operación en pérdidas con deuda activa (${r.deudaTotal>0?_fmtMoney(r.deudaTotal):'—'}). Sin capacidad de pago: riesgo máximo.`});
   else if(r.debtEbitda!=null){
-    if(r.debtEbitda<2)        B.push({tipo:'pos',titulo:'Deuda controlada',texto:`Ratio Deuda/EBITDA de ${r.debtEbitda.toFixed(1)}x. Apalancamiento saludable y manejable.`});
-    else if(r.debtEbitda<4)   B.push({tipo:'warn',titulo:'Deuda moderada',texto:`Ratio Deuda/EBITDA de ${r.debtEbitda.toFixed(1)}x. Vigilar crecimiento de deuda respecto al EBITDA.`});
-    else                      B.push({tipo:'danger',titulo:'Apalancamiento elevado',texto:`Ratio Deuda/EBITDA de ${r.debtEbitda.toFixed(1)}x supera el umbral de 4x. Priorizar desapalancamiento.`});
+    if(r.debtEbitda<BM.debtEbitda*0.6)        B.push({tipo:'pos',titulo:'Deuda controlada',texto:`Ratio Deuda/EBITDA de ${r.debtEbitda.toFixed(1)}x, bajo el referente del sector (${BM.debtEbitda}x). Apalancamiento saludable y manejable.`});
+    else if(r.debtEbitda<BM.debtEbitda)   B.push({tipo:'warn',titulo:'Deuda moderada',texto:`Ratio Deuda/EBITDA de ${r.debtEbitda.toFixed(1)}x. Vigilar crecimiento de deuda respecto al EBITDA.`});
+    else                      B.push({tipo:'danger',titulo:'Apalancamiento elevado',texto:`Ratio Deuda/EBITDA de ${r.debtEbitda.toFixed(1)}x supera el referente del sector (${BM.debtEbitda}x). Priorizar desapalancamiento.`});
   }
 
   if(r.yoy!=null){
@@ -5186,7 +5192,7 @@ function addSucursalRow(){
   row.innerHTML=`<input class="iinput suc-nom" placeholder="Ej: Sucursal Norte" style="font-size:13px;">
     <input class="iinput suc-vta" type="number" placeholder="Ingresos" style="font-size:13px;" oninput="previewCalc&&previewCalc()">
     <input class="iinput suc-cog" type="number" placeholder="Costo ventas" style="font-size:13px;">
-    <button onclick="this.closest('.suc-row').remove()" style="background:none;border:1px solid var(--border2);border-radius:6px;color:var(--muted);cursor:pointer;font-size:14px;padding:4px 8px;">×</button>`;
+    <button onclick="this.closest('.suc-row').remove()" aria-label="Eliminar sucursal" style="background:none;border:1px solid var(--border2);border-radius:6px;color:var(--muted);cursor:pointer;font-size:14px;padding:4px 8px;">×</button>`;
   cont.appendChild(row);
 }
 window.toggleSucursales=toggleSucursales;
@@ -6738,23 +6744,23 @@ async function downloadTemplate(){
       ],
     },
     MX:{
-      restaurantes:{margenEbitda:10,margenNeto:5,razCorriente:1.2,debtEbitda:3.5,cobIntereses:2.5,ccc:25,dso:15,roe:12,_fuente:'Estimación interna orientativa · PyME México',_fecha:'2025'},
-      tecnologia:  {margenEbitda:25,margenNeto:15,razCorriente:2,  debtEbitda:2,  cobIntereses:5,  ccc:40,dso:30,roe:20,_fuente:'Estimación interna orientativa · PyME México',_fecha:'2025'},
-      manufactura: {margenEbitda:12,margenNeto:7, razCorriente:1.5,debtEbitda:3.5,cobIntereses:3,  ccc:75,dso:45,roe:14,_fuente:'Estimación interna orientativa · PyME México',_fecha:'2025'},
-      salud:       {margenEbitda:18,margenNeto:10,razCorriente:1.5,debtEbitda:2.5,cobIntereses:4,  ccc:40,dso:30,roe:16,_fuente:'Estimación interna orientativa · PyME México',_fecha:'2025'},
-      construccion:{margenEbitda:12,margenNeto:8, razCorriente:1.3,debtEbitda:4,  cobIntereses:2.5,ccc:90,dso:60,roe:12,_fuente:'Estimación interna orientativa · PyME México',_fecha:'2025'},
-      transporte:  {margenEbitda:11,margenNeto:6, razCorriente:1.3,debtEbitda:3.5,cobIntereses:2.5,ccc:50,dso:30,roe:13,_fuente:'Estimación interna orientativa · PyME México',_fecha:'2025'},
-      _default:    {margenEbitda:15,margenNeto:8, razCorriente:1.5,debtEbitda:3,  cobIntereses:3,  ccc:60,dso:45,roe:15,_fuente:'Estimación interna orientativa · PyME México',_fecha:'2025'},
+      restaurantes:{margenEbitda:10,margenNeto:5,razCorriente:1.2,debtEbitda:3.5,cobIntereses:2.5,ccc:25,dso:15,roe:12,cogsPct:38,gastosPct:25,_fuente:'Estimación interna orientativa · PyME México',_fecha:'2025'},
+      tecnologia:  {margenEbitda:25,margenNeto:15,razCorriente:2,  debtEbitda:2,  cobIntereses:5,  ccc:40,dso:30,roe:20,cogsPct:25,gastosPct:40,_fuente:'Estimación interna orientativa · PyME México',_fecha:'2025'},
+      manufactura: {margenEbitda:12,margenNeto:7, razCorriente:1.5,debtEbitda:3.5,cobIntereses:3,  ccc:75,dso:45,roe:14,cogsPct:58,gastosPct:15,_fuente:'Estimación interna orientativa · PyME México',_fecha:'2025'},
+      salud:       {margenEbitda:18,margenNeto:10,razCorriente:1.5,debtEbitda:2.5,cobIntereses:4,  ccc:40,dso:30,roe:16,cogsPct:40,gastosPct:22,_fuente:'Estimación interna orientativa · PyME México',_fecha:'2025'},
+      construccion:{margenEbitda:12,margenNeto:8, razCorriente:1.3,debtEbitda:4,  cobIntereses:2.5,ccc:90,dso:60,roe:12,cogsPct:70,gastosPct:12,_fuente:'Estimación interna orientativa · PyME México',_fecha:'2025'},
+      transporte:  {margenEbitda:11,margenNeto:6, razCorriente:1.3,debtEbitda:3.5,cobIntereses:2.5,ccc:50,dso:30,roe:13,cogsPct:55,gastosPct:25,_fuente:'Estimación interna orientativa · PyME México',_fecha:'2025'},
+      _default:    {margenEbitda:15,margenNeto:8, razCorriente:1.5,debtEbitda:3,  cobIntereses:3,  ccc:60,dso:45,roe:15,cogsPct:55,gastosPct:25,_fuente:'Estimación interna orientativa · PyME México',_fecha:'2025'},
     },
     ES:{
       // Cifras orientativas; las FUENTES oficiales están en _meta.fuentes. Afinar con extracción directa de BdE base RSE.
-      restaurantes:{margenEbitda:10,margenNeto:5,razCorriente:1.2,debtEbitda:3.5,cobIntereses:2.5,ccc:25,dso:15,roe:12,_fuente:'Orientativo · base: INE EEE Servicios (hostelería) + BdE RSE',_fecha:'2024'},
-      tecnologia:  {margenEbitda:25,margenNeto:15,razCorriente:2,  debtEbitda:2,  cobIntereses:5,  ccc:40,dso:30,roe:20,_fuente:'Orientativo · base: INE EEE Servicios (info/comunicaciones) + BdE RSE',_fecha:'2024'},
-      manufactura: {margenEbitda:12,margenNeto:7, razCorriente:1.5,debtEbitda:3.5,cobIntereses:3,  ccc:75,dso:45,roe:14,_fuente:'Orientativo · base: INE EEE Industrial + BdE RSE',_fecha:'2024'},
-      salud:       {margenEbitda:18,margenNeto:10,razCorriente:1.5,debtEbitda:2.5,cobIntereses:4,  ccc:40,dso:30,roe:16,_fuente:'Orientativo · base: INE EEE Servicios (sanitarias) + BdE RSE',_fecha:'2024'},
-      construccion:{margenEbitda:12,margenNeto:8, razCorriente:1.3,debtEbitda:4,  cobIntereses:2.5,ccc:90,dso:60,roe:12,_fuente:'Orientativo · base: INE EEE + AEAT (construcción) + BdE RSE',_fecha:'2024'},
-      transporte:  {margenEbitda:11,margenNeto:6, razCorriente:1.3,debtEbitda:3.5,cobIntereses:2.5,ccc:50,dso:30,roe:13,_fuente:'Orientativo · base: INE EEE Servicios (transporte) + BdE RSE',_fecha:'2024'},
-      _default:    {margenEbitda:15,margenNeto:8, razCorriente:1.5,debtEbitda:3,  cobIntereses:3,  ccc:60,dso:45,roe:15,_fuente:'Orientativo · base: Banco de España base RSE (total sectores)',_fecha:'2024'},
+      restaurantes:{margenEbitda:10,margenNeto:5,razCorriente:1.2,debtEbitda:3.5,cobIntereses:2.5,ccc:25,dso:15,roe:12,cogsPct:38,gastosPct:25,_fuente:'Orientativo · base: INE EEE Servicios (hostelería) + BdE RSE',_fecha:'2024'},
+      tecnologia:  {margenEbitda:25,margenNeto:15,razCorriente:2,  debtEbitda:2,  cobIntereses:5,  ccc:40,dso:30,roe:20,cogsPct:25,gastosPct:40,_fuente:'Orientativo · base: INE EEE Servicios (info/comunicaciones) + BdE RSE',_fecha:'2024'},
+      manufactura: {margenEbitda:12,margenNeto:7, razCorriente:1.5,debtEbitda:3.5,cobIntereses:3,  ccc:75,dso:45,roe:14,cogsPct:58,gastosPct:15,_fuente:'Orientativo · base: INE EEE Industrial + BdE RSE',_fecha:'2024'},
+      salud:       {margenEbitda:18,margenNeto:10,razCorriente:1.5,debtEbitda:2.5,cobIntereses:4,  ccc:40,dso:30,roe:16,cogsPct:40,gastosPct:22,_fuente:'Orientativo · base: INE EEE Servicios (sanitarias) + BdE RSE',_fecha:'2024'},
+      construccion:{margenEbitda:12,margenNeto:8, razCorriente:1.3,debtEbitda:4,  cobIntereses:2.5,ccc:90,dso:60,roe:12,cogsPct:70,gastosPct:12,_fuente:'Orientativo · base: INE EEE + AEAT (construcción) + BdE RSE',_fecha:'2024'},
+      transporte:  {margenEbitda:11,margenNeto:6, razCorriente:1.3,debtEbitda:3.5,cobIntereses:2.5,ccc:50,dso:30,roe:13,cogsPct:55,gastosPct:25,_fuente:'Orientativo · base: INE EEE Servicios (transporte) + BdE RSE',_fecha:'2024'},
+      _default:    {margenEbitda:15,margenNeto:8, razCorriente:1.5,debtEbitda:3,  cobIntereses:3,  ccc:60,dso:45,roe:15,cogsPct:55,gastosPct:25,_fuente:'Orientativo · base: Banco de España base RSE (total sectores)',_fecha:'2024'},
     },
   };
 
@@ -7745,12 +7751,13 @@ async function downloadTemplate(){
 
     // ── 12. EXECUTIVE STRATEGY ──
     PB(140);SEC('Executive Strategy','Prioridades estrategicas e impacto financiero','12');
-    const impDSO=r.cxc>0&&r.diasCobro>45?r.cxc*(Math.max(0,r.diasCobro-45)/r.diasCobro):0;
+    const _stratBM=getBM(r.giro, r.pais);
+    const impDSO=r.cxc>0&&r.diasCobro>_stratBM.dso?r.cxc*(Math.max(0,r.diasCobro-_stratBM.dso)/r.diasCobro):0;
     const impG=(r.gastosOp||gastoTotal)*0.05;
     const sBriefs=[];
-    if(r.diasCobro>45) sBriefs.push({t:'PRIORIDAD ALTA: Acelerar cobranza',b:'Reducir DSO de '+Math.round(r.diasCobro)+'d a 45d liberaria '+_mv(impDSO)+' de efectivo.',c:C.green,bg:C.greenPl});
-    if(r.margenEbitda<15) sBriefs.push({t:'PRIORIDAD ALTA: Reducir costos operativos',b:'Margen '+_pv(r.margenEbitda)+' bajo benchmark 15%. Reducir gastos 5% = '+_mv(impG)+'.',c:C.amber,bg:C.amberPl});
-    if(r.debtEbitda>3) sBriefs.push({t:'RIESGO: Apalancamiento elevado',b:'Deuda/G.Op. '+_t(_x(r.debtEbitda))+'x. Priorizar pago deuda CP '+_mv(r.pasivoCp||0)+'.',c:C.red,bg:C.redPl});
+    if(r.diasCobro>_stratBM.dso) sBriefs.push({t:'PRIORIDAD ALTA: Acelerar cobranza',b:'Reducir DSO de '+Math.round(r.diasCobro)+'d a '+_stratBM.dso+'d liberaria '+_mv(impDSO)+' de efectivo.',c:C.green,bg:C.greenPl});
+    if(r.margenEbitda<_stratBM.margenEbitda) sBriefs.push({t:'PRIORIDAD ALTA: Reducir costos operativos',b:'Margen '+_pv(r.margenEbitda)+' bajo benchmark '+_stratBM.margenEbitda+'%. Reducir gastos 5% = '+_mv(impG)+'.',c:C.amber,bg:C.amberPl});
+    if(r.debtEbitda>_stratBM.debtEbitda) sBriefs.push({t:'RIESGO: Apalancamiento elevado',b:'Deuda/G.Op. '+_t(_x(r.debtEbitda))+'x. Priorizar pago deuda CP '+_mv(r.pasivoCp||0)+'.',c:C.red,bg:C.redPl});
     else if(r.debtEbitda<1.5) sBriefs.push({t:'OPORTUNIDAD: Capacidad financiera disponible',b:'Deuda/G.Op. '+_t(_x(r.debtEbitda))+'x bajo. Margen para financiar crecimiento.',c:C.blue,bg:C.bluePl});
     if(r.yoy!=null&&r.yoy>10) sBriefs.push({t:'FORTALEZA: Crecimiento acelerado',b:'Crecimiento '+r.yoy.toFixed(1)+'% YoY. Momentum para expansión.',c:C.green,bg:C.greenPl});
     if(!sBriefs.length) sBriefs.push({t:'Desempeno equilibrado',b:'Indicadores en rangos saludables. Mantener disciplina.',c:C.slate,bg:C.card});
@@ -7850,10 +7857,10 @@ async function downloadTemplate(){
     PB(160);SEC('Analisis de Riesgos','Exposicion financiera y plan de mitigacion','16');
     const risks=[];
     if(r.razCorriente<1)        risks.push({area:'Liquidez',       sev:'ALTA', detail:'Razon corriente '+_t(_x(r.razCorriente))+'x - por debajo de 1.0',accion:'Restructurar deuda CP; inyectar capital de trabajo',c:C.red,bg:C.redPl});
-    else if(r.razCorriente<1.5) risks.push({area:'Liquidez',       sev:'MEDIA',detail:'Razon corriente '+_t(_x(r.razCorriente))+'x - margen ajustado',  accion:'Monitorear flujo mensual; reducir pasivos CP',     c:C.amber,bg:C.amberPl});
-    if(r.debtEbitda>4)          risks.push({area:'Apalancamiento', sev:'ALTA', detail:'D/G.Op. '+_t(_x(r.debtEbitda))+'x - nivel elevado',               accion:'Amortizacion acelerada; revisar estructura',       c:C.red,bg:C.redPl});
-    if(r.margenEbitda<10)       risks.push({area:'Rentabilidad',   sev:'MEDIA',detail:'Margen operativo '+_pv(r.margenEbitda)+' - bajo benchmark',        accion:'Revision de costos y eficiencia operativa',        c:C.amber,bg:C.amberPl});
-    if(r.ccc>90)                risks.push({area:'Cap. Trabajo',   sev:'MEDIA',detail:'CCC '+Math.round(r.ccc)+' dias - ciclo de caja largo',             accion:'Acelerar cobros; renegociar plazos',               c:C.amber,bg:C.amberPl});
+    else if(r.razCorriente<_stratBM.razCorriente) risks.push({area:'Liquidez',       sev:'MEDIA',detail:'Razon corriente '+_t(_x(r.razCorriente))+'x - margen ajustado',  accion:'Monitorear flujo mensual; reducir pasivos CP',     c:C.amber,bg:C.amberPl});
+    if(r.debtEbitda>_stratBM.debtEbitda)          risks.push({area:'Apalancamiento', sev:'ALTA', detail:'D/G.Op. '+_t(_x(r.debtEbitda))+'x - nivel elevado',               accion:'Amortizacion acelerada; revisar estructura',       c:C.red,bg:C.redPl});
+    if(r.margenEbitda<_stratBM.margenEbitda)       risks.push({area:'Rentabilidad',   sev:'MEDIA',detail:'Margen operativo '+_pv(r.margenEbitda)+' - bajo referente del sector ('+_stratBM.margenEbitda+'%)',        accion:'Revision de costos y eficiencia operativa',        c:C.amber,bg:C.amberPl});
+    if(r.ccc>_stratBM.ccc)                risks.push({area:'Cap. Trabajo',   sev:'MEDIA',detail:'CCC '+Math.round(r.ccc)+' dias - ciclo de caja largo',             accion:'Acelerar cobros; renegociar plazos',               c:C.amber,bg:C.amberPl});
     if(r.flujoNeto<0)           risks.push({area:'Flujo de Caja',  sev:'ALTA', detail:'Flujo neto negativo: '+_mv(r.flujoNeto),                           accion:'Revision urgente de financiamiento',               c:C.red,bg:C.redPl});
     if(!risks.length)           risks.push({area:'Sin riesgos',    sev:'BAJO', detail:'No se detectaron riesgos criticos en el periodo analizado',         accion:'Mantener disciplina y monitoreo trimestral',       c:C.green,bg:C.greenPl});
     risks.forEach(risk=>{
@@ -8530,8 +8537,9 @@ function renderAnalyticsView(r){
   set('anlKpiC0', r.yoy!=null?(r.yoy>=0?'▲ vs año anterior':'▼ vs año anterior'):'Sin histórico');
   document.getElementById('anlKpiC0')&&(document.getElementById('anlKpiC0').className='kpi-change '+(r.yoy==null?'neutral':r.yoy>=0?'positive':'negative'));
   set('anlKpi2', _pp(r.margenEbitda));
-  set('anlKpiC2', r.margenEbitda>=15?'▲ Sobre benchmark 15%':'▼ Bajo benchmark 15%');
-  document.getElementById('anlKpiC2')&&(document.getElementById('anlKpiC2').className='kpi-change '+(r.margenEbitda>=15?'positive':'negative'));
+  const _anlBM=(window.getBM&&window.getBM(r.giro, r.pais))||{margenEbitda:15};
+  set('anlKpiC2', r.margenEbitda>=_anlBM.margenEbitda?'▲ Sobre benchmark '+_pp(_anlBM.margenEbitda):'▼ Bajo benchmark '+_pp(_anlBM.margenEbitda));
+  document.getElementById('anlKpiC2')&&(document.getElementById('anlKpiC2').className='kpi-change '+(r.margenEbitda>=_anlBM.margenEbitda?'positive':'negative'));
 
   const suc=r.sucursales;
   const clienteMap=r.clienteMap||window._obbioClienteMap||null;
@@ -8863,16 +8871,8 @@ function renderCostosView(r){
   const el=document.getElementById('costosGastosView'); if(!el) return;
   el.querySelectorAll('[data-nodata]').forEach(n=>n.remove());
   if(!r){ const g=el.querySelector('.kpi-grid'); if(g) g.insertAdjacentHTML('beforebegin',noDataHtml('🏭','Sin datos de costos','Ingresa ventas y COGS para ver el análisis.')); return; }
-  // Sector COGS% benchmark
-  const _gC=(r.giro||'').toLowerCase();
-  const _cogsRef=_gC.includes('tecnol')||_gC.includes('softw')||_gC.includes('tech')||_gC.includes('digital')?25:
-                 _gC.includes('restaur')||_gC.includes('aliment')||_gC.includes('food')?38:
-                 _gC.includes('servic')||_gC.includes('consul')?35:
-                 _gC.includes('manufactur')||_gC.includes('industri')||_gC.includes('fabri')?58:
-                 _gC.includes('construcc')||_gC.includes('inmobil')?70:
-                 _gC.includes('comerc')||_gC.includes('retail')||_gC.includes('comercial')?65:
-                 _gC.includes('salud')||_gC.includes('medic')?40:
-                 55;
+  // Sector COGS% benchmark — referente único, ver OBBIO_BENCHMARKS
+  const _cogsRef=((window.getBM&&window.getBM(r.giro, r.pais))||{cogsPct:55}).cogsPct;
   const _mbRef=100-_cogsRef;
   const bd=r.cogsBreakdown||{};
   const hasBreakdown=(bd.materia||0)+(bd.mod||0)+(bd.maquila||0)+(bd.otros||0)>0;
@@ -8932,16 +8932,8 @@ function renderGastosView(r){
   const hasBreakdown=hasAdminBD||hasVtsBD;
   const gastoTotal=(r.gadmin||0)+(r.gventas||0)+(r.gfin||0);
   const pct=r.ventas>0?gastoTotal/r.ventas*100:null;
-  // Sector gastos% benchmark
-  const _gG=(r.giro||'').toLowerCase();
-  const _gastRef=_gG.includes('tecnol')||_gG.includes('softw')||_gG.includes('tech')||_gG.includes('digital')?40:
-                 _gG.includes('restaur')||_gG.includes('aliment')||_gG.includes('food')?25:
-                 _gG.includes('servic')||_gG.includes('consul')?28:
-                 _gG.includes('manufactur')||_gG.includes('industri')||_gG.includes('fabri')?15:
-                 _gG.includes('construcc')||_gG.includes('inmobil')?12:
-                 _gG.includes('comerc')||_gG.includes('retail')||_gG.includes('comercial')?18:
-                 _gG.includes('salud')||_gG.includes('medic')?22:
-                 25;
+  // Sector gastos% benchmark — referente único, ver OBBIO_BENCHMARKS
+  const _gastRef=((window.getBM&&window.getBM(r.giro, r.pais))||{gastosPct:25}).gastosPct;
   const COLORS=['#F59E0B','#8B5CF6','#22C55E','#06B6D4','#EF4444','#EC4899','#F97316'];
   const k1=document.getElementById('gv-kpi-total'); if(k1) k1.innerHTML=_m(gastoTotal);
   const _gapG=pct!=null?+(pct-_gastRef).toFixed(1):null;
@@ -8979,11 +8971,11 @@ function renderGastosView(r){
   const bg={'pos':'positive-border','info':'info-border','warn':'warning-border','danger':'danger-border'};
   const briefs=[];
   if(pct!=null){
-    const benchPct=30,barW=Math.min(100,pct),barColor=pct<25?'#22C55E':pct<40?'#F59E0B':'#EF4444';
-    const progressBar=`<div style="height:6px;background:rgba(255,255,255,.07);border-radius:99px;overflow:hidden;margin-top:8px;"><div style="height:100%;width:${barW}%;background:${barColor};border-radius:99px;"></div></div><div style="font-size:10px;color:var(--muted);margin-top:4px;">Benchmark industria ~${benchPct}%</div>`;
-    if(pct<25) briefs.push({tipo:'pos',titulo:'Estructura de gastos eficiente',texto:`Gastos operativos en ${_pp(pct)} de ventas — ${(benchPct-pct).toFixed(1)}pp por debajo del benchmark.${progressBar}`});
-    else if(pct<40) briefs.push({tipo:'info',titulo:'Gastos en rango razonable',texto:`Gastos del ${_pp(pct)} sobre ventas. Revisar rubros con mayor peso.${progressBar}`});
-    else briefs.push({tipo:'warn',titulo:'Gastos elevados',texto:`Gastos del ${_pp(pct)} de ventas — ${(pct-benchPct).toFixed(1)}pp sobre benchmark. Priorizar optimización.${progressBar}`});
+    const benchPct=_gastRef,barW=Math.min(100,pct),barColor=pct<benchPct*0.85?'#22C55E':pct<benchPct*1.35?'#F59E0B':'#EF4444';
+    const progressBar=`<div style="height:6px;background:rgba(255,255,255,.07);border-radius:99px;overflow:hidden;margin-top:8px;"><div style="height:100%;width:${barW}%;background:${barColor};border-radius:99px;"></div></div><div style="font-size:10px;color:var(--muted);margin-top:4px;">Referente del sector ~${benchPct}%</div>`;
+    if(pct<benchPct*0.85) briefs.push({tipo:'pos',titulo:'Estructura de gastos eficiente',texto:`Gastos operativos en ${_pp(pct)} de ventas — ${(benchPct-pct).toFixed(1)}pp por debajo del referente del sector.${progressBar}`});
+    else if(pct<benchPct*1.35) briefs.push({tipo:'info',titulo:'Gastos en rango razonable',texto:`Gastos del ${_pp(pct)} sobre ventas. Revisar rubros con mayor peso.${progressBar}`});
+    else briefs.push({tipo:'warn',titulo:'Gastos elevados',texto:`Gastos del ${_pp(pct)} de ventas — ${(pct-benchPct).toFixed(1)}pp sobre el referente del sector.${progressBar}`});
   }
   if(hasBreakdown&&barItems.length>0){const topItem=barItems[0];const topShare=gastoTotal>0?topItem[1]/gastoTotal*100:0;if(topShare>35) briefs.push({tipo:'warn',titulo:`${topItem[0]} domina el gasto`,texto:`Representa ${_pp(topShare)} del gasto total (${_m(topItem[1])}). Alta concentración en un rubro puede ser riesgo operativo.`});}
   if(r.gfin>0&&gastoTotal>0&&r.gfin/gastoTotal>0.15) briefs.push({tipo:'warn',titulo:'Carga financiera relevante',texto:`G. Financieros de ${_m(r.gfin)} = ${_pp(r.gfin/gastoTotal*100)} del gasto total. Reducir deuda mejoraría margen neto.`});
@@ -9895,7 +9887,8 @@ function renderStrategyView(r){
     return;
   }
   // Calcular impacto potencial: mejora DSO + optimización gastos
-  const impactDSO = r.cxc>0&&r.diasCobro>45 ? r.cxc*(Math.max(0,r.diasCobro-45)/r.diasCobro) : 0;
+  const _stgBM=(window.getBM&&window.getBM(r.giro, r.pais))||{margenEbitda:15,debtEbitda:3,dso:45};
+  const impactDSO = r.cxc>0&&r.diasCobro>_stgBM.dso ? r.cxc*(Math.max(0,r.diasCobro-_stgBM.dso)/r.diasCobro) : 0;
   const impactGastos = r.gastosOp*0.05;
   const impactTotal = impactDSO+impactGastos;
   const ins=typeof generarCFOInsights==='function'?generarCFOInsights(r):[];
@@ -9913,19 +9906,19 @@ function renderStrategyView(r){
   const grid=el.querySelector('.briefing-grid');
   if(grid){
     const briefs=[];
-    if(r.diasCobro>45) briefs.push({
+    if(r.diasCobro>_stgBM.dso) briefs.push({
       tipo:'pos',titulo:'PRIORIDAD ALTA: Acelerar cobranza',
-      texto:`Reducir DSO de ${Math.round(r.diasCobro)} a 45 días liberaría ${_m(impactDSO)} de efectivo.`,
+      texto:`Reducir DSO de ${Math.round(r.diasCobro)} a ${_stgBM.dso} días liberaría ${_m(impactDSO)} de efectivo.`,
       kpi:`DSO: ${Math.round(r.diasCobro)} días · CxC: ${_m(r.cxc)}`,
       origen:`CxC ${_m(r.cxc)} ÷ (Ventas ${_m(r.ventas)} ÷ 365) = ${Math.round(r.diasCobro)} días`
     });
-    if(r.margenEbitda<15) briefs.push({
+    if(r.margenEbitda<_stgBM.margenEbitda) briefs.push({
       tipo:'warn',titulo:'PRIORIDAD ALTA: Reducir costos operativos',
-      texto:`Margen EBITDA ${_pp(r.margenEbitda)} bajo benchmark 15%. Reducir G&A 5% = ${_m(impactGastos)}.`,
+      texto:`Margen EBITDA ${_pp(r.margenEbitda)} bajo benchmark ${_stgBM.margenEbitda}%. Reducir G&A 5% = ${_m(impactGastos)}.`,
       kpi:`EBITDA: ${_m(r.ebitda)} · Margen: ${_pp(r.margenEbitda)}`,
       origen:`Ventas ${_m(r.ventas)} − COGS ${_m(r.cogs)} − OpEx ${_m(r.gastosOp)} = ${_m(r.ebitda)}`
     });
-    if(r.debtEbitda!=null && r.debtEbitda>3) briefs.push({
+    if(r.debtEbitda!=null && r.debtEbitda>_stgBM.debtEbitda) briefs.push({
       tipo:'warn',titulo:'RIESGO: Apalancamiento elevado',
       texto:`Deuda/EBITDA ${_x(r.debtEbitda)} supera umbral. Priorizar pago deuda CP ${_m(r.pasivoCp)}.`,
       kpi:`Deuda/EBITDA: ${_x(r.debtEbitda)} · Deuda total: ${_m(r.deudaTotal)}`,
@@ -9990,7 +9983,7 @@ function strategyDrillDown(idx){
   ddp.innerHTML=`
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
       <div style="font-size:14px;font-weight:700;color:var(--text);">${b.titulo}</div>
-      <button onclick="this.closest('.strategy-drilldown').style.display='none'" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;line-height:1;">×</button>
+      <button onclick="this.closest('.strategy-drilldown').style.display='none'" aria-label="Cerrar detalle" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;line-height:1;">×</button>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
       <div style="padding:14px;border-radius:10px;background:${bg[b.tipo]};border:1px solid ${bc[b.tipo]}22;">
@@ -10267,21 +10260,23 @@ function copilotAppend(role,text){
 }
 function buildFinancialProfile(r){
   const p={};
+  const BM=(window.getBM&&window.getBM(r.giro, r.pais))||{margenEbitda:15,razCorriente:1.5,debtEbitda:3,dso:45};
+  p.bm=BM;
   // Rentabilidad
-  p.rentabilidad = r.margenEbitda>=20?'excelente':r.margenEbitda>=12?'aceptable':r.margenEbitda>=0?'baja':'negativa';
+  p.rentabilidad = r.margenEbitda>=BM.margenEbitda*1.5?'excelente':r.margenEbitda>=BM.margenEbitda*0.8?'aceptable':r.margenEbitda>=0?'baja':'negativa';
   p.margenBrutoOk = r.margenBruto>=40;
   // Liquidez
-  p.liquidez = r.razCorriente!=null?(r.razCorriente>=2?'sólida':r.razCorriente>=1.5?'adecuada':r.razCorriente>=1?'ajustada':'crítica'):'sin_datos';
+  p.liquidez = r.razCorriente!=null?(r.razCorriente>=BM.razCorriente*1.3?'sólida':r.razCorriente>=BM.razCorriente?'adecuada':r.razCorriente>=1?'ajustada':'crítica'):'sin_datos';
   p.cajaOk = r.caja>0;
   // Deuda
-  p.deuda = r.debtEbitda!=null?(r.debtEbitda<2?'baja':r.debtEbitda<4?'moderada':r.debtEbitda<6?'alta':'crítica'):'sin_datos';
+  p.deuda = r.debtEbitda!=null?(r.debtEbitda<BM.debtEbitda*0.6?'baja':r.debtEbitda<BM.debtEbitda?'moderada':r.debtEbitda<BM.debtEbitda*1.7?'alta':'crítica'):'sin_datos';
   p.coberturaOk = r.cobIntereses!=null && r.cobIntereses>2.5;
   // Cashflow
   p.cfOp = r.flujoOp>0?'positivo':'negativo';
   p.cfNeto = r.flujoNeto>=0?'positivo':'negativo';
   // Ciclo operativo
-  p.cicloEficiente = r.ccc<50;
-  p.cobranzaOk = r.diasCobro!=null&&r.diasCobro<=45;
+  p.cicloEficiente = r.ccc<BM.ccc;
+  p.cobranzaOk = r.diasCobro!=null&&r.diasCobro<=BM.dso;
   // Crecimiento
   p.crecimiento = r.yoy!=null?(r.yoy>15?'acelerado':r.yoy>5?'moderado':r.yoy>0?'lento':'negativo'):'sin_datos';
   // Fiscal
@@ -10290,10 +10285,10 @@ function buildFinancialProfile(r){
   // Prioridades calculadas
   p.acciones=[];
   if(p.liquidez==='crítica') p.acciones.push({prioridad:1,area:'Liquidez',accion:`Razón corriente ${_x(r.razCorriente)} — déficit de activos circulantes. Acelerar cobranza y/o refinanciar pasivos CP.`,valor:_m(r.pasivoCp)});
-  if(p.deuda==='alta'||p.deuda==='crítica') p.acciones.push({prioridad:2,area:'Deuda',accion:`Deuda/EBITDA ${_x(r.debtEbitda)} — por encima del umbral de referencia 4x. Priorizar desapalancamiento.`,valor:_m(r.deudaTotal)});
+  if(p.deuda==='alta'||p.deuda==='crítica') p.acciones.push({prioridad:2,area:'Deuda',accion:`Deuda/EBITDA ${_x(r.debtEbitda)} — por encima del referente del sector (${_x(BM.debtEbitda)}x). Priorizar desapalancamiento.`,valor:_m(r.deudaTotal)});
   if(p.cfOp==='negativo') p.acciones.push({prioridad:1,area:'Cashflow',accion:`Flujo operativo negativo (${_m(r.flujoOp)}). La operación consume caja. Reducir costos variables o mejorar ciclo de cobros.`,valor:_m(r.flujoOp)});
-  if(p.rentabilidad==='baja'||p.rentabilidad==='negativa') p.acciones.push({prioridad:2,area:'Rentabilidad',accion:`Margen EBITDA ${_pp(r.margenEbitda)} — por debajo del benchmark 12-15%. Optimizar G&A y negociar costo de insumos.`,valor:_m(r.ebitda)});
-  if(!p.cobranzaOk) p.acciones.push({prioridad:3,area:'Capital de Trabajo',accion:`DSO ${Math.round(r.diasCobro)} días — reducir a 45 días liberaría ${_m(r.cxc*(r.diasCobro-45)/r.diasCobro)} de efectivo.`,valor:_m(r.cxc)});
+  if(p.rentabilidad==='baja'||p.rentabilidad==='negativa') p.acciones.push({prioridad:2,area:'Rentabilidad',accion:`Margen EBITDA ${_pp(r.margenEbitda)} — por debajo del referente del sector (${_pp(BM.margenEbitda)}). Optimizar G&A y negociar costo de insumos.`,valor:_m(r.ebitda)});
+  if(!p.cobranzaOk) p.acciones.push({prioridad:3,area:'Capital de Trabajo',accion:`DSO ${Math.round(r.diasCobro)} días — reducir a ${BM.dso} días liberaría ${_m(r.cxc*(r.diasCobro-BM.dso)/r.diasCobro)} de efectivo.`,valor:_m(r.cxc)});
   p.acciones.sort((a,b)=>a.prioridad-b.prioridad);
   // Estado general
   p.estado = r.score>=80?'Excelente':r.score>=60?'Saludable':r.score>=40?'Requiere atención':'Riesgo elevado';
@@ -10350,7 +10345,7 @@ function copilotRespond(q,r){
 
   /* ── EBITDA ── */
   if(has('ebitda','ebida','ebitd','ganancia operativa','utilidad operativa')){
-    return `<strong>EBITDA: ${_m(r.ebitda)}</strong> — Margen ${_pp(r.margenEbitda)} (${p.rentabilidad}).<br>${p.rentabilidad==='excelente'?'Por encima del benchmark 15–20%. Excelente generación operativa.':p.rentabilidad==='aceptable'?'Dentro del rango aceptable. Hay margen de mejora en gastos.':'Por debajo del benchmark mínimo 12%. Revisar estructura de costos es prioritario.'}`;
+    return `<strong>EBITDA: ${_m(r.ebitda)}</strong> — Margen ${_pp(r.margenEbitda)} (${p.rentabilidad}).<br>${p.rentabilidad==='excelente'?'Por encima del referente del sector ('+_pp(p.bm.margenEbitda)+'). Excelente generación operativa.':p.rentabilidad==='aceptable'?'Dentro del rango aceptable respecto al referente del sector ('+_pp(p.bm.margenEbitda)+'). Hay margen de mejora en gastos.':'Por debajo del referente del sector ('+_pp(p.bm.margenEbitda)+'). Revisar estructura de costos es prioritario.'}`;
   }
 
   /* ── CUÁNTO GANÉ / UTILIDAD NETA ── */
@@ -10377,7 +10372,7 @@ function copilotRespond(q,r){
   /* ── LIQUIDEZ / PUEDO PAGAR ── */
   if(has('liquidez','puedo pagar','tengo para pagar','me alcanza','alcanza','corriente','tengo dinero','hay dinero','tengo caja','dinero disponible','puedo cubrir')){
     if(p.liquidez==='sin_datos') return 'No tengo datos del balance. Ingresa activos y pasivos circulantes para calcular la liquidez.';
-    return `<strong>Liquidez ${p.liquidez}</strong> — Razón corriente: ${_x(r.razCorriente)} · Caja disponible: ${_m(r.caja)}.<br>${r.razCorriente>=2?'Por cada $1 de deuda a corto plazo tienes '+r.razCorriente.toFixed(1)+'x cubierto. Estás bien.':r.razCorriente>=1.5?'Cubre tus compromisos con margen razonable. Mantén el ritmo de cobranza.':r.razCorriente>=1?'Cubres exactamente tus compromisos, sin margen. Acelera cobranza.':'⚠️ Tus deudas de corto plazo superan tus activos circulantes. Acción urgente requerida.'}`;
+    return `<strong>Liquidez ${p.liquidez}</strong> — Razón corriente: ${_x(r.razCorriente)} · Caja disponible: ${_m(r.caja)}.<br>${r.razCorriente>=p.bm.razCorriente*1.3?'Por cada $1 de deuda a corto plazo tienes '+r.razCorriente.toFixed(1)+'x cubierto. Estás bien.':r.razCorriente>=p.bm.razCorriente?'Cubre tus compromisos con margen razonable, en línea con el referente del sector ('+p.bm.razCorriente+'x). Mantén el ritmo de cobranza.':r.razCorriente>=1?'Cubres exactamente tus compromisos, sin margen. Acelera cobranza.':'⚠️ Tus deudas de corto plazo superan tus activos circulantes. Acción urgente requerida.'}`;
   }
 
   /* ── DEUDA ── */
@@ -10393,12 +10388,12 @@ function copilotRespond(q,r){
 
   /* ── CICLO DE COBROS / DÍAS ── */
   if(has('cobr','dso','dias de cobro','cuanto tardo en cobrar','me pagan tarde','cuantos dias','ccc','ciclo de efectivo','inventario dias','proveedores dias','dio','dpo')){
-    return `<strong>Ciclo de efectivo: ${_d(r.ccc)}</strong><br>· Cobranza (DSO): <strong>${_d(r.diasCobro)}</strong>${!p.cobranzaOk?' ⚠️ arriba de 45 días':' ✅'}<br>· Inventario (DIO): ${_d(r.diasInv)}<br>· Pago a proveedores (DPO): ${_d(r.diasPago)}<br>${p.cicloEficiente?'Ciclo eficiente — el efectivo regresa rápido a la caja.':'Ciclo largo. Cada día extra inmoviliza ~'+_m(r.ventas/365)+' de capital de trabajo.'}`;
+    return `<strong>Ciclo de efectivo: ${_d(r.ccc)}</strong><br>· Cobranza (DSO): <strong>${_d(r.diasCobro)}</strong>${!p.cobranzaOk?' ⚠️ arriba de '+p.bm.dso+' días (referente del sector)':' ✅'}<br>· Inventario (DIO): ${_d(r.diasInv)}<br>· Pago a proveedores (DPO): ${_d(r.diasPago)}<br>${p.cicloEficiente?'Ciclo eficiente — el efectivo regresa rápido a la caja.':'Ciclo largo. Cada día extra inmoviliza ~'+_m(r.ventas/365)+' de capital de trabajo.'}`;
   }
 
   /* ── RENTABILIDAD / ROE / ROA ── */
   if(has('rentable','rentabilidad','roa','roe','retorno','soy rentable','que tan rentable','retorno sobre')){
-    return `<strong>Rentabilidad: ${p.rentabilidad}</strong><br>· ROE: ${_pp(r.roe)} · ROA: ${_pp(r.roa)} · Margen neto: ${_pp(r.margenNeto)}<br>· Utilidad neta: ${_m(r.utilNeta)} sobre ingresos de ${_m(r.ventas)}<br>${r.roe>15?'Excelente retorno para los socios.':r.roe>8?'Rentabilidad aceptable. Potencial de mejora en márgenes.':r.roe>0?'Rentabilidad baja. Revisar estructura de costos.':'⚠️ Pérdida neta. Acción urgente.'}`;
+    return `<strong>Rentabilidad: ${p.rentabilidad}</strong><br>· ROE: ${_pp(r.roe)} · ROA: ${_pp(r.roa)} · Margen neto: ${_pp(r.margenNeto)}<br>· Utilidad neta: ${_m(r.utilNeta)} sobre ingresos de ${_m(r.ventas)}<br>${r.roe>p.bm.roe?'Excelente retorno para los socios, sobre el referente del sector ('+p.bm.roe+'%).':r.roe>p.bm.roe*0.5?'Rentabilidad aceptable. Potencial de mejora en márgenes.':r.roe>0?'Rentabilidad baja. Revisar estructura de costos.':'⚠️ Pérdida neta. Acción urgente.'}`;
   }
 
   /* ── MÁRGENES ── */
@@ -10634,7 +10629,7 @@ function buildDataPreview(r){
       </div>
       <div class="dpv-company">
         <div class="dpv-company-name">${esc(r.empresa||'Tu empresa')}</div>
-        <div class="dpv-company-sub">${r.anio||2024} · ${(LOCALE[r.pais||'MX']||LOCALE.MX).pais} · IVA ${(LOCALE[r.pais||'MX']||LOCALE.MX).tasaConsumo}% / ${(LOCALE[r.pais||'MX']||LOCALE.MX).impuestoUtilidad} ${(LOCALE[r.pais||'MX']||LOCALE.MX).tasaImpuesto}% · ${r.giro||'—'} · Score: <b style="color:${scoreColor};">${scoreLabel}</b></div>
+        <div class="dpv-company-sub">${r.anio||new Date().getFullYear()} · ${(LOCALE[r.pais||'MX']||LOCALE.MX).pais} · IVA ${(LOCALE[r.pais||'MX']||LOCALE.MX).tasaConsumo}% / ${(LOCALE[r.pais||'MX']||LOCALE.MX).impuestoUtilidad} ${(LOCALE[r.pais||'MX']||LOCALE.MX).tasaImpuesto}% · ${r.giro||'—'} · Score: <b style="color:${scoreColor};">${scoreLabel}</b></div>
         <div class="dpv-headline-kpis">
           <div class="dpv-hkpi"><div class="dpv-hkpi-v">${fmt(r.ventas)}</div><div class="dpv-hkpi-l">Ventas</div></div>
           <div class="dpv-hkpi"><div class="dpv-hkpi-v">${fmt(r.ebitda)}</div><div class="dpv-hkpi-l">EBITDA</div></div>
@@ -11073,7 +11068,7 @@ window.fetchBenchmark=async function(){
   /* ── Crear el popover flotante ── */
   const pop = document.createElement('div');
   pop.id = 'kpiInfoPopover';
-  pop.innerHTML = '<span class="kpi-pop-close" id="kpiPopClose">×</span><div class="kpi-pop-title"></div><div class="kpi-pop-body"></div>';
+  pop.innerHTML = '<span class="kpi-pop-close" id="kpiPopClose" role="button" tabindex="0" aria-label="Cerrar">×</span><div class="kpi-pop-title"></div><div class="kpi-pop-body"></div>';
   document.body.appendChild(pop);
 
   let _popHide;
@@ -11189,7 +11184,7 @@ window.fetchBenchmark=async function(){
     </div>
     <div style="display:flex;gap:6px;align-items:center;">
       <button onclick="chatClear()" class="ch-close" title="Limpiar chat" style="font-size:14px;">🗑</button>
-      <button onclick="toggleChatbot()" class="ch-close">×</button>
+      <button onclick="toggleChatbot()" class="ch-close" aria-label="Cerrar chat">×</button>
     </div>
   </div>
 
