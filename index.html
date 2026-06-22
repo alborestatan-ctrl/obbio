@@ -10079,25 +10079,25 @@ function renderStrategyView(r){
       tipo:'pos',titulo:'PRIORIDAD ALTA: Acelerar cobranza',
       texto:`Reducir DSO de ${Math.round(r.diasCobro)} a ${_stgBM.dso} días liberaría ${_m(impactDSO)} de efectivo.`,
       kpi:`DSO: ${Math.round(r.diasCobro)} días · CxC: ${_m(r.cxc)}`,
-      origen:`CxC ${_m(r.cxc)} ÷ (Ventas ${_m(r.ventas)} ÷ 365) = ${Math.round(r.diasCobro)} días`
+      origen:`Se calcula con tu cuentas por cobrar (${_m(r.cxc)}) y tus ventas (${_m(r.ventas)}).`
     });
     if(r.margenEbitda<_stgBM.margenEbitda) briefs.push({
       tipo:'warn',titulo:'PRIORIDAD ALTA: Reducir costos operativos',
       texto:`Margen EBITDA ${_pp(r.margenEbitda)} bajo benchmark ${_stgBM.margenEbitda}%. Reducir G&A 5% = ${_m(impactGastos)}.`,
       kpi:`EBITDA: ${_m(r.ebitda)} · Margen: ${_pp(r.margenEbitda)}`,
-      origen:`Ventas ${_m(r.ventas)} − COGS ${_m(r.cogs)} − OpEx ${_m(r.gastosOp)} = ${_m(r.ebitda)}`
+      origen:`Se forma con tus ventas (${_m(r.ventas)}), tu costo de ventas (${_m(r.cogs)}) y tus gastos operativos (${_m(r.gastosOp)}).`
     });
     if(r.debtEbitda!=null && r.debtEbitda>_stgBM.debtEbitda) briefs.push({
       tipo:'warn',titulo:'RIESGO: Apalancamiento elevado',
       texto:`Deuda/EBITDA ${_x(r.debtEbitda)} supera umbral. Priorizar pago deuda CP ${_m(r.pasivoCp)}.`,
       kpi:`Deuda/EBITDA: ${_x(r.debtEbitda)} · Deuda total: ${_m(r.deudaTotal)}`,
-      origen:`Deuda total ${_m(r.deudaTotal)} ÷ EBITDA ${_m(r.ebitda)} = ${_x(r.debtEbitda)}`
+      origen:`Se calcula con tu deuda total (${_m(r.deudaTotal)}) y tu EBITDA (${_m(r.ebitda)}).`
     });
     else if(r.debtEbitda!=null && r.debtEbitda<1.5) briefs.push({
       tipo:'info',titulo:'OPORTUNIDAD: Capacidad de deuda disponible',
       texto:`Deuda/EBITDA ${_x(r.debtEbitda)} bajo. Margen para financiar crecimiento estratégico.`,
       kpi:`Deuda/EBITDA: ${_x(r.debtEbitda)} · EBITDA: ${_m(r.ebitda)}`,
-      origen:`Deuda total ${_m(r.deudaTotal)} ÷ EBITDA ${_m(r.ebitda)} = ${_x(r.debtEbitda)}`
+      origen:`Se calcula con tu deuda total (${_m(r.deudaTotal)}) y tu EBITDA (${_m(r.ebitda)}).`
     });
     if(r.yoy!=null && r.yoy>10) briefs.push({
       tipo:'pos',titulo:'FORTALEZA: Crecimiento acelerado',
@@ -11214,7 +11214,7 @@ window.fetchBenchmark=function(){
     // ── Comparativos ──
     'Utilidad Neta Proy': 'Estimación de la ganancia neta al cierre del período proyectado.',
     'Rating Interno':     'Calificación interna del sistema (A=score≥80, B=≥60, C=≥40, D=<40). Basada en rentabilidad, liquidez, deuda, cashflow y crecimiento. No es calificación oficial de buró de crédito ni agencia calificadora.',
-    'Ticket Promedio':    'Ingreso promedio por línea de venta registrada en el dataset. Fórmula: Ingresos Totales ÷ Número de líneas. Si cada fila representa una factura completa, equivale al valor medio por factura; si cada fila es un ítem, refleja el precio promedio por ítem.',
+    'Ticket Promedio':    'Ingreso promedio por línea de venta registrada. Si cada fila representa una factura completa, equivale al valor medio por factura; si cada fila es un ítem, refleja el precio promedio por ítem.',
   };
 
   /* ── Definiciones de gráficos para botón ℹ ── */
