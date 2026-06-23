@@ -6620,6 +6620,16 @@ function _checkParserWarnings(d){
     showNotif(`⚠️ No se reconocieron: ${missing.join(', ')}. Revisa los nombres en tu Excel o captura manualmente (tomados como 0).`,'warning',9000);
 }
 
+/* ── Sector: detección única (texto libre del Excel → opción real del <select>) y etiqueta para mostrar al cliente ── */
+const GIRO_LABELS={servicios:'Servicios',comercial:'Comercial / Retail',manufactura:'Manufactura / Industrial',tecnologia:'Tecnología / SaaS',restaurante:'Restaurante / Alimentos',construccion:'Construcción / Inmobiliaria',salud:'Salud / Clínica / Farmacia',transporte:'Transporte / Logística',mixta:'Mixta / Otro'};
+function giroLabel(g){ return GIRO_LABELS[g]||g||''; }
+function _normalizeGiroSelect(text){
+  if(!window._obbmSectorKey) return 'mixta';
+  const key=window._obbmSectorKey(text);
+  const map={restaurantes:'restaurante',tecnologia:'tecnologia',manufactura:'manufactura',salud:'salud',construccion:'construccion',transporte:'transporte',comercio:'comercial',servicios:'servicios',_default:'mixta'};
+  return map[key]||'mixta';
+}
+
 function applyExcelData(){
   if(!_pendingExcelData) return;
   const d=_pendingExcelData;
@@ -6643,7 +6653,13 @@ function applyExcelData(){
   if(d.dias_cobro!=='')   setVal('ii_dias_cobro', parseNum(d.dias_cobro));
   if(d.dias_inv!=='')     setVal('ii_dias_inv',   parseNum(d.dias_inv));
   if(d.dias_pago!=='')    setVal('ii_dias_pago',  parseNum(d.dias_pago));
-  if(d.giro!=='')         setVal('ii_giro',   d.giro);
+  if(d.giro!==''){
+    const giroDetectado=(typeof _normalizeGiroSelect==='function')?_normalizeGiroSelect(d.giro):'mixta';
+    setVal('ii_giro', giroDetectado);
+    const giroTextoYaIndicaMixto=/mixt|otro|vari/i.test(String(d.giro));
+    if(giroDetectado==='mixta'&&!giroTextoYaIndicaMixto&&typeof showNotif==='function')
+      showNotif(`⚠️ No se reconoció el sector "${d.giro}" — se dejó en "Mixta / Otro". Selecciónalo manualmente si aplica.`,'warning',9000);
+  }
   if(d.moneda!=='')       setVal('ii_moneda', d.moneda);
   // ── Sucursales ──
   if(d.modo_sucursales!==''){
@@ -6991,13 +7007,15 @@ async function downloadTemplate(){
   };
 
   function _obbmSectorKey(giro){
-    const g=(giro||'').toLowerCase();
+    const g=String(giro||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
     if(g.includes('restaur')||g.includes('aliment')||g.includes('gastro')||g.includes('food')||g.includes('beber')) return 'restaurantes';
     if(g.includes('tecnol')||g.includes('software')||g.includes('tech')||g.includes('digital')||g.includes('sistemas')) return 'tecnologia';
     if(g.includes('manufactur')||g.includes('industri')||g.includes('producc')||g.includes('fabri')) return 'manufactura';
     if(g.includes('salud')||g.includes('medic')||g.includes('clinic')||g.includes('hospital')||g.includes('farmac')) return 'salud';
     if(g.includes('construcc')||g.includes('inmobil')||g.includes('bienes raice')||g.includes('develop')) return 'construccion';
     if(g.includes('transport')||g.includes('logistic')||g.includes('fletam')) return 'transporte';
+    if(g.includes('comerc')||g.includes('retail')||g.includes('tienda')) return 'comercio';
+    if(g.includes('servic')||g.includes('consul')) return 'servicios';
     return '_default';
   }
 
@@ -7516,7 +7534,7 @@ async function downloadTemplate(){
     doc.splitTextToSize(_t(r.empresa||'Empresa'),202).slice(0,2).forEach((ln,i)=>doc.text(ln,ML+13,274+i*17));
     doc.setFont('ArialPDF','normal');doc.setFontSize(9);sc(...C.muted);
     doc.text('Periodo: '+_t(String(r.anio||new Date().getFullYear())),ML+13,308);
-    doc.text(_t((r.pais==='ES'?'Espana':'Mexico')+' - '+(r.giro||'N/D')),ML+13,322);
+    doc.text(_t((r.pais==='ES'?'Espana':'Mexico')+' - '+((typeof giroLabel==='function'?giroLabel(r.giro):r.giro)||'N/D')),ML+13,322);
     doc.text('Moneda: '+_t(r.moneda||'MXN'),ML+13,336);
     doc.text('Generado: '+new Date().toLocaleDateString('es-MX'),ML+13,350);
     doc.setFont('ArialPDF','bold');doc.setFontSize(8.5);sc(...scoreC);doc.text(_t(cls),ML+13,374);
@@ -8139,6 +8157,7 @@ async function downloadTemplate(){
   window.generarDiagnostico=generarDiagnostico;
   window.generarCFOInsights=generarCFOInsights;
   window.getBM=getBM;
+  window._obbmSectorKey=_obbmSectorKey;
 
   document.addEventListener('DOMContentLoaded',function(){ try{ if(getCalc()) renderAIView(); }catch(e){} });
 })();
@@ -9323,14 +9342,9 @@ const TaxCore=(function(){
     construccion:{ivaNeto:.07,isrV:.08,gfEbitda:.28},
   };
   function getBench(giro){
-    if(!giro) return BENCH.default;
-    const g=giro.toLowerCase();
-    if(g.includes('comerc')||g.includes('retail')||g.includes('tienda')) return BENCH.comercio;
-    if(g.includes('servic')||g.includes('consul')) return BENCH.servicios;
-    if(g.includes('manufac')||g.includes('fabric')||g.includes('planta')) return BENCH.manufactura;
-    if(g.includes('tecnol')||g.includes('softw')||g.includes('tech')||g.includes('digital')) return BENCH.tecnologia;
-    if(g.includes('construc')||g.includes('inmob')||g.includes('obra')) return BENCH.construccion;
-    return BENCH.default;
+    /* sector se detecta UNA sola vez en toda la app: misma fuente que getBM (financiero) */
+    const key=(window._obbmSectorKey)?window._obbmSectorKey(giro):'_default';
+    return BENCH[key]||BENCH.default;
   }
   function calcScore(r,anomalies){
     let s=100;
@@ -10907,7 +10921,7 @@ function buildDataPreview(r){
       </div>
       <div class="dpv-company">
         <div class="dpv-company-name">${esc(r.empresa||'Tu empresa')}</div>
-        <div class="dpv-company-sub">${r.anio||new Date().getFullYear()} · ${(LOCALE[r.pais||'MX']||LOCALE.MX).pais} · IVA ${(LOCALE[r.pais||'MX']||LOCALE.MX).tasaConsumo}% / ${(LOCALE[r.pais||'MX']||LOCALE.MX).impuestoUtilidad} ${(LOCALE[r.pais||'MX']||LOCALE.MX).tasaImpuesto}% · ${r.giro||'—'} · Score: <b style="color:${scoreColor};">${scoreLabel}</b></div>
+        <div class="dpv-company-sub">${r.anio||new Date().getFullYear()} · ${(LOCALE[r.pais||'MX']||LOCALE.MX).pais} · IVA ${(LOCALE[r.pais||'MX']||LOCALE.MX).tasaConsumo}% / ${(LOCALE[r.pais||'MX']||LOCALE.MX).impuestoUtilidad} ${(LOCALE[r.pais||'MX']||LOCALE.MX).tasaImpuesto}% · ${(typeof giroLabel==='function'?giroLabel(r.giro):r.giro)||'—'} · Score: <b style="color:${scoreColor};">${scoreLabel}</b></div>
         <div class="dpv-headline-kpis">
           <div class="dpv-hkpi"><div class="dpv-hkpi-v">${fmt(r.ventas)}</div><div class="dpv-hkpi-l">Ventas</div></div>
           <div class="dpv-hkpi"><div class="dpv-hkpi-v">${fmt(r.ebitda)}</div><div class="dpv-hkpi-l">EBITDA</div></div>
