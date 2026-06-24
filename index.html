@@ -13,7 +13,7 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.2/dist/umd/supabase.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif;}
 :root{
@@ -3771,6 +3771,7 @@ background:#10B981;
             <option value="tecnologia">Tecnología / SaaS</option>
             <option value="restaurante">Restaurante / Alimentos</option>
             <option value="construccion">Construcción / Inmobiliaria</option>
+            <option value="gimnasio">Gimnasio / Fitness / Deporte</option>
             <option value="salud">Salud / Clínica / Farmacia</option>
             <option value="transporte">Transporte / Logística</option>
             <option value="mixta">Mixta / Otro</option>
@@ -4929,8 +4930,9 @@ function calcFinanciero(){
   // Balance
   const activoCirc   = caja+cxc+inventario;
   const totalActivos = activoCirc+activoFijo;
-  const totalPasivos = pasivoCp+pasivoLp;
-  const capitalDerivado = totalActivos-totalPasivos;
+  const totalPasivos = pasivoCp+pasivoLp; // deuda financiera: CP+LP, sin CxP (Deuda/EBITDA, cobertura, Deuda/Capital)
+  const totalPasivosConCxp = pasivoCp+pasivoLp+cxp; // pasivos totales del balance, con CxP (para derivar Capital y Apalancamiento)
+  const capitalDerivado = totalActivos-totalPasivosConCxp;
   // Si el usuario ingresó capital, usarlo; si no, derivarlo de activos-pasivos
   const capital = capitalIngresado>0?capitalIngresado:capitalDerivado;
   // Flag de desbalance: si ingresaron capital Y difiere >5% del derivado
@@ -4970,7 +4972,7 @@ function calcFinanciero(){
   const debtEbitda         = ebitda>0?deudaTotal/ebitda:null;
   const debtEbitdaCritical = ebitda<=0&&deudaTotal>0;
   const cobIntereses = er.gfin?ebitda/er.gfin:null;
-  const apalancamiento = totalActivos>0?totalPasivos/totalActivos*100:null;
+  const apalancamiento = totalActivos>0?totalPasivosConCxp/totalActivos*100:null;
   // Debt/Equity: capital negativo = insolvencia técnica → no dividir
   const debtEquity   = capital>0?deudaTotal/capital:null;
   const capitalNegativo = capital<0&&deudaTotal>0;
@@ -5083,7 +5085,7 @@ function calcFinanciero(){
     utilBruta,gastosOp,ebit,dep,ebitda,uai,isr,utilNeta,
     margenBruto,margenOp,margenEbitda,margenNeto,
     caja,cxc,inventario,activoFijo,activoCirc,totalActivos,
-    pasivoCp,pasivoLp,cxp,totalPasivos,capital,capTrabNeto,capitalNegativo,balanceDesbalanceado,
+    pasivoCp,pasivoLp,cxp,totalPasivos,totalPasivosConCxp,capital,capTrabNeto,capitalNegativo,balanceDesbalanceado,
     flujoOp,flujoInv,flujoFin,flujoNeto,flujoMetodo:_flujoMetodo,
     razCorriente,pruebaAcida,debtEbitda,debtEbitdaCritical,cobIntereses,deudaTotal,
     apalancamiento,debtEquity,roa,roe,
@@ -5688,13 +5690,16 @@ function parseExcelWorkbook(wb){
   const parseRows=(ws,hints)=>{
     if(!ws) return [];
     const raw=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
-    let hdrIdx=0;
-    // Skip title/description rows: rows where the matching cell contains "(opc" with length >15,
-    // or where any cell is a long sentence (>60 chars) — those are instructions, not headers.
+    let hdrIdx=0, _bestScore=0;
+    // Elegir la fila que coincide con MÁS palabras de encabezado. Un encabezado real
+    // ("Fecha, Cliente, Producto, Ventas") coincide con varias; un título decorativo
+    // ("Ventas restaurante") solo con una. Se omiten filas de instrucción.
     for(let i=0;i<Math.min(raw.length,8);i++){
       const rn=raw[i].map(c=>norm(String(c||'')));
       const isTitle=rn.some(h=>(h.includes('(opc')&&h.length>15)||h.length>60);
-      if(!isTitle&&hints.some(kw=>rn.some(h=>h.includes(kw)))){ hdrIdx=i; break; }
+      if(isTitle) continue;
+      const _score=hints.filter(kw=>rn.some(h=>h.includes(kw))).length;
+      if(_score>_bestScore){ _bestScore=_score; hdrIdx=i; }
     }
     const hdrs=raw[hdrIdx].map(c=>norm(String(c||'')));
     return raw.slice(hdrIdx+1)
@@ -6621,12 +6626,12 @@ function _checkParserWarnings(d){
 }
 
 /* ── Sector: detección única (texto libre del Excel → opción real del <select>) y etiqueta para mostrar al cliente ── */
-const GIRO_LABELS={servicios:'Servicios',comercial:'Comercial / Retail',manufactura:'Manufactura / Industrial',tecnologia:'Tecnología / SaaS',restaurante:'Restaurante / Alimentos',construccion:'Construcción / Inmobiliaria',salud:'Salud / Clínica / Farmacia',transporte:'Transporte / Logística',mixta:'Mixta / Otro'};
+const GIRO_LABELS={servicios:'Servicios',comercial:'Comercial / Retail',manufactura:'Manufactura / Industrial',tecnologia:'Tecnología / SaaS',restaurante:'Restaurante / Alimentos',construccion:'Construcción / Inmobiliaria',salud:'Salud / Clínica / Farmacia',transporte:'Transporte / Logística',gimnasio:'Gimnasio / Fitness / Deporte',mixta:'Mixta / Otro'};
 function giroLabel(g){ return GIRO_LABELS[g]||g||''; }
 function _normalizeGiroSelect(text){
   if(!window._obbmSectorKey) return 'mixta';
   const key=window._obbmSectorKey(text);
-  const map={restaurantes:'restaurante',tecnologia:'tecnologia',manufactura:'manufactura',salud:'salud',construccion:'construccion',transporte:'transporte',comercio:'comercial',servicios:'servicios',_default:'mixta'};
+  const map={restaurantes:'restaurante',tecnologia:'tecnologia',manufactura:'manufactura',salud:'salud',construccion:'construccion',transporte:'transporte',gimnasios:'gimnasio',comercio:'comercial',servicios:'servicios',_default:'mixta'};
   return map[key]||'mixta';
 }
 
@@ -6925,6 +6930,7 @@ function _obtDataSheet(wb, d){
 
 const _OBT_NE = '↓ Filas de EJEMPLO (gris cursiva). Bórralas y captura tus datos.';
 const _OBT_SHEETS = [
+  {name:'Datos Generales',title:'Datos Generales',req:false,freezeAt:5,widths:[24,48],labelCols:2,numCols:[],notes:['Datos de tu empresa. El "Giro" personaliza el benchmark del sector.','Giros válidos: Servicios · Comercial · Manufactura · Tecnología · Restaurante · Construcción · Salud · Transporte.'],header:['Campo','Valor'],rows:[['Empresa','Mi Empresa S.A. de C.V.'],['País','México'],['Moneda','MXN'],['Giro','Servicios']]},
   {name:'Estado de Resultados',title:'Estado de Resultados',req:true,freezeAt:5,widths:[28,46,12,12,12],labelCols:2,numCols:[2,3,4],notes:['Una columna por año. Importes SIN IVA. Deja vacío lo que no tengas.',_OBT_NE],header:['Concepto','Descripción',2022,2023,2024],rows:[['── INGRESOS ──','','','',''],['Ventas netas','Ingresos del año, SIN IVA.',1100000,1245000,1368000],['── COSTO DE VENTAS ──','','','',''],['Costo de ventas (COGS)','Materiales, mano de obra directa.',551000,622000,686000],['── GASTOS OPERATIVOS ──','','','',''],['Gastos de administración','Sueldos admin, renta, servicios.',482000,524000,570000],['Gastos de ventas','Comisiones, publicidad, marketing.',176000,194000,214000],['Depreciación','Vacío si no lo tienes.',43000,47000,51000],['── GASTOS FINANCIEROS ──','','','',''],['Gastos financieros','Solo intereses pagados.',95000,102000,111000]]},
   {name:'Balance General',title:'Balance General',req:true,freezeAt:5,widths:[28,46,12,12,12],labelCols:2,numCols:[2,3,4],notes:['Saldos al cierre. Una columna por año.',_OBT_NE],header:['Concepto','Descripción',2022,2023,2024],rows:[['── ACTIVOS CIRCULANTES ──','','','',''],['Caja y bancos','Efectivo + saldos al cierre.',320000,390000,450000],['Cuentas por cobrar','Lo que te deben clientes.',290000,335000,380000],['Inventario','0 si solo das servicios.',170000,195000,220000],['── ACTIVOS FIJOS ──','','','',''],['Activo fijo neto','Equipo, inmuebles, neto deprec.',1050000,1130000,1200000],['── PASIVOS CIRCULANTES ──','','','',''],['Cuentas por pagar','Lo que debes a proveedores.',140000,160000,180000],['Pasivo corto plazo','Vence en menos de 12 meses.',280000,300000,320000],['── PASIVOS LARGO PLAZO ──','','','',''],['Pasivo largo plazo','Más de 12 meses.',540000,510000,480000],['── CAPITAL ──','','','',''],['Capital contable','Vacío = Activos − Pasivos.',980000,1130000,1270000]]},
   {name:'Ventas',title:'Ventas',req:false,freezeAt:5,widths:[12,20,16,10,16,12],labelCols:5,numCols:[5],notes:['Una fila por venta. Importe SIN IVA.',_OBT_NE],header:['Fecha','Cliente','Producto','Región','Sucursal','Ventas'],rows:[['2024-01-08','ACME Corp','Software Pro','Norte','Suc. Norte',120000],['2024-02-05','Gamma Retail','Software Pro','Sur','Suc. Sur',140000],['2024-03-11','Delta Log.','Consultoría','Norte','Suc. Norte',98000]]},
@@ -6987,6 +6993,7 @@ async function downloadTemplate(){
     },
     MX:{
       restaurantes:{margenEbitda:10,margenNeto:5,razCorriente:1.2,debtEbitda:3.5,cobIntereses:2.5,ccc:25,dso:15,roe:12,cogsPct:38,gastosPct:25,_fuente:'Estimación interna orientativa · PyME México',_fecha:'2025'},
+      gimnasios:   {margenEbitda:20,margenNeto:6,razCorriente:1.2,debtEbitda:3.5,cobIntereses:2.5,ccc:10,dso:5, roe:14,cogsPct:22,gastosPct:50,_fuente:'Estimación interna orientativa · PyME México',_fecha:'2025'},
       tecnologia:  {margenEbitda:25,margenNeto:15,razCorriente:2,  debtEbitda:2,  cobIntereses:5,  ccc:40,dso:30,roe:20,cogsPct:25,gastosPct:40,_fuente:'Estimación interna orientativa · PyME México',_fecha:'2025'},
       manufactura: {margenEbitda:12,margenNeto:7, razCorriente:1.5,debtEbitda:3.5,cobIntereses:3,  ccc:75,dso:45,roe:14,cogsPct:58,gastosPct:15,_fuente:'Estimación interna orientativa · PyME México',_fecha:'2025'},
       salud:       {margenEbitda:18,margenNeto:10,razCorriente:1.5,debtEbitda:2.5,cobIntereses:4,  ccc:40,dso:30,roe:16,cogsPct:40,gastosPct:22,_fuente:'Estimación interna orientativa · PyME México',_fecha:'2025'},
@@ -6997,6 +7004,7 @@ async function downloadTemplate(){
     ES:{
       // Cifras orientativas; las FUENTES oficiales están en _meta.fuentes. Afinar con extracción directa de BdE base RSE.
       restaurantes:{margenEbitda:10,margenNeto:5,razCorriente:1.2,debtEbitda:3.5,cobIntereses:2.5,ccc:25,dso:15,roe:12,cogsPct:38,gastosPct:25,_fuente:'Orientativo · base: INE EEE Servicios (hostelería) + BdE RSE',_fecha:'2024'},
+      gimnasios:   {margenEbitda:20,margenNeto:6,razCorriente:1.2,debtEbitda:3.5,cobIntereses:2.5,ccc:10,dso:5, roe:14,cogsPct:22,gastosPct:50,_fuente:'Orientativo · base: INE EEE Servicios (act. deportivas) + BdE RSE',_fecha:'2024'},
       tecnologia:  {margenEbitda:25,margenNeto:15,razCorriente:2,  debtEbitda:2,  cobIntereses:5,  ccc:40,dso:30,roe:20,cogsPct:25,gastosPct:40,_fuente:'Orientativo · base: INE EEE Servicios (info/comunicaciones) + BdE RSE',_fecha:'2024'},
       manufactura: {margenEbitda:12,margenNeto:7, razCorriente:1.5,debtEbitda:3.5,cobIntereses:3,  ccc:75,dso:45,roe:14,cogsPct:58,gastosPct:15,_fuente:'Orientativo · base: INE EEE Industrial + BdE RSE',_fecha:'2024'},
       salud:       {margenEbitda:18,margenNeto:10,razCorriente:1.5,debtEbitda:2.5,cobIntereses:4,  ccc:40,dso:30,roe:16,cogsPct:40,gastosPct:22,_fuente:'Orientativo · base: INE EEE Servicios (sanitarias) + BdE RSE',_fecha:'2024'},
@@ -7011,6 +7019,7 @@ async function downloadTemplate(){
     if(g.includes('restaur')||g.includes('aliment')||g.includes('gastro')||g.includes('food')||g.includes('beber')) return 'restaurantes';
     if(g.includes('tecnol')||g.includes('software')||g.includes('tech')||g.includes('digital')||g.includes('sistemas')) return 'tecnologia';
     if(g.includes('manufactur')||g.includes('industri')||g.includes('producc')||g.includes('fabri')) return 'manufactura';
+    if(g.includes('gimnas')||g.includes('gym')||g.includes('fitness')||g.includes('deport')||g.includes('crossfit')) return 'gimnasios';
     if(g.includes('salud')||g.includes('medic')||g.includes('clinic')||g.includes('hospital')||g.includes('farmac')) return 'salud';
     if(g.includes('construcc')||g.includes('inmobil')||g.includes('bienes raice')||g.includes('develop')) return 'construccion';
     if(g.includes('transport')||g.includes('logistic')||g.includes('fletam')) return 'transporte';
@@ -7813,7 +7822,7 @@ async function downloadTemplate(){
     y+=34;
 
     // ── 05. BALANCE GENERAL ──
-    const hasBal=(r.totalActivos||0)>0||(r.totalPasivos||0)>0;
+    const hasBal=(r.totalActivos||0)>0||(r.totalPasivosConCxp||0)>0;
     if(hasBal){
       PB(180);SEC('Balance General','Snapshot al cierre del periodo','05');
       TABLE(['Concepto','Importe','% Activo'],[
@@ -7822,6 +7831,7 @@ async function downloadTemplate(){
         ['Total Activos',_mv(r.totalActivos),'100%'],
         ['Pasivo CP',_mv(r.pasivoCp||0),r.totalActivos>0?_pv((r.pasivoCp||0)/r.totalActivos*100):'N/D'],
         ['Pasivo LP',_mv(r.pasivoLp||0),r.totalActivos>0?_pv((r.pasivoLp||0)/r.totalActivos*100):'N/D'],
+        ['Cuentas por Pagar',_mv(r.cxp||0),r.totalActivos>0?_pv((r.cxp||0)/r.totalActivos*100):'N/D'],
         ['Patrimonio / Capital',_mv(r.capital),r.totalActivos>0?_pv(r.capital/r.totalActivos*100):'N/D'],
       ],{widths:[CW*0.52,CW*0.26,CW*0.22],rightAlign:[1,2]});
       const bkW=(CW-12)/4;ensure(62);
@@ -9880,7 +9890,8 @@ function renderFinancialCenterView(r){
           <tr style="border-bottom:1px solid var(--border2);background:rgba(34,197,94,.08);"><td style="padding:10px 14px;font-weight:800;color:var(--primary);">TOTAL ACTIVOS</td><td style="padding:10px 14px;text-align:right;font-weight:800;color:var(--primary);">${_m(r.totalActivos)}</td></tr>
           <tr style="border-bottom:1px solid var(--border2);"><td style="padding:10px 14px;color:var(--muted);">Pasivo Circulante</td><td style="padding:10px 14px;text-align:right;font-weight:700;color:var(--danger);">${_m(r.pasivoCp)}</td></tr>
           <tr style="border-bottom:1px solid var(--border2);"><td style="padding:10px 14px;color:var(--muted);">Pasivo Largo Plazo</td><td style="padding:10px 14px;text-align:right;font-weight:700;color:var(--warning);">${_m(r.pasivoLp)}</td></tr>
-          <tr style="border-bottom:1px solid var(--border2);background:rgba(244,92,92,.04);"><td style="padding:10px 14px;font-weight:700;">TOTAL PASIVOS</td><td style="padding:10px 14px;text-align:right;font-weight:800;color:var(--danger);">${_m(r.totalPasivos)}</td></tr>
+          <tr style="border-bottom:1px solid var(--border2);"><td style="padding:10px 14px;color:var(--muted);">Cuentas por Pagar</td><td style="padding:10px 14px;text-align:right;font-weight:700;color:var(--warning);">${_m(r.cxp)}</td></tr>
+          <tr style="border-bottom:1px solid var(--border2);background:rgba(244,92,92,.04);"><td style="padding:10px 14px;font-weight:700;">TOTAL PASIVOS</td><td style="padding:10px 14px;text-align:right;font-weight:800;color:var(--danger);">${_m(r.totalPasivosConCxp)}</td></tr>
           <tr style="background:rgba(34,211,160,.06);"><td style="padding:11px 14px;font-weight:800;font-size:14px;">CAPITAL CONTABLE</td><td style="padding:11px 14px;text-align:right;font-weight:800;font-size:15px;color:${r.capital>=0?'var(--success)':'var(--danger)'};">${_m(r.capital)}</td></tr>
         </tbody>
       </table>
@@ -11974,19 +11985,31 @@ function sbInit(){
     sbHideOverlay(); // modo local / no configurado
     return;
   }
+  // Lock de sesión en memoria (no usa navigator.locks): evita el deadlock conocido de
+  // supabase-js v2 cuando una llamada a Supabase se dispara dentro del propio callback
+  // de onAuthStateChange justo tras un reload. Trade-off aceptado: se pierde la
+  // sincronización del lock de sesión entre pestañas del mismo navegador — aceptable
+  // para esta SPA, donde cada pestaña ya maneja su propio estado de UI.
+  const _sbMemLock = async (_name, _acquireTimeout, fn) => fn();
   _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    realtime: { params: { eventsPerSecond: 10 } }
+    realtime: { params: { eventsPerSecond: 10 } },
+    auth: { lock: _sbMemLock, persistSession: true, autoRefreshToken: true },
   });
   window._sb = _sb;
 
-  _sb.auth.onAuthStateChange(async (event, session)=>{
+  _sb.auth.onAuthStateChange((event, session)=>{
+    // Este callback SOLO actualiza estado de sesión — nunca dispara una llamada a
+    // Supabase (ni await) aquí dentro. Eso es justo lo que producía el deadlock:
+    // sbAfterLogin()→sbLoadUserEmpresa() llamaba a _sb.from(...) desde dentro del
+    // propio callback de auth, compitiendo por el mismo lock de sesión. Se difiere
+    // con setTimeout(...,0) para que corra DESPUÉS de que este callback termine.
     if(session){
       _sbUser = session.user;
       window._sbUser = _sbUser;
       _sbIsAdmin = (session.user.user_metadata?.role==='admin');
       // Solo cargar UI en login real o sesión inicial; TOKEN_REFRESHED no recarga el selector
       if(event==='SIGNED_IN'||event==='INITIAL_SESSION'){
-        await sbAfterLogin();
+        setTimeout(()=>{ sbAfterLogin(); }, 0);
       }
     } else if(event==='SIGNED_OUT'||event==='USER_DELETED'||event==='INITIAL_SESSION'){
       _sbUser = null; window._sbUser = null;
