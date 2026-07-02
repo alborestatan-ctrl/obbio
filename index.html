@@ -844,9 +844,7 @@ th[data-tip]{cursor:default;}
 <div id="sbLoginOverlay" style="position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;">
   <div style="width:100%;max-width:400px;padding:48px 40px;background:var(--card);border:1px solid var(--border);border-radius:20px;box-shadow:0 40px 80px rgba(0,0,0,.65);">
     <div style="text-align:center;margin-bottom:32px;">
-      <div style="display:inline-flex;align-items:center;justify-content:center;width:56px;height:56px;background:var(--primary-dim);border:1px solid rgba(34,197,94,.4);border-radius:14px;margin-bottom:16px;">
-        <span style="font-size:20px;font-weight:900;color:var(--primary);">OB</span>
-      </div>
+      <img class="obbio-logo" width="64" height="64" alt="Obbio" style="display:block;margin:0 auto 16px;">
       <h2 style="font-size:22px;font-weight:800;color:var(--text);margin-bottom:6px;">Obbio</h2>
       <p style="font-size:13px;color:var(--muted);">Inicia sesión para continuar</p>
     </div>
@@ -886,7 +884,7 @@ th[data-tip]{cursor:default;}
   <!-- LOGO -->
   <div class="logo">
     <div class="logo-inner">
-      <div class="logo-badge">OB</div>
+      <img class="obbio-logo" width="32" height="32" alt="Obbio" style="flex-shrink:0;">
       <h1>Obbio</h1>
     </div>
     <p>Finance · Strategy · Intelligence</p>
@@ -1017,9 +1015,7 @@ th[data-tip]{cursor:default;}
   <div style="max-width:720px;margin:0 auto;">
     <!-- Logo + saludo -->
     <div style="text-align:center;margin-bottom:40px;">
-      <div style="display:inline-flex;align-items:center;justify-content:center;width:64px;height:64px;background:var(--primary-dim);border:1px solid rgba(34,197,94,.4);border-radius:18px;margin-bottom:20px;">
-        <span style="font-size:24px;font-weight:900;color:var(--primary);">OB</span>
-      </div>
+      <img class="obbio-logo" width="80" height="80" alt="Obbio" style="display:block;margin:0 auto 20px;">
       <h1 style="font-size:30px;font-weight:800;color:var(--text);letter-spacing:-.5px;margin-bottom:10px;">Bienvenido a Obbio</h1>
       <p style="font-size:15px;color:var(--muted);max-width:480px;margin:0 auto;line-height:1.6;">Tu centro de inteligencia financiera. En menos de 2 minutos tendrás tu dashboard completo.</p>
     </div>
@@ -3889,6 +3885,10 @@ const C = {
   muted:'#52525B', border:'rgba(255,255,255,.08)',
   text:'#FFFFFF', textMuted:'#A1A1AA'
 };
+const _LOGO_SRC='data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0iQ2FwYV8xIiBkYXRhLW5hbWU9IkNhcGEgMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB3aWR0aD0iMTA4MCIgaGVpZ2h0PSIxMDczIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmlld0JveD0iMCAwIDEwODAgMTA3MyI+CiAgPGRlZnM+CiAgICA8c3R5bGU+CiAgICAgIC5jbHMtMSB7CiAgICAgICAgZmlsbDogdXJsKCNEZWdyYWRhZG9fc2luX25vbWJyZV8xMzIpOwogICAgICB9CiAgICA8L3N0eWxlPgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJEZWdyYWRhZG9fc2luX25vbWJyZV8xMzIiIGRhdGEtbmFtZT0iRGVncmFkYWRvIHNpbiBub21icmUgMTMyIiB4MT0iMjk2Ljc2NjgiIHkxPSI1MTMuNTk2MyIgeDI9Ijg0Mi40MTUyIiB5Mj0iNTEzLjU5NjMiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjMDBlMDdlIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iLjMzMjMiIHN0b3AtY29sb3I9IiMyNmE1YTUiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIuNjQwNyIgc3RvcC1jb2xvcj0iIzFkNWZmYiIgc3RvcC1vcGFjaXR5PSIuOCIvPgogICAgICA8c3RvcCBvZmZzZXQ9Ii44Njk0IiBzdG9wLWNvbG9yPSIjN2IyNGZjIi8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogIDwvZGVmcz4KICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik04MjMuNTg4OSw3MDYuMDg5N2MtMTAuNTgyMSwxOC4xNi0yNi41NDU0LDMwLjQzNjItNDQuODc2MiwzOS41OThsLTE0OC41MDQxLDc0LjIyMjdjLTI5LjIyNzYsMTQuNjA4LTYwLjYyOTksMjMuMTk0Ni05My41NTY3LDIwLjkwNy0yNy4wMTgzLTEuODc3MS01Mi40NjQ4LTExLjQ4OTUtNzMuMTI4Ny0yOS4wMTE3LTIyLjUxODYtMTkuMDk0OC0zNi42OTg1LTQ2LjUwNTctMzYuNTg3NS03Ni41MTY1bC43NTgzLTIwNC45NzQ5Yy4wOTE1LTI0Ljc0NTQsOS4yNjY4LTQ4LjA0NDgsMjcuNDg1Mi02NC41NzcyLDIxLjk1ODQtMTkuOTI2Myw1MS4xNjg4LTI4LjQwMzcsODAuMzU3Mi0yMi4xOTM5LDkuMDAxNywxLjkxNTEsMTcuNTkyMSw0LjI4NjIsMjUuOTQ0OSw4LjU2NDVsOTEuMjYwNCw0Ni43NDMyLDEyMi40MzM5LDYzLjA4NmMyNC4zODE5LDEyLjU2MzIsNDUuNTY3MiwyNy4yNzk1LDU1LjAyOTgsNTMuODY0NywxMC42MDA1LDI5Ljc4MTksOS42MzM0LDYyLjQwMjEtNi42MTYzLDkwLjI4ODJaTTQ4Ny4zNzQ5LDY2OC41OTg2bC0uMjA4MSw2NC44MTJjLS4wNDY2LDE0LjUyMzMsNi4zMDU2LDI2Ljk4NzcsMTcuNzY5MiwzNS44MTY0LDEwLjQ5MSw3LjgyNiwyMi44ODM0LDEyLjQ2NDQsMzYuNDU3NiwxMi43MzE1LDE4LjMzNDkuMzYwNywzNy4wMDU2LTMuNTM5Miw1My41MTY0LTExLjgyNTlsMTYzLjM1Ni04MS45ODc3YzE0LjM5NC05LjMzMzUsMjEuMjI5NS0yNi4yOTA3LDE3LjE5Ny00My4wODY0LTIuNDk1OC0xMC4zOTUzLTguMjUwMi0yMC44NDQ5LTE4LjM2NDQtMjUuOTk5OGwtMTU0LjM1NDgtNzguNjY5OS02NS40MTQ4LTMzLjU4MzFjLTkuNjU5OC00Ljk1OTItMTkuNDczNy03Ljk1NDQtMzAuMjg4Ny00LjgwOTQtMTAuMzI1MiwzLjAwMjUtMTguNTgzOSwxMS42MjY5LTE4LjY3MTYsMjMuMTIybC0uNjU1NSw4NS45MDkzLDUyLjg1NTUtLjAzNWMxNC4xNzA3LS45MTA3LDI2LjcxMDgtNS41NjUxLDM4Ljk5MDgtMTIuNTMyNWw0OS44NjAyLTMzLjU2Miw1OC43ODY1LDMwLjA1NTItNzMuMDczNyw0OC44NTA2Yy0xMS4wMDM2LDcuMTI4My0yMi4xNDMzLDEyLjY4MTctMzQuMzg5OSwxNy4xOTctMTIuOTc5Miw0LjIyODMtMjUuNzIzOCw3LjQ5NTMtMzkuNTU4Niw3LjUxNjNsLTUzLjgwOTEuMDgxNlpNNDE5LjQwOTEsMjY5LjYyNjdjMTguOTUzLTkuNDM5NywzOC41MjQ5LTE2LjE2MDUsNTkuMzI0NS0yMC42ODExLDMwLjI2OTktNi41Nzg5LDY4LjIzMTMtMi44ODk1LDk1LjM3NTYsMTMuMzA5MmwxNDIuODc0OCw3MC42NTk0LDQwLjY1MzgsMjAuNjUzNWM3LjYwMDgsMy44NjE1LDEyLjg2ODcsMTAuOTI1MywxNi42MjE1LDE4LjQ5MTIsNi43MjY1LDEzLjU2MDgsNy45MjIzLDI4LjQxMjIsNi42MTk4LDQzLjU3MzItMy44NTAzLDMwLjc5NjQtMjAuMzYxNyw1OC4xMjMtNDUuNDY4OCw3Ni4yMjRsLTMyLjU0MzIsMjEuOTM1Niw1Ny44MzI5LDI5Ljg4OTJjMzkuMzYxNS0yNC4wMTA2LDY3LjQ2NjItNTcuMDYyNSw3OC4wMTUzLTEwMi4zMDU2LDEwLjkzNzQtNTkuMTY4NS0uNjYwNy0xMTYuMTAwOC01Ny45ODMxLTE0NC4zNTMzbC0xNzcuODUzMS04Ny42NTg0Yy0xMy42MjA2LTYuNzEzMi0yNi42NDAxLTEyLjg2NjEtNDEuNDM1My0xNi42OTMxLTM4LjI2NzktOS44OTg3LTc4LjA0NjUtOC41OTA5LTExNS45MDksMi43NTQzLTUxLjQ5ODgsMTUuNDMxMi05OC43MzcxLDM5LjIyOTktMTI3LjQzNSw4Ni4yMTEzLTE2LjA5MTEsMjYuMzQyOC0yMC41NTQ5LDQ5Ljg4MjItMjAuNjEwOCw4MC42MjI4bC0uMjEwNywxMTUuODgzMy0uNTExMSwxOTIuMDEwOWMtLjA0NzcsMTcuOTA1NywzLjcxMDUsMzQuOTM4NCwxMC4zOTI1LDUxLjExNjUsOC40MTgzLDIwLjM4MjEsMjIuMzU3OSwzNy4wMzk5LDQwLjQyMSw0OS41MDUsMTQuMTk1MSw5LjY0OTEsMjkuNTg5NCwxNS45OTQ2LDQ2LjI5NjMsMjAuMTY0MywxNC4wNDA2LDMuMzI0NywyNy45MDY5LDQuOTA5OCw0Mi43OTUzLDUuMTExLTEyLjcxODUtMTguNDY1OC0xOC45OTAxLTM5LjYxLTE5LjUwOTMtNjEuOTE2NC0yMS4zMTMxLTQuMDQyNy00MC43NDE2LTEyLjY2MTEtNTEuMzI4Ny0zMi40OTk0LTUuMjcxMS0xMC41ODI1LTguNDcwNS0yMS45NTc0LTguNDY2Mi0zMy45NTg5bC4wMDk1LTI2Ljg2MzEuNDY4Ni0xNTkuNDIxNS41NTE0LTEyNy45NjI3YzIuNjM1Ny0zOS41MzI3LDI2Ljk0MTUtNjYuODMyMiw2MS4wMTE2LTgzLjgwMTFaTTYzOC45ODIxLDQzNS4wNjhsOTIuMDA2Myw0Ny44MzY5YzE2LjcxNjYtMTIuMTk5NSwyOS40NTY2LTI5LjEzNzcsMzUuODA0NS00OS4wMjM4bC0xMTQuNjg3Mi01OS40MzMtNjMuNDgwNS0zMi45Nzc1Yy0zOS42ODE1LTIwLjYxNDEtODIuNjQ0My0yNi42OTI4LTEyNS43ODI1LTE0LjEwMTMtMTMuMDU5Nyw0LjEwNjYtMjQuODQ5Myw5LjM0MzMtMzYuNzY0OCwxNi4xMTA1LTIwLjczNjUsMTEuNzc2OC0zOS45Mzc4LDI1LjM3OTgtNTguNTQxMiw0MC40NzcxbC4wMzc4LDc3LjY3MzVjNy43NjQ0LTEwLjM0MjIsMTQuOTU3My0xOS4yOTM0LDI0LjEzMzctMjcuNTU2OCwxOS4yNzM2LTE3LjE3NTYsNDAuNTczOC0zMS4yMTkzLDY0LjAwMy00Mi4wNzMyLDMzLjM4MDktMTUuMTAwNiw2Ny44ODgtMTYuNTIzNywxMDEuMDI4NC41OTIybDgyLjI0MjUsNDIuNDc1NFpNODM3LjYxMDcsNTc0LjUyMDJjNS4yNjk2LTI1Ljg3ODktMS43Njk0LTUwLjczODgtMTUuNzQ5OC03My4xNTI4LTExLjc5MSwxNi4yODc4LTI1LjkxMDIsMjkuODk2MS00Mi4yMDUzLDQxLjA3MjRsMi42MDk0LDEyLjI2MjNjMTkuMjkwMSwxMC4yNTY1LDM2Ljg0NDMsMjIuMDg0MSw0OS4xMzg0LDQwLjkyNDJsNi4yMDczLTIxLjEwNjFaIi8+Cjwvc3ZnPg==';
+window._logoPng=null;
+{const _li=new Image();_li.onload=()=>{const _lc=document.createElement('canvas');_lc.width=440;_lc.height=436;_lc.getContext('2d').drawImage(_li,0,0,440,436);window._logoPng=_lc.toDataURL('image/png');};_li.src=_LOGO_SRC;}
+document.querySelectorAll('.obbio-logo').forEach(el=>el.src=_LOGO_SRC);
 const gridColor = 'rgba(255,255,255,.06)';
 const baseOpts = {
   responsive:true, maintainAspectRatio:false,
@@ -7353,8 +7353,8 @@ async function downloadTemplate(){
       for(let i=2;i<=tot;i++){
         doc.setPage(i);
         sf(...C.green);doc.rect(0,0,W,3,'F');
-        doc.setFont('ArialPDF','bold');doc.setFontSize(7.5);sc(...C.green);doc.text('OBBIO',ML,20);
-        doc.setFont('ArialPDF','normal');sc(...C.muted);doc.text(' Finance - Strategy - Intelligence',ML+32,20);
+        if(window._logoPng){doc.addImage(window._logoPng,'PNG',ML,11,16,16);}else{doc.setFont('ArialPDF','bold');doc.setFontSize(7.5);sc(...C.green);doc.text('OBBIO',ML,20);}
+        doc.setFont('ArialPDF','normal');doc.setFontSize(7.5);sc(...C.muted);doc.text('Finance · Strategy · Intelligence',ML+(window._logoPng?20:32),20);
         doc.setFontSize(7);sc(...C.muted);doc.text(_t(r.empresa||'')+(r.anio?' - '+r.anio:''),W/2,20,{align:'center'});
         ss(...C.border);doc.setLineWidth(.4);doc.line(ML,H-34,W-MR,H-34);
         doc.setFont('ArialPDF','normal');doc.setFontSize(7);sc(...C.muted);
@@ -7527,8 +7527,8 @@ async function downloadTemplate(){
     sf(...C.white);doc.rect(0,0,W,H,'F');
     // Franja verde superior
     sf(...C.green);doc.rect(0,0,W,56,'F');
-    doc.setFont('ArialPDF','bold');doc.setFontSize(21);sc(...C.white);doc.text('OBBIO',ML,38);
-    doc.setFont('ArialPDF','normal');doc.setFontSize(9);sc(220,252,231);doc.text('Finance - Strategy - Intelligence',ML+90,38);
+    if(window._logoPng){doc.addImage(window._logoPng,'PNG',ML,10,36,36);}else{doc.setFont('ArialPDF','bold');doc.setFontSize(21);sc(...C.white);doc.text('OBBIO',ML,38);}
+    doc.setFont('ArialPDF','normal');doc.setFontSize(9);sc(220,252,231);doc.text('Finance - Strategy - Intelligence',ML+(window._logoPng?44:90),38);
     doc.setFontSize(8);sc(220,252,231);doc.text(new Date().toLocaleDateString('es-MX',{year:'numeric',month:'long',day:'numeric'}),W-MR,38,{align:'right'});
     // Titulo
     doc.setFont('ArialPDF','bold');doc.setFontSize(46);sc(...C.ink);doc.text('Reporte',ML,140);
