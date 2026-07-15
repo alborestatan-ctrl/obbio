@@ -1,5 +1,30 @@
 const https = require('https');
 
+function supabaseGet(path, token) {
+  return new Promise((resolve, reject) => {
+    const host = new URL(process.env.SUPABASE_URL).hostname;
+    const req = https.request({
+      hostname: host, path, method: 'GET',
+      headers: { 'apikey': process.env.SUPABASE_SERVICE_ROLE_KEY, 'Authorization': `Bearer ${token}` },
+    }, (res) => {
+      let raw = '';
+      res.on('data', c => raw += c);
+      res.on('end', () => {
+        try { resolve({ status: res.statusCode, body: JSON.parse(raw) }); }
+        catch { resolve({ status: res.statusCode, body: raw }); }
+      });
+    });
+    req.on('error', reject);
+    req.end();
+  });
+}
+
+async function verifyUser(jwt) {
+  if (!jwt) return false;
+  const res = await supabaseGet('/auth/v1/user', jwt);
+  return res.status === 200;
+}
+
 function groqRequest(payload) {
   return new Promise((resolve, reject) => {
     const body = JSON.stringify(payload);
@@ -28,11 +53,18 @@ function groqRequest(payload) {
 
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
 
   if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY)
+    return res.status(500).json({ error: 'Variables de entorno no configuradas' });
+
+  const callerJwt = (req.headers.authorization || '').replace('Bearer ', '');
+  const isAuthed = await verifyUser(callerJwt);
+  if (!isAuthed) return res.status(401).json({ error: 'No autorizado' });
 
   const { sheets } = req.body || {};
   if (!sheets || !sheets.length) return res.status(400).json({ error: 'sheets requerido' });
@@ -40,8 +72,8 @@ module.exports = async (req, res) => {
 
   // Build compact text representation
   const sheetText = sheets.map(s => {
-    const rowsText = s.rows.slice(0, 35).map(row =>
-      row.slice(0, 8).map(c => {
+    const rowsText = s.rows.slice(0, 60).map(row =>
+      row.slice(0, 10).map(c => {
         const v = (c === null || c === undefined || c === '') ? '' : String(c);
         return v.length > 28 ? v.slice(0, 26) + '..' : v;
       }).join(' | ')
@@ -100,7 +132,7 @@ Si hay múltiples años, usa siempre el más reciente. Si los valores son mensua
         { role: 'system', content: systemPrompt },
         { role: 'user',   content: userPrompt },
       ],
-      max_tokens: 450,
+      max_tokens: 600,
       temperature: 0.1,
     });
 

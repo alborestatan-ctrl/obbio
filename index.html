@@ -136,6 +136,9 @@ body{background:var(--bg);color:var(--text);overflow-x:hidden;max-width:100vw;}
 .nav button:hover{background:rgba(255,255,255,.04);color:var(--text);}
 .nav button.active{background:var(--primary-dim);color:var(--primary);border:1px solid rgba(34,197,94,.25);font-weight:600;}
 .nav-icon{font-size:14px;width:17px;text-align:center;flex-shrink:0;}
+.nav-icon svg{width:16px;height:16px;flex-shrink:0;fill:url(#ob-g);display:block;}
+.nav button.active .nav-icon svg{filter:drop-shadow(0 0 4px rgba(0,224,126,.35));}
+.nav-section-label svg{width:12px;height:12px;flex-shrink:0;fill:url(#ob-g);opacity:.7;display:block;}
 .sidebar-data-btn{padding:8px 14px;margin-bottom:8px;}
 .sidebar-data-btn button{width:100%;padding:11px 14px;border-radius:12px;border:1px solid rgba(34,197,94,.35);background:linear-gradient(135deg,rgba(34,197,94,.12),rgba(167,139,250,.08));color:var(--primary);font-size:12.5px;font-weight:700;cursor:pointer;text-align:left;display:flex;align-items:center;gap:9px;transition:.2s;}
 .sidebar-data-btn button:hover{background:linear-gradient(135deg,rgba(34,197,94,.2),rgba(167,139,250,.14));border-color:rgba(34,197,94,.5);}
@@ -168,6 +171,7 @@ body{background:var(--bg);color:var(--text);overflow-x:hidden;max-width:100vw;}
 .view{display:none;animation:fadeIn .25s ease;}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
 @keyframes shimmer{0%{background-position:-400px 0;}100%{background-position:400px 0;}}
+@keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
 .skel{border-radius:8px;background:linear-gradient(90deg,var(--card2) 25%,rgba(255,255,255,.05) 50%,var(--card2) 75%);background-size:800px 100%;animation:shimmer 1.4s infinite linear;}
 [data-theme="light"] .skel{background:linear-gradient(90deg,#e9eef4 25%,#f4f7fb 50%,#e9eef4 75%);background-size:800px 100%;}
 .skel-line{height:14px;margin-bottom:10px;border-radius:6px;}
@@ -877,6 +881,7 @@ th[data-tip]{cursor:default;}
 </div>
 
 <div class="app">
+<svg style="width:0;height:0;position:absolute;overflow:hidden;" aria-hidden="true"><defs><linearGradient id="ob-g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#00e07e"/><stop offset="33%" stop-color="#26a5a5"/><stop offset="64%" stop-color="#1d5ffb" stop-opacity="0.9"/><stop offset="87%" stop-color="#7b24fc"/></linearGradient></defs></svg>
 
 <!-- SIDEBAR -->
 <aside class="sidebar">
@@ -893,7 +898,7 @@ th[data-tip]{cursor:default;}
   <!-- BOTÓN DATOS — SIEMPRE VISIBLE ARRIBA -->
   <div class="sidebar-data-btn">
     <button onclick="showViewFromBanner('ingresodatosView')">
-      <span>⚡</span><span>Ingresar / Actualizar Datos</span>
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width:15px;height:15px;flex-shrink:0;fill:currentColor;display:block;"><path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM13 17H11V13H8L12 9L16 13H13V17Z"/></svg><span>Ingresar / Actualizar Datos</span>
     </button>
   </div>
   <div class="sidebar-data-btn" style="padding-top:0;margin-top:-2px;">
@@ -913,50 +918,48 @@ th[data-tip]{cursor:default;}
 
     <div class="nav-group open" id="navGroupPrincipal">
       <div class="nav-section-label" onclick="toggleNavGroup('navGroupPrincipal')">
-        <span><span>🏠</span>Principal</span><span class="nav-arrow">▶</span>
+        <span><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="url(#ob-g)" d="M10 20V14H14V20H19V12H22L12 3L2 12H5V20H10Z"/></svg>Principal</span><span class="nav-arrow">▶</span>
       </div>
       <div class="nav-group-items">
-        <button class="active" onclick="showView('dashboardView',this)"><span class="nav-icon">📋</span>Dashboard Ejecutivo</button>
-        <button onclick="showView('financeView',this)"><span class="nav-icon">💰</span>Inteligencia Financiera</button>
-        <button id="navAnalyticsBtn" onclick="showView('analyticsView',this)" style="display:none;"><span class="nav-icon">📈</span>Análisis de Desempeño</button>
-        <button onclick="showView('productosView',this)"><span class="nav-icon">📦</span>Ventas por Producto</button>
+        <button class="active" onclick="showView('dashboardView',this)"><span class="nav-icon"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="3" width="7" height="7" rx="1" fill="url(#ob-g)"/><rect x="14" y="3" width="7" height="7" rx="1" fill="url(#ob-g)"/><rect x="3" y="14" width="7" height="7" rx="1" fill="url(#ob-g)"/><rect x="14" y="14" width="7" height="7" rx="1" fill="url(#ob-g)"/></svg></span>Dashboard Ejecutivo</button>
+        <button onclick="showView('financeView',this)"><span class="nav-icon"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="url(#ob-g)" d="M3.5 18.5L9.5 12.5L13.5 16.5L22 6.92L20.59 5.51L13.5 13.5L9.5 9.5L2 17L3.5 18.5Z"/></svg></span>Inteligencia Financiera</button>
+        <button id="navAnalyticsBtn" onclick="showView('analyticsView',this)" style="display:none;"><span class="nav-icon"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="12" width="4" height="9" rx="1" fill="url(#ob-g)"/><rect x="10" y="7" width="4" height="14" rx="1" fill="url(#ob-g)"/><rect x="17" y="3" width="4" height="18" rx="1" fill="url(#ob-g)"/></svg></span>Análisis de Desempeño</button>
+        <button onclick="showView('productosView',this)"><span class="nav-icon"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="url(#ob-g)" d="M12 2L2 7V17L12 22L22 17V7L12 2ZM12 4.24L19.39 8L12 11.76L4.61 8L12 4.24ZM4 9.65L11 13.29V19.65L4 16V9.65ZM13 19.65V13.29L20 9.65V16L13 19.65Z"/></svg></span>Ventas por Producto</button>
       </div>
     </div>
 
     <div class="nav-group" id="navGroupFinanzas">
       <div class="nav-section-label" onclick="toggleNavGroup('navGroupFinanzas')">
-        <span><span>💧</span>Finanzas</span><span class="nav-arrow">▶</span>
+        <span><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="url(#ob-g)" d="M11.8 10.9C9.53 10.31 8.8 9.7 8.8 8.75C8.8 7.66 9.81 6.9 11.5 6.9C13.28 6.9 13.94 7.75 14 9H16.21C16.14 7.28 15.09 5.7 13 5.19V3H10V5.16C8.06 5.58 6.5 6.84 6.5 8.77C6.5 11.08 8.41 12.23 11.2 12.9C13.7 13.5 14.2 14.38 14.2 15.31C14.2 16 13.71 17.1 11.5 17.1C9.44 17.1 8.63 16.18 8.5 15H6.32C6.44 17.19 8.08 18.42 10 18.83V21H13V18.85C14.95 18.48 16.5 17.35 16.5 15.3C16.5 12.46 14.07 11.49 11.8 10.9Z"/></svg>Finanzas</span><span class="nav-arrow">▶</span>
       </div>
       <div class="nav-group-items">
-        <button onclick="showView('cashflowView',this)"><span class="nav-icon">💧</span>Flujo de Caja</button>
-        <button onclick="showView('workingCapitalView',this)"><span class="nav-icon">🏦</span>Capital de Trabajo</button>
-        <button onclick="showView('debtView',this)"><span class="nav-icon">📉</span>Endeudamiento</button>
-        <button onclick="showView('costosGastosView',this)"><span class="nav-icon">🏭</span>Costos y Gastos</button>
-        <button onclick="showView('taxView',this)"><span class="nav-icon">🏛️</span>Inteligencia Fiscal</button>
-        <button onclick="showView('financialCenterView',this)"><span class="nav-icon">📑</span>Centro Financiero</button>
+        <button onclick="showView('cashflowView',this)"><span class="nav-icon"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="url(#ob-g)" d="M12 2C12 2 6 9 6 13.5C6 16.54 8.69 19 12 19C15.31 19 18 16.54 18 13.5C18 9 12 2 12 2ZM12 17C9.79 17 8 15.43 8 13.5C8 11.14 10.21 7.58 12 5.03C13.79 7.58 16 11.14 16 13.5C16 15.43 14.21 17 12 17Z"/></svg></span>Flujo de Caja</button>
+        <button onclick="showView('workingCapitalView',this)"><span class="nav-icon"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="url(#ob-g)" d="M12 3L2 8H4V9H2V11H22V9H20V8H22L12 3ZM12 5.28L18.47 8H5.53L12 5.28ZM6 12V18H4V20H20V18H18V12H16V18H13V12H11V18H8V12H6Z"/></svg></span>Capital de Trabajo</button>
+        <button onclick="showView('debtView',this)"><span class="nav-icon"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="url(#ob-g)" d="M16 18L18.29 15.71L13.41 10.83L9.41 14.83L2 7.41L3.41 6L9.41 12L13.41 8L19.71 14.29L22 12V18H16Z"/></svg></span>Endeudamiento</button>
+        <button onclick="showView('costosGastosView',this)"><span class="nav-icon"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="url(#ob-g)" d="M12 15.5C11.07 15.5 10.2 15.14 9.55 14.55L4 20H20L14.45 14.55C13.8 15.14 12.93 15.5 12 15.5ZM20 4H4V12L9 7V12L14 7V12L20 7V4Z"/></svg></span>Costos y Gastos</button>
+        <button onclick="showView('financialCenterView',this)"><span class="nav-icon"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="url(#ob-g)" d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2ZM18 20H6V4H13V9H18V20ZM8 15H16V17H8V15ZM8 11H16V13H8V11Z"/></svg></span>Centro Financiero</button>
       </div>
     </div>
 
     <div class="nav-group" id="navGroupEstrategia">
       <div class="nav-section-label" onclick="toggleNavGroup('navGroupEstrategia')">
-        <span><span>🧠</span>Estrategia</span><span class="nav-arrow">▶</span>
+        <span><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="url(#ob-g)" d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20ZM12 17L17 12L12 7L11 8L14.59 11.59L7 11.59V13.41L14.59 13.41L11 17L12 17Z"/></svg>Estrategia</span><span class="nav-arrow">▶</span>
       </div>
       <div class="nav-group-items">
-        <button onclick="showView('comparativosView',this)"><span class="nav-icon">🔁</span>Comparativos</button>
-        <button onclick="showView('forecastView',this)"><span class="nav-icon">📊</span>Pronóstico y Planeación</button>
-        <button onclick="showView('modelView',this)"><span class="nav-icon">🧮</span>Modelo Financiero</button>
-        <button onclick="showView('strategyView',this)"><span class="nav-icon">🧠</span>Estrategia Ejecutiva</button>
-        <button onclick="showView('aiView',this)"><span class="nav-icon">✨</span>Diagnóstico IA</button>
-        <button onclick="showView('riskView',this)"><span class="nav-icon">⚠️</span>Centro de Riesgos</button>
+        <button onclick="showView('comparativosView',this)"><span class="nav-icon"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="url(#ob-g)" d="M7 7H17V10L21 6L17 2V5H5V11H7V7ZM17 17H7V14L3 18L7 22V19H19V13H17V17Z"/></svg></span>Comparativos</button>
+        <button onclick="showView('forecastView',this)"><span class="nav-icon"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="url(#ob-g)" d="M19 3H18V1H16V3H8V1H6V3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM19 19H5V8H19V19ZM7 10H9V17H7V10ZM11 13H13V17H11V13ZM15 11H17V17H15V11Z"/></svg></span>Pronóstico y Planeación</button>
+        <button onclick="showView('modelView',this)"><span class="nav-icon"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="url(#ob-g)" d="M19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM19 19H5V5H19V19ZM7 7H17V9H7V7ZM7 11H9V13H7V11ZM11 11H13V13H11V11ZM15 11H17V17H15V11ZM7 15H9V17H7V15ZM11 15H13V17H11V15Z"/></svg></span>Planeación Fiscal</button>
+        <button onclick="showView('strategyView',this)"><span class="nav-icon"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="url(#ob-g)" d="M7 2V13H10V22L17 11H13L17 2H7Z"/></svg></span>Estrategia & Diagnóstico</button>
+        <button onclick="showView('riskView',this)"><span class="nav-icon"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="url(#ob-g)" d="M12 1L3 5V11C3 16.55 6.84 21.74 12 23C17.16 21.74 21 16.55 21 11V5L12 1ZM11 15V17H13V15H11ZM11 7V13H13V7H11Z"/></svg></span>Centro de Riesgos</button>
       </div>
     </div>
 
     <div class="nav-group" id="navGroupDatos">
       <div class="nav-section-label" onclick="toggleNavGroup('navGroupDatos')">
-        <span><span>⚡</span>Datos</span><span class="nav-arrow">▶</span>
+        <span><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="url(#ob-g)" d="M12 2C8.13 2 5 3.79 5 6V18C5 20.21 8.13 22 12 22C15.87 22 19 20.21 19 18V6C19 3.79 15.87 2 12 2ZM17 18C17 18.83 14.76 20 12 20C9.24 20 7 18.83 7 18V15.46C8.52 16.42 10.24 16.95 12 17C13.76 16.95 15.48 16.42 17 15.46V18ZM17 12.79C15.48 13.75 13.76 14.27 12 14.27C10.24 14.27 8.52 13.75 7 12.79V10.13C8.52 11.09 10.24 11.61 12 11.66C13.76 11.61 15.48 11.09 17 10.13V12.79ZM12 9.93C9.24 9.93 7 8.76 7 7.93C7 7.1 9.24 5.93 12 5.93C14.76 5.93 17 7.1 17 7.93C17 8.76 14.76 9.93 12 9.93Z"/></svg>Datos</span><span class="nav-arrow">▶</span>
       </div>
       <div class="nav-group-items">
-        <button onclick="showView('ingresodatosView',this)"><span class="nav-icon">⚡</span>Ingresar Datos</button>
+        <button onclick="showView('ingresodatosView',this)"><span class="nav-icon"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="url(#ob-g)" d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM13 17H11V13H8L12 9L16 13H13V17Z"/></svg></span>Ingresar Datos</button>
       </div>
     </div>
 
@@ -1176,7 +1179,7 @@ th[data-tip]{cursor:default;}
         <div class="kpi-icon yellow">📉</div>
       </div>
       <div class="kpi-value">—</div>
-      <div class="kpi-sub">% de cada peso de ventas que se convierte en ganancia operativa</div>
+      <div class="kpi-sub">% del ingreso que se convierte en ganancia operativa</div>
       <div class="kpi-bottom">
         <div class="kpi-change neutral">—</div>
         <canvas class="kpi-sparkline" id="spark4"></canvas>
@@ -1374,13 +1377,15 @@ th[data-tip]{cursor:default;}
     <div class="financial-grid">
       <div>
         <div class="statement-card">
-          <div class="statement-row"><span class="statement-label">Ingresos brutos</span><strong class="statement-value">—</strong></div>
-          <div class="statement-row"><span class="statement-label">Costo de ventas</span><strong class="statement-value" style="color:var(--danger);">—</strong></div>
-          <div class="statement-row highlight"><span class="statement-label" style="font-weight:600;color:var(--text);">Utilidad Bruta</span><strong class="statement-value positive">—</strong></div>
-          <div class="statement-row"><span class="statement-label">Gastos Operativos</span><strong class="statement-value" style="color:var(--danger);">—</strong></div>
-          <div class="statement-row highlight"><span class="statement-label" style="font-weight:600;color:var(--text);">EBITDA</span><strong class="statement-value positive">—</strong></div>
-          <div class="statement-row"><span class="statement-label">Impuestos</span><strong class="statement-value" style="color:var(--danger);">—</strong></div>
-          <div class="statement-row highlight"><span class="statement-label" style="font-weight:700;color:var(--text);font-size:14px;">Utilidad Neta</span><strong class="statement-value positive" style="font-size:16px;">—</strong></div>
+          <div class="statement-row"><span class="statement-label">Ingresos brutos</span><strong class="statement-value" id="fin-sv-ventas">—</strong></div>
+          <div class="statement-row"><span class="statement-label">Costo de ventas</span><strong class="statement-value" id="fin-sv-cogs" style="color:var(--danger);">—</strong></div>
+          <div class="statement-row highlight"><span class="statement-label" style="font-weight:600;color:var(--text);">Utilidad Bruta</span><strong class="statement-value positive" id="fin-sv-utilbruta">—</strong></div>
+          <div class="statement-row"><span class="statement-label">Gastos Operativos</span><strong class="statement-value" id="fin-sv-gastosop" style="color:var(--danger);">—</strong></div>
+          <div class="statement-row highlight"><span class="statement-label" style="font-weight:600;color:var(--text);">Utilidad Operativa (EBIT)</span><strong class="statement-value positive" id="fin-sv-ebit">—</strong></div>
+          <div class="statement-row" id="fin-row-gfin" style="display:none;"><span class="statement-label">Gastos Financieros</span><strong class="statement-value" id="fin-sv-gfin" style="color:var(--danger);">—</strong></div>
+          <div class="statement-row highlight" id="fin-row-uai" style="display:none;"><span class="statement-label" style="font-weight:600;color:var(--text);">Util. Antes de Impuestos</span><strong class="statement-value positive" id="fin-sv-uai">—</strong></div>
+          <div class="statement-row"><span class="statement-label">Impuestos (ISR)</span><strong class="statement-value" id="fin-sv-isr" style="color:var(--warning);">—</strong></div>
+          <div class="statement-row highlight"><span class="statement-label" style="font-weight:700;color:var(--text);font-size:14px;">Utilidad Neta</span><strong class="statement-value positive" id="fin-sv-utilneta" style="font-size:16px;">—</strong></div>
         </div>
       </div>
       <div>
@@ -1430,7 +1435,7 @@ th[data-tip]{cursor:default;}
     <div id="fin-bm-body" style="min-height:56px;display:flex;align-items:center;color:var(--muted);font-size:13px;">
       Ingresa datos y presiona <strong style="color:var(--primary);margin-left:4px;">Generar Benchmark IA</strong> para comparar tu empresa vs el sector.
     </div>
-    <p id="fin-bm-fuente" style="display:none;font-size:11px;color:var(--muted2);margin-top:10px;line-height:1.5;"></p>
+    <div id="fin-bm-fuente" style="display:none;margin-top:14px;border-top:1px solid var(--border2);padding-top:12px;"></div>
   </div>
 </div>
 
@@ -2061,10 +2066,10 @@ th[data-tip]{cursor:default;}
 <div id="modelView" class="view" style="display:none;">
 <header class="topbar">
   <div>
-    <h2 class="page-title">Modelo Financiero</h2>
-    <p class="page-subtitle">Simula escenarios de crecimiento y evalúa su impacto en P&amp;L, flujo libre y valor de empresa · Mueve los sliders para actualizar en tiempo real</p>
+    <h2 class="page-title">Planeación Fiscal</h2>
+    <p class="page-subtitle" id="plan-subtitle">Modelo financiero proyectivo · Inteligencia fiscal e impacto tributario</p>
   </div>
-  <div class="topbar-actions">
+  <div class="topbar-actions" id="plan-model-btns">
     <button onclick="openCFOWith('¿Qué escenario del modelo financiero debo considerar según mis datos actuales?')" style="padding:8px 14px;border-radius:9px;border:1px solid rgba(167,139,250,.35);background:rgba(167,139,250,.08);color:#a78bfa;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:background .15s;" onmouseover="this.style.background='rgba(167,139,250,.18)'" onmouseout="this.style.background='rgba(167,139,250,.08)'">🤖 Preguntar al CFO</button>
     <button onclick="applyScenario('opt')" style="padding:8px 14px;border-radius:9px;border:1px solid rgba(34,211,160,.3);background:rgba(34,211,160,.1);color:var(--success);font-size:12px;font-weight:700;cursor:pointer;">🟢 Optimista</button>
     <button onclick="applyScenario('base')" style="padding:8px 14px;border-radius:9px;border:1px solid rgba(34,197,94,.3);background:rgba(34,197,94,.1);color:var(--primary);font-size:12px;font-weight:700;cursor:pointer;">🔵 Base</button>
@@ -2073,6 +2078,13 @@ th[data-tip]{cursor:default;}
   </div>
 </header>
 
+<!-- Tab strip -->
+<div style="display:flex;gap:4px;margin-bottom:20px;background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:4px;width:fit-content;">
+  <button id="planPill_model" onclick="planTab('model')" style="padding:8px 20px;border-radius:9px;border:none;background:var(--primary);color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:.15s;">📊 Modelo Financiero</button>
+  <button id="planPill_fiscal" onclick="planTab('fiscal')" style="padding:8px 20px;border-radius:9px;border:none;background:transparent;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;transition:.15s;">🏛️ Inteligencia Fiscal</button>
+</div>
+
+<div id="plan-body-model">
 <div class="analytics-grid">
   <!-- SLIDERS -->
   <div class="card">
@@ -2244,25 +2256,36 @@ th[data-tip]{cursor:default;}
   </div>
 </div>
 
-</div>
+</div><!-- /plan-body-model -->
+
+<!-- ── TAB: INTELIGENCIA FISCAL ── -->
+<div id="plan-body-fiscal" style="display:none;"></div>
+
+</div><!-- /modelView -->
 <!-- ==================== EXECUTIVE STRATEGY ==================== -->
 <div id="strategyView" class="view" style="display:none;">
 
 <header class="topbar">
-
 <div>
-<h2 class="page-title">
-Estrategia Ejecutiva
-</h2>
-
-<p class="page-subtitle">
-Recomendaciones financieras automatizadas
-</p>
+  <h2 class="page-title">Estrategia Ejecutiva</h2>
+  <p class="page-subtitle" id="strat-subtitle">Recomendaciones financieras automatizadas · Diagnóstico IA integrado</p>
 </div>
-<div class="topbar-actions"><button onclick="openCFOWith('¿Cuál es mi posición estratégica y qué debo priorizar?')" style="padding:8px 14px;border-radius:9px;border:1px solid rgba(167,139,250,.35);background:rgba(167,139,250,.08);color:#a78bfa;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:background .15s;" onmouseover="this.style.background='rgba(167,139,250,.18)'" onmouseout="this.style.background='rgba(167,139,250,.08)'">🤖 Preguntar al CFO</button></div>
-
+<div class="topbar-actions" id="strat-strategy-btns">
+  <button onclick="openCFOWith('¿Cuál es mi posición estratégica y qué debo priorizar?')" style="padding:8px 14px;border-radius:9px;border:1px solid rgba(167,139,250,.35);background:rgba(167,139,250,.08);color:#a78bfa;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:background .15s;" onmouseover="this.style.background='rgba(167,139,250,.18)'" onmouseout="this.style.background='rgba(167,139,250,.08)'">🤖 Preguntar al CFO</button>
+</div>
+<div class="topbar-actions" id="strat-ai-btns" style="display:none;">
+  <button onclick="openCFOWith('Explícame los hallazgos más importantes del diagnóstico financiero.')" style="padding:8px 14px;border-radius:9px;border:1px solid rgba(167,139,250,.35);background:rgba(167,139,250,.08);color:#a78bfa;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:background .15s;" onmouseover="this.style.background='rgba(167,139,250,.18)'" onmouseout="this.style.background='rgba(167,139,250,.08)'">🤖 Preguntar al CFO</button>
+  <button onclick="generarReportePDF()" style="padding:8px 16px;border-radius:9px;border:none;background:var(--primary);color:#fff;font-weight:700;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">📄 Reporte PDF</button>
+</div>
 </header>
 
+<!-- Tab strip -->
+<div style="margin-bottom:20px;display:inline-flex;background:var(--card2);border-radius:12px;padding:4px;gap:4px;">
+  <button id="stratPill_strategy" onclick="stratTab('strategy')" style="padding:8px 20px;border-radius:9px;border:none;background:var(--primary);color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:.15s;">⚡ Estrategia</button>
+  <button id="stratPill_ai" onclick="stratTab('ai')" style="padding:8px 20px;border-radius:9px;border:none;background:transparent;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;transition:.15s;">🧠 Diagnóstico IA</button>
+</div>
+
+<div id="strat-body-strategy">
 <div id="resumen-strategyView" class="obbio-resumen" style="display:none;"></div>
 <section class="kpi-grid">
 
@@ -2473,8 +2496,9 @@ Mapa Estratégico de Impacto
 </section>
 <div class="financial-grid">
   <div class="card"><div class="card-header"><div class="card-title">Composición del COGS</div></div><p id="insight-costosView" class="chart-insight"></p><div class="chart-container"><canvas id="costosDonutChart"></canvas></div></div>
-  <div class="card"><div class="card-header"><div class="card-title">% sobre Ventas por Componente</div></div><div class="chart-container"><canvas id="costosBarChart"></canvas></div></div>
+  <div class="card"><div class="card-header"><div class="card-title">% sobre Ventas por Componente <span style="font-size:10px;font-weight:400;color:var(--muted2);">· toca una barra</span></div></div><div class="chart-container"><canvas id="costosBarChart"></canvas></div></div>
 </div>
+<div id="cv-drill" class="card" style="display:none;padding:16px 20px;margin-bottom:4px;border-color:var(--border2);"></div>
 <div class="card"><div class="card-header"><div class="card-title">Sensibilidad de Costos</div></div><div id="cv-sens-body" style="padding:16px 20px;"></div></div>
 </div>
 
@@ -2488,8 +2512,9 @@ Mapa Estratégico de Impacto
 </section>
 <div class="financial-grid">
   <div class="card"><div class="card-header"><div class="card-title">Gastos por Categoría</div></div><p id="insight-gastosView" class="chart-insight"></p><div class="chart-container"><canvas id="gastosDonutChart"></canvas></div></div>
-  <div class="card"><div class="card-header"><div class="card-title">Desglose por Rubro</div></div><div class="chart-container"><canvas id="gastosBarChart"></canvas></div></div>
+  <div class="card"><div class="card-header"><div class="card-title">Desglose por Rubro <span style="font-size:10px;font-weight:400;color:var(--muted2);">· toca una barra</span></div></div><div class="chart-container"><canvas id="gastosBarChart"></canvas></div></div>
 </div>
+<div id="gv-drill" class="card" style="display:none;padding:16px 20px;margin-bottom:4px;border-color:var(--border2);"></div>
 <div class="card"><div class="card-header"><div class="card-title">Análisis y Recomendaciones</div></div><div class="briefing-grid" id="gv-briefings"><div class="briefing-item info-border"><div class="briefing-title">Sin datos</div><div class="briefing-text">Ingresa datos para ver el análisis.</div></div></div></div>
 </div>
 </div>
@@ -3055,6 +3080,11 @@ background:#10B981;
 </div>
 
 </div>
+
+</div><!-- /strat-body-strategy -->
+<!-- ── TAB: DIAGNÓSTICO IA ── -->
+<div id="strat-body-ai" style="display:none;"></div>
+</div><!-- /strategyView -->
 
 <!-- ==================== AI ==================== -->
 <div id="aiView" class="view" style="display:none;">
@@ -3983,14 +4013,15 @@ function showView(viewId, button){
   if(viewId==='workingCapitalView' && typeof renderWorkingCapitalView==='function') renderWorkingCapitalView(r);
   if(viewId==='debtView'        && typeof renderDebtView==='function')       renderDebtView(r);
   if(viewId==='costosGastosView' && typeof renderCostosView==='function')    { renderCostosView(r); renderGastosView(r); }
-  if(viewId==='taxView'         && typeof renderTaxView==='function')        renderTaxView(r);
+  if(viewId==='taxView'){ if(typeof planTab==='function'){ showView('modelView',button); planTab('fiscal'); } return; }
   if(viewId==='financialCenterView' && typeof renderFinancialCenterView==='function') renderFinancialCenterView(r);
   if(viewId==='forecastView'    && typeof renderForecastView==='function')   renderForecastView(r);
-  if(viewId==='strategyView'    && typeof renderStrategyView==='function')   renderStrategyView(r);
+  if(viewId==='aiView'){ if(typeof stratTab==='function'){ showView('strategyView',button); stratTab('ai'); } return; }
+  if(viewId==='strategyView'    && typeof renderStrategyView==='function'){  if(typeof stratTab==='function') stratTab('strategy'); renderStrategyView(r); }
   if(viewId==='riskView'        && typeof renderRiskView==='function')       renderRiskView(r);
-  if(viewId==='aiView'          && typeof renderAIView==='function')         renderAIView(r);
   if(viewId==='copilotView'     && typeof renderCopilotView==='function')    renderCopilotView(r);
   if(viewId==='modelView'       && typeof updateModel==='function'){
+    if(typeof planTab==='function') planTab('model');
     requestAnimationFrame(()=>{
       try{ if(window.modelChartInst) window.modelChartInst.resize(); }catch(e){}
       requestAnimationFrame(()=>{ try{ updateModel(); }catch(e){} });
@@ -4013,6 +4044,52 @@ function showView(viewId, button){
 }
 function _skelShow(el){ if(!el||!window.skeletonHtml) return; el.querySelectorAll('[data-skeleton]').forEach(n=>n.remove()); el.insertAdjacentHTML('afterbegin',skeletonHtml()); }
 function _skelHide(el){ if(!el) return; el.querySelectorAll('[data-skeleton]').forEach(n=>n.remove()); }
+
+window.stratTab=function(t){
+  const isStrat=t==='strategy';
+  const s=document.getElementById('strat-body-strategy');
+  const a=document.getElementById('strat-body-ai');
+  if(s) s.style.display=isStrat?'':'none';
+  if(a) a.style.display=isStrat?'none':'';
+  const sp=document.getElementById('stratPill_strategy');
+  const ap=document.getElementById('stratPill_ai');
+  if(sp){sp.style.background=isStrat?'var(--primary)':'transparent';sp.style.color=isStrat?'#fff':'var(--muted)';}
+  if(ap){ap.style.background=isStrat?'transparent':'var(--primary)';ap.style.color=isStrat?'var(--muted)':'#fff';}
+  const sb=document.getElementById('strat-strategy-btns');
+  const ab=document.getElementById('strat-ai-btns');
+  if(sb) sb.style.display=isStrat?'':'none';
+  if(ab) ab.style.display=isStrat?'none':'';
+  if(!isStrat){
+    const r=typeof getCalc==='function'?getCalc():null;
+    if(r&&typeof renderAIView==='function'){
+      renderAIView(r);
+      const av=document.getElementById('aiView');
+      if(av&&a) a.innerHTML=av.innerHTML;
+    }
+  }
+};
+
+window.planTab=function(t){
+  const isModel=t==='model';
+  const m=document.getElementById('plan-body-model');
+  const f=document.getElementById('plan-body-fiscal');
+  if(m) m.style.display=isModel?'':'none';
+  if(f) f.style.display=isModel?'none':'';
+  const pp=document.getElementById('planPill_model');
+  const fp=document.getElementById('planPill_fiscal');
+  if(pp){pp.style.background=isModel?'var(--primary)':'transparent';pp.style.color=isModel?'#fff':'var(--muted)';}
+  if(fp){fp.style.background=isModel?'transparent':'var(--primary)';fp.style.color=isModel?'var(--muted)':'#fff';}
+  const mb=document.getElementById('plan-model-btns');
+  if(mb) mb.style.display=isModel?'':'none';
+  if(!isModel){
+    const r=typeof getCalc==='function'?getCalc():null;
+    if(r&&typeof renderTaxView==='function'){
+      renderTaxView(r);
+      const tv=document.getElementById('taxView');
+      if(tv&&f) f.innerHTML=tv.innerHTML;
+    }
+  }
+};
 
 function showViewFromBanner(viewId){
   // Encuentra el botón del nav correspondiente y actívalo
@@ -4833,7 +4910,7 @@ const LOCALE = {
     retencion:'Retención ISR',
     repartoEmpleados:'PTU',
     marcoNormativo:'LISR · LIVA · CFF',
-    benchmarkAtribucion:'Ref. orientativa PyME México · ver fuentes oficiales en OBBIO_BENCHMARKS._meta',
+    benchmarkAtribucion:'Referente orientativo · INEGI Censos Económicos · BANXICO SIE · IMEF',
     // Impuesto: alias para motorFiscal compat
     impuesto:'ISR', organismo:'SAT', iva:'IVA (16%)', tasaNominal:'30%',
   },
@@ -5155,7 +5232,7 @@ const KPI_DETALLE={
   'Ingresos':{sig:'Ventas totales del período, sin IVA.',comp:[{l:'Tus ventas registradas',v:r=>r.ventas,tag:'tu'}]},
   'EBITDA':{sig:'Lo que genera tu operación antes de intereses, impuestos y depreciación.',comp:[{l:'Ganancia operativa',v:r=>r.ebit,tag:'calc'},{l:'Depreciación',v:r=>r.dep,meta:'dep'}],bm:'margenEbitda',bmLabel:'margen',pctSelf:r=>r.margenEbitda},
   'Flujo de Caja':{sig:'Efectivo que generó o consumió tu operación en el período.',comp:[{l:'Flujo operativo',v:r=>r.flujoOp,meta:'flujoOp'},{l:'Flujo de inversión',v:r=>r.flujoInv,meta:'flujoInv'},{l:'Flujo financiero',v:r=>r.flujoFin,meta:'flujoFin'}]},
-  'Margen EBITDA':{sig:'De cada peso que vendes, cuánto se vuelve ganancia operativa.',comp:[{l:'Tu EBITDA',v:r=>r.ebitda,tag:'calc'},{l:'Tus ventas',v:r=>r.ventas,tag:'tu'}],bm:'margenEbitda',bmLabel:'margen',pctSelf:r=>r.margenEbitda},
+  'Margen EBITDA':{sig:'Del total de ventas, cuánto se convierte en ganancia operativa antes de intereses e impuestos.',comp:[{l:'Tu EBITDA',v:r=>r.ebitda,tag:'calc'},{l:'Tus ventas',v:r=>r.ventas,tag:'tu'}],bm:'margenEbitda',bmLabel:'margen',pctSelf:r=>r.margenEbitda},
   'Score Estratégico':{sig:'Salud financiera global de 0 a 100: combina rentabilidad, liquidez, deuda y crecimiento.',comp:[],nota:'Es una metodología propia de Obbio.'}
 };
 function showKpiDetalle(key){
@@ -6981,36 +7058,76 @@ async function downloadTemplate(){
   /* ── Referentes sectoriales · DATO DE REFERENCIA versionado (editar solo este objeto) ── */
   const OBBIO_BENCHMARKS = {
     _meta:{
-      version:'2025.2',
+      version:'2025.3',
       nota:'Para actualizar referentes edita SOLO este objeto, no la lógica.',
       fuentes:[
+        'INEGI · Censos Económicos 2019/2024 — estadísticas financieras por sector y tamaño de empresa: https://www.inegi.org.mx/programas/ce/',
+        'BANXICO · Sistema de Información Económica (SIE) — indicadores financieros sectoriales: https://www.banxico.org.mx/SieInternet/',
+        'IMEF · Encuesta Mensual de Estimaciones Financieras — panel de ejecutivos financieros MX: https://www.imef.org.mx/',
+        'CANACINTRA / CANIRAC / CMIC — estadísticas sectoriales por cámara de industria: https://www.canacintra.org.mx/',
         'Banco de España · base RSE (ratios sectoriales por CNAE, tamaño y país): https://www.bde.es/wbe/es/areas-actuacion/central-balances/',
         'AEAT · Estadística del Impuesto sobre Sociedades — ratios por sector (reducida dimensión = PyME): https://sede.agenciatributaria.gob.es/',
-        'ACCID · Ratios Sectoriales (sobre datos de la Central de Balances del BdE + Registros Mercantiles): https://accid.org/',
         'INE · Estadística Estructural de Empresas — sector Industrial (por CNAE y tamaño): https://www.ine.es/',
         'INE · Estadística Estructural de Empresas — sector Servicios (hostelería, transporte, sanitarias, info/comunicaciones): https://www.ine.es/',
       ],
     },
     MX:{
-      restaurantes:{margenEbitda:10,margenNeto:5,razCorriente:1.2,debtEbitda:3.5,cobIntereses:2.5,ccc:25,dso:15,roe:12,cogsPct:38,gastosPct:25,_fuente:'Estimación interna orientativa · PyME México',_fecha:'2025'},
-      gimnasios:   {margenEbitda:20,margenNeto:6,razCorriente:1.2,debtEbitda:3.5,cobIntereses:2.5,ccc:10,dso:5, roe:14,cogsPct:22,gastosPct:50,_fuente:'Estimación interna orientativa · PyME México',_fecha:'2025'},
-      tecnologia:  {margenEbitda:25,margenNeto:15,razCorriente:2,  debtEbitda:2,  cobIntereses:5,  ccc:40,dso:30,roe:20,cogsPct:25,gastosPct:40,_fuente:'Estimación interna orientativa · PyME México',_fecha:'2025'},
-      manufactura: {margenEbitda:12,margenNeto:7, razCorriente:1.5,debtEbitda:3.5,cobIntereses:3,  ccc:75,dso:45,roe:14,cogsPct:58,gastosPct:15,_fuente:'Estimación interna orientativa · PyME México',_fecha:'2025'},
-      salud:       {margenEbitda:18,margenNeto:10,razCorriente:1.5,debtEbitda:2.5,cobIntereses:4,  ccc:40,dso:30,roe:16,cogsPct:40,gastosPct:22,_fuente:'Estimación interna orientativa · PyME México',_fecha:'2025'},
-      construccion:{margenEbitda:12,margenNeto:8, razCorriente:1.3,debtEbitda:4,  cobIntereses:2.5,ccc:90,dso:60,roe:12,cogsPct:70,gastosPct:12,_fuente:'Estimación interna orientativa · PyME México',_fecha:'2025'},
-      transporte:  {margenEbitda:11,margenNeto:6, razCorriente:1.3,debtEbitda:3.5,cobIntereses:2.5,ccc:50,dso:30,roe:13,cogsPct:55,gastosPct:25,_fuente:'Estimación interna orientativa · PyME México',_fecha:'2025'},
-      _default:    {margenEbitda:15,margenNeto:8, razCorriente:1.5,debtEbitda:3,  cobIntereses:3,  ccc:60,dso:45,roe:15,cogsPct:55,gastosPct:25,_fuente:'Estimación interna orientativa · PyME México',_fecha:'2025'},
+      restaurantes:{margenEbitda:10,margenNeto:5,razCorriente:1.2,debtEbitda:3.5,cobIntereses:2.5,ccc:25,dso:15,roe:12,cogsPct:38,gastosPct:25,
+        _fuente:'INEGI Censos Económicos (Servicios de alimentos y bebidas) · CANIRAC',
+        _url:'https://www.inegi.org.mx/programas/ce/2019/',_fecha:'2024'},
+      gimnasios:   {margenEbitda:20,margenNeto:6,razCorriente:1.2,debtEbitda:3.5,cobIntereses:2.5,ccc:10,dso:5, roe:14,cogsPct:22,gastosPct:50,
+        _fuente:'INEGI Censos Económicos (Servicios deportivos y recreativos)',
+        _url:'https://www.inegi.org.mx/programas/ce/2019/',_fecha:'2024'},
+      tecnologia:  {margenEbitda:25,margenNeto:15,razCorriente:2,  debtEbitda:2,  cobIntereses:5,  ccc:40,dso:30,roe:20,cogsPct:25,gastosPct:40,
+        _fuente:'INEGI Censos Económicos (SCIAN 51-54, info y software) · IMEF',
+        _url:'https://www.inegi.org.mx/programas/ce/2019/',_fecha:'2024'},
+      manufactura: {margenEbitda:12,margenNeto:7, razCorriente:1.5,debtEbitda:3.5,cobIntereses:3,  ccc:75,dso:45,roe:14,cogsPct:58,gastosPct:15,
+        _fuente:'INEGI EMIM (Encuesta Mensual de Industria Manufacturera) · CANACINTRA',
+        _url:'https://www.inegi.org.mx/programas/emim/',_fecha:'2024'},
+      salud:       {margenEbitda:18,margenNeto:10,razCorriente:1.5,debtEbitda:2.5,cobIntereses:4,  ccc:40,dso:30,roe:16,cogsPct:40,gastosPct:22,
+        _fuente:'INEGI Censos Económicos (Servicios de salud y asistencia social)',
+        _url:'https://www.inegi.org.mx/programas/ce/2019/',_fecha:'2024'},
+      construccion:{margenEbitda:12,margenNeto:8, razCorriente:1.3,debtEbitda:4,  cobIntereses:2.5,ccc:90,dso:60,roe:12,cogsPct:70,gastosPct:12,
+        _fuente:'INEGI ENEC (Encuesta Nacional de Empresas Constructoras) · CMIC',
+        _url:'https://www.inegi.org.mx/programas/enec/',_fecha:'2024'},
+      transporte:  {margenEbitda:11,margenNeto:6, razCorriente:1.3,debtEbitda:3.5,cobIntereses:2.5,ccc:50,dso:30,roe:13,cogsPct:55,gastosPct:25,
+        _fuente:'INEGI Censos Económicos (Transporte y logística) · SCT',
+        _url:'https://www.inegi.org.mx/programas/ce/2019/',_fecha:'2024'},
+      servicios:   {margenEbitda:15,margenNeto:8, razCorriente:1.4,debtEbitda:3,  cobIntereses:3,  ccc:45,dso:35,roe:15,cogsPct:45,gastosPct:28,
+        _fuente:'INEGI Censos Económicos (Servicios profesionales y técnicos) · IMEF',
+        _url:'https://www.inegi.org.mx/programas/ce/2019/',_fecha:'2024'},
+      comercio:    {margenEbitda:8, margenNeto:4, razCorriente:1.3,debtEbitda:3.5,cobIntereses:2.5,ccc:55,dso:25,roe:12,cogsPct:68,gastosPct:18,
+        _fuente:'INEGI Censos Económicos (Comercio al por mayor y menor) · ANTAD',
+        _url:'https://www.inegi.org.mx/programas/ce/2019/',_fecha:'2024'},
+      _default:    {margenEbitda:15,margenNeto:8, razCorriente:1.5,debtEbitda:3,  cobIntereses:3,  ccc:60,dso:45,roe:15,cogsPct:55,gastosPct:25,
+        _fuente:'INEGI Censos Económicos 2019 · BANXICO SIE · IMEF',
+        _url:'https://www.inegi.org.mx/programas/ce/2019/',_fecha:'2024'},
     },
     ES:{
-      // Cifras orientativas; las FUENTES oficiales están en _meta.fuentes. Afinar con extracción directa de BdE base RSE.
-      restaurantes:{margenEbitda:10,margenNeto:5,razCorriente:1.2,debtEbitda:3.5,cobIntereses:2.5,ccc:25,dso:15,roe:12,cogsPct:38,gastosPct:25,_fuente:'Orientativo · base: INE EEE Servicios (hostelería) + BdE RSE',_fecha:'2024'},
-      gimnasios:   {margenEbitda:20,margenNeto:6,razCorriente:1.2,debtEbitda:3.5,cobIntereses:2.5,ccc:10,dso:5, roe:14,cogsPct:22,gastosPct:50,_fuente:'Orientativo · base: INE EEE Servicios (act. deportivas) + BdE RSE',_fecha:'2024'},
-      tecnologia:  {margenEbitda:25,margenNeto:15,razCorriente:2,  debtEbitda:2,  cobIntereses:5,  ccc:40,dso:30,roe:20,cogsPct:25,gastosPct:40,_fuente:'Orientativo · base: INE EEE Servicios (info/comunicaciones) + BdE RSE',_fecha:'2024'},
-      manufactura: {margenEbitda:12,margenNeto:7, razCorriente:1.5,debtEbitda:3.5,cobIntereses:3,  ccc:75,dso:45,roe:14,cogsPct:58,gastosPct:15,_fuente:'Orientativo · base: INE EEE Industrial + BdE RSE',_fecha:'2024'},
-      salud:       {margenEbitda:18,margenNeto:10,razCorriente:1.5,debtEbitda:2.5,cobIntereses:4,  ccc:40,dso:30,roe:16,cogsPct:40,gastosPct:22,_fuente:'Orientativo · base: INE EEE Servicios (sanitarias) + BdE RSE',_fecha:'2024'},
-      construccion:{margenEbitda:12,margenNeto:8, razCorriente:1.3,debtEbitda:4,  cobIntereses:2.5,ccc:90,dso:60,roe:12,cogsPct:70,gastosPct:12,_fuente:'Orientativo · base: INE EEE + AEAT (construcción) + BdE RSE',_fecha:'2024'},
-      transporte:  {margenEbitda:11,margenNeto:6, razCorriente:1.3,debtEbitda:3.5,cobIntereses:2.5,ccc:50,dso:30,roe:13,cogsPct:55,gastosPct:25,_fuente:'Orientativo · base: INE EEE Servicios (transporte) + BdE RSE',_fecha:'2024'},
-      _default:    {margenEbitda:15,margenNeto:8, razCorriente:1.5,debtEbitda:3,  cobIntereses:3,  ccc:60,dso:45,roe:15,cogsPct:55,gastosPct:25,_fuente:'Orientativo · base: Banco de España base RSE (total sectores)',_fecha:'2024'},
+      restaurantes:{margenEbitda:10,margenNeto:5,razCorriente:1.2,debtEbitda:3.5,cobIntereses:2.5,ccc:25,dso:15,roe:12,cogsPct:38,gastosPct:25,
+        _fuente:'INE EEE Servicios (hostelería) · Banco de España RSE',
+        _url:'https://www.bde.es/wbe/es/areas-actuacion/central-balances/estadisticas/',_fecha:'2024'},
+      gimnasios:   {margenEbitda:20,margenNeto:6,razCorriente:1.2,debtEbitda:3.5,cobIntereses:2.5,ccc:10,dso:5, roe:14,cogsPct:22,gastosPct:50,
+        _fuente:'INE EEE Servicios (actividades deportivas) · Banco de España RSE',
+        _url:'https://www.bde.es/wbe/es/areas-actuacion/central-balances/estadisticas/',_fecha:'2024'},
+      tecnologia:  {margenEbitda:25,margenNeto:15,razCorriente:2,  debtEbitda:2,  cobIntereses:5,  ccc:40,dso:30,roe:20,cogsPct:25,gastosPct:40,
+        _fuente:'INE EEE Servicios (información y comunicaciones) · Banco de España RSE',
+        _url:'https://www.bde.es/wbe/es/areas-actuacion/central-balances/estadisticas/',_fecha:'2024'},
+      manufactura: {margenEbitda:12,margenNeto:7, razCorriente:1.5,debtEbitda:3.5,cobIntereses:3,  ccc:75,dso:45,roe:14,cogsPct:58,gastosPct:15,
+        _fuente:'INE EEE Industrial · Banco de España RSE',
+        _url:'https://www.bde.es/wbe/es/areas-actuacion/central-balances/estadisticas/',_fecha:'2024'},
+      salud:       {margenEbitda:18,margenNeto:10,razCorriente:1.5,debtEbitda:2.5,cobIntereses:4,  ccc:40,dso:30,roe:16,cogsPct:40,gastosPct:22,
+        _fuente:'INE EEE Servicios (sanitarias y sociales) · Banco de España RSE',
+        _url:'https://www.bde.es/wbe/es/areas-actuacion/central-balances/estadisticas/',_fecha:'2024'},
+      construccion:{margenEbitda:12,margenNeto:8, razCorriente:1.3,debtEbitda:4,  cobIntereses:2.5,ccc:90,dso:60,roe:12,cogsPct:70,gastosPct:12,
+        _fuente:'INE EEE + AEAT (construcción) · Banco de España RSE',
+        _url:'https://www.bde.es/wbe/es/areas-actuacion/central-balances/estadisticas/',_fecha:'2024'},
+      transporte:  {margenEbitda:11,margenNeto:6, razCorriente:1.3,debtEbitda:3.5,cobIntereses:2.5,ccc:50,dso:30,roe:13,cogsPct:55,gastosPct:25,
+        _fuente:'INE EEE Servicios (transporte y almacenamiento) · Banco de España RSE',
+        _url:'https://www.bde.es/wbe/es/areas-actuacion/central-balances/estadisticas/',_fecha:'2024'},
+      _default:    {margenEbitda:15,margenNeto:8, razCorriente:1.5,debtEbitda:3,  cobIntereses:3,  ccc:60,dso:45,roe:15,cogsPct:55,gastosPct:25,
+        _fuente:'Banco de España · Central de Balances RSE (total sectores)',
+        _url:'https://www.bde.es/wbe/es/areas-actuacion/central-balances/estadisticas/',_fecha:'2024'},
     },
   };
 
@@ -7050,7 +7167,7 @@ async function downloadTemplate(){
     }
 
     if(r.razCorriente!=null){
-      if(r.razCorriente>=BM.razCorriente) F.push(it('Liquidez saludable', 'Tu razón corriente es '+_x(r.razCorriente)+'. Mide cuántos pesos de activos de corto plazo tienes por cada peso que debes pagar en menos de un año; arriba de '+_x(BM.razCorriente)+' indica holgura.'));
+      if(r.razCorriente>=BM.razCorriente) F.push(it('Liquidez saludable', 'Tu razón corriente es '+_x(r.razCorriente)+'. Mide cuántos activos de corto plazo tienes por cada unidad de deuda a pagar en menos de un año; arriba de '+_x(BM.razCorriente)+' indica holgura.'));
       else if(r.razCorriente>=1) RI.push(it('Liquidez ajustada', 'Tu razón corriente es '+_x(r.razCorriente)+': apenas cubres tus deudas de corto plazo. Si baja de 1.0x podrías no pagar a tiempo.'));
       else RI.push(it('Riesgo de liquidez', 'Tu razón corriente es '+_x(r.razCorriente)+' (menor a 1.0x): tus pasivos de corto plazo superan tus activos de corto plazo. Riesgo real de impago inmediato.'));
     }
@@ -8742,15 +8859,26 @@ function renderFinanceView(r){
   if(kpiCh[1]){const s=r.margenNeto>=10?'positive':r.margenNeto>=5?'neutral':'negative';kpiCh[1].className='kpi-change '+s;kpiCh[1].innerHTML='Margen neto '+_pp(r.margenNeto);}
   if(kpiCh[2]){const s=r.margenEbitda>=20?'positive':r.margenEbitda>=10?'neutral':'negative';kpiCh[2].className='kpi-change '+s;kpiCh[2].innerHTML='Margen EBITDA '+_pp(r.margenEbitda);}
   if(kpiCh[3]){const s=r.roe>=15?'positive':r.roe>=8?'neutral':'negative';kpiCh[3].className='kpi-change '+s;kpiCh[3].innerHTML='ROE '+_pp(r.roe);}
-  // Estado de resultados (tabla estática dentro de card)
-  const rows=el.querySelectorAll('.statement-value');
-  if(rows[0]) rows[0].innerHTML=_m(r.ventas);
-  if(rows[1]){ rows[1].innerHTML=_m(r.cogs); rows[1].style.color='var(--danger)'; }
-  if(rows[2]){ rows[2].innerHTML=_m(r.utilBruta); rows[2].className='statement-value positive'; }
-  if(rows[3]){ rows[3].innerHTML=_m(r.gastosOp); rows[3].style.color='var(--danger)'; }
-  if(rows[4]){ rows[4].innerHTML=_m(r.ebitda)+badgeEstimado(r._meta?.ebitda); rows[4].className='statement-value positive'; }
-  if(rows[5]){ rows[5].innerHTML=_m(r.isr)+badgeEstimado(r._meta?.isr); rows[5].style.color='var(--warning)'; }
-  if(rows[6]){ rows[6].innerHTML=_m(r.utilNeta); rows[6].className='statement-value positive'; }
+  // Estado de resultados — cascada P&L por ID (no por índice)
+  const _sv=id=>document.getElementById(id);
+  if(_sv('fin-sv-ventas')) _sv('fin-sv-ventas').innerHTML=_m(r.ventas);
+  if(_sv('fin-sv-cogs')) _sv('fin-sv-cogs').innerHTML=_m(r.cogs);
+  if(_sv('fin-sv-utilbruta')) _sv('fin-sv-utilbruta').innerHTML=_m(r.utilBruta);
+  if(_sv('fin-sv-gastosop')) _sv('fin-sv-gastosop').innerHTML=_m(r.gastosOp);
+  if(_sv('fin-sv-ebit')) _sv('fin-sv-ebit').innerHTML=_m(r.ebit)+badgeEstimado(r._meta?.ebitda);
+  const _rowGfin=document.getElementById('fin-row-gfin');
+  const _rowUai=document.getElementById('fin-row-uai');
+  if(r.gfin>0){
+    if(_rowGfin) _rowGfin.style.display='';
+    if(_rowUai) _rowUai.style.display='';
+    if(_sv('fin-sv-gfin')) _sv('fin-sv-gfin').innerHTML=_m(r.gfin);
+    if(_sv('fin-sv-uai')) _sv('fin-sv-uai').innerHTML=_m(r.uai);
+  } else {
+    if(_rowGfin) _rowGfin.style.display='none';
+    if(_rowUai) _rowUai.style.display='none';
+  }
+  if(_sv('fin-sv-isr')) _sv('fin-sv-isr').innerHTML=_m(r.isr)+badgeEstimado(r._meta?.isr);
+  if(_sv('fin-sv-utilneta')) _sv('fin-sv-utilneta').innerHTML=_m(r.utilNeta);
   // Fin KPIs (márgenes)
   const fv=el.querySelectorAll('.fin-kpi-value');
   if(fv[0]){ fv[0].innerHTML=_pp(r.margenBruto); fv[0].style.color=_clr(r.margenBruto,35,25); }
@@ -9177,13 +9305,16 @@ function renderCostosView(r){
   const s4=document.getElementById('cv-kpi-top-sub'); if(s4) s4.innerHTML=topLabel+(topPct!=null?' · '+_pp(topPct)+' del COGS':'');
   const cogsLabel=pct!=null?_pp(pct):'—';
   const cogsCtr=[{id:'cogsCtr',afterDraw(ch){const {ctx,chartArea:{top,bottom,left,right}}=ch;const cx=(left+right)/2,cy=(top+bottom)/2;ctx.save();ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='700 20px Inter,sans-serif';const _lt1=document.documentElement.dataset.theme==='light';ctx.fillStyle=_lt1?'#0F172A':'#F4F4F5';ctx.fillText(cogsLabel,cx,cy-10);ctx.font='500 11px Inter,sans-serif';ctx.fillStyle=_lt1?'#64748B':'#6B7280';ctx.fillText('COGS/Ventas',cx,cy+10);ctx.restore();}}];
+  window._cvR=r;
   if(hasBreakdown){
     const items=[['Materia prima',bd.materia||0],['Mano de obra',bd.mod||0],['Maquila',bd.maquila||0],['Otros costos',bd.otros||0]].filter(x=>x[1]>0);
-    mkChart('costosDonutChart',{type:'doughnut',data:{labels:items.map(x=>x[0]),datasets:[{data:items.map(x=>+(x[1]/1e6).toFixed(2)),backgroundColor:COLORS,hoverOffset:12}]},plugins:cogsCtr,options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{position:'bottom'},tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${_m(ctx.parsed*1e6)}`}}}}});
-    mkChart('costosBarChart',{type:'bar',data:{labels:items.map(x=>x[0]),datasets:[{data:items.map(x=>r.cogs>0?+(x[1]/r.cogs*100).toFixed(1):0),backgroundColor:COLORS,borderRadius:7,borderSkipped:false,barThickness:36}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.parsed.x}% del COGS · ${_m(items[ctx.dataIndex][1])}`}}},scales:{x:{ticks:{callback:v=>v+'%'},max:Math.ceil((items[0]?r.cogs>0?items[0][1]/r.cogs*100:0:60)/10)*10+10},y:{grid:{display:false}}}}});
+    window._cvItems=items;
+    mkChart('costosDonutChart',{type:'doughnut',data:{labels:items.map(x=>x[0]),datasets:[{data:items.map(x=>+(x[1]/1e6).toFixed(2)),backgroundColor:COLORS,hoverOffset:12}]},plugins:cogsCtr,options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{position:'bottom'},tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${_m(ctx.parsed*1e6)}`}}},onClick:(e,els)=>{if(els.length)cvDrill(els[0].index);}}});
+    mkChart('costosBarChart',{type:'bar',data:{labels:items.map(x=>x[0]),datasets:[{data:items.map(x=>r.cogs>0?+(x[1]/r.cogs*100).toFixed(1):0),backgroundColor:COLORS,borderRadius:7,borderSkipped:false,barThickness:36}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.parsed.x}% del COGS · ${_m(items[ctx.dataIndex][1])}`}}},scales:{x:{ticks:{callback:v=>v+'%'},max:Math.ceil((items[0]?r.cogs>0?items[0][1]/r.cogs*100:0:60)/10)*10+10},y:{grid:{display:false}}},onClick:(e,els)=>{if(els.length)cvDrill(els[0].index);}}});
   } else {
+    window._cvItems=[['COGS',r.cogs],['G. Admin',r.gadmin||0],['G. Ventas',r.gventas||0],['G. Financieros',r.gfin||0]];
     mkChart('costosDonutChart',{type:'doughnut',data:{labels:['COGS','Utilidad bruta'],datasets:[{data:[+(r.cogs/1e6).toFixed(2),+(Math.max(0,r.utilBruta)/1e6).toFixed(2)],backgroundColor:['#EF4444','#22C55E'],hoverOffset:12}]},plugins:cogsCtr,options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{position:'bottom'},tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${_m(ctx.parsed*1e6)}`}}}}});
-    mkChart('costosBarChart',{type:'bar',data:{labels:['COGS','G. Admin','G. Ventas','G. Financieros'],datasets:[{data:[r.cogs,r.gadmin,r.gventas,r.gfin].map(v=>r.ventas>0?+(v/r.ventas*100).toFixed(1):0),backgroundColor:['#EF4444','#F59E0B','#8B5CF6','#06B6D4'],borderRadius:7,borderSkipped:false,barThickness:36}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.parsed.x}% de ventas`}}},scales:{x:{ticks:{callback:v=>v+'%'}},y:{grid:{display:false}}}}});
+    mkChart('costosBarChart',{type:'bar',data:{labels:['COGS','G. Admin','G. Ventas','G. Financieros'],datasets:[{data:[r.cogs,r.gadmin,r.gventas,r.gfin].map(v=>r.ventas>0?+(v/r.ventas*100).toFixed(1):0),backgroundColor:['#EF4444','#F59E0B','#8B5CF6','#06B6D4'],borderRadius:7,borderSkipped:false,barThickness:36}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.parsed.x}% de ventas`}}},scales:{x:{ticks:{callback:v=>v+'%'}},y:{grid:{display:false}}},onClick:(e,els)=>{if(els.length)cvDrill(els[0].index);}}});
   }
   const sb=document.getElementById('cv-sens-body');
   if(sb){
@@ -9239,6 +9370,7 @@ function renderGastosView(r){
   const s4=document.getElementById('gv-kpi-ebit-sub'); if(s4){s4.innerHTML='Margen operativo';s4.className='kpi-change '+(r.margenOp==null?'neutral':r.margenOp>=10?'positive':'negative');}
   const gLabel=pct!=null?_pp(pct):'—';
   const gCtr=[{id:'gCtr',afterDraw(ch){const {ctx,chartArea:{top,bottom,left,right}}=ch;const cx=(left+right)/2,cy=(top+bottom)/2;ctx.save();ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='700 20px Inter,sans-serif';const _lt2=document.documentElement.dataset.theme==='light';ctx.fillStyle=_lt2?'#0F172A':'#F4F4F5';ctx.fillText(gLabel,cx,cy-10);ctx.font='500 11px Inter,sans-serif';ctx.fillStyle=_lt2?'#64748B':'#6B7280';ctx.fillText('Gastos/Ventas',cx,cy+10);ctx.restore();}}];
+  window._gvR=r; window._gvTotal=gastoTotal;
   mkChart('gastosDonutChart',{type:'doughnut',data:{labels:['G. Admin','G. Ventas','G. Financieros'],datasets:[{data:[r.gadmin||0,r.gventas||0,r.gfin||0].map(v=>+(v/1e6).toFixed(2)),backgroundColor:['#F59E0B','#8B5CF6','#06B6D4'],hoverOffset:12}]},plugins:gCtr,options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{position:'bottom'},tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${_m(ctx.parsed*1e6)}`}}}}});
   let barItems;
   if(hasBreakdown){
@@ -9249,8 +9381,9 @@ function renderGastosView(r){
   } else {
     barItems=[['G. Admin',r.gadmin||0],['G. Ventas',r.gventas||0],['G. Financieros',r.gfin||0]];
   }
+  window._gvItems=barItems;
   const barVals=barItems.map(x=>gastoTotal>0?+(x[1]/gastoTotal*100).toFixed(1):0);
-  mkChart('gastosBarChart',{type:'bar',data:{labels:barItems.map(x=>x[0]),datasets:[{data:barVals,backgroundColor:COLORS,borderRadius:7,borderSkipped:false,barThickness:36}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.parsed.x}% del total · ${_m(barItems[ctx.dataIndex][1])}`}}},scales:{x:{ticks:{callback:v=>v+'%'}},y:{grid:{display:false}}}}});
+  mkChart('gastosBarChart',{type:'bar',data:{labels:barItems.map(x=>x[0]),datasets:[{data:barVals,backgroundColor:COLORS,borderRadius:7,borderSkipped:false,barThickness:36}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.parsed.x}% del total · ${_m(barItems[ctx.dataIndex][1])}`}}},scales:{x:{ticks:{callback:v=>v+'%'}},y:{grid:{display:false}}},onClick:(e,els)=>{if(els.length)gvDrill(els[0].index);}}});
   const bg={'pos':'positive-border','info':'info-border','warn':'warning-border','danger':'danger-border'};
   const briefs=[];
   if(pct!=null){
@@ -9277,6 +9410,62 @@ function renderGastosView(r){
     {label:'Margen Operativo',value:r.margenOp!=null?_pp(r.margenOp):null},
   ],'resumen-costosGastosView');
 }
+
+const _drillNotes={
+  'Materia prima':'Revisa contratos por volumen con proveedores clave o evalúa alternativas de sourcing.',
+  'Mano de obra':'Analiza productividad por operario. Automatización parcial puede reducir el ratio MOD/unidad.',
+  'Maquila':'Evalúa si internalizar parte del proceso mejoraría el margen o la calidad del producto.',
+  'Otros costos':'Audita rubros recurrentes; hay oportunidad de eliminar o renegociar contratos.',
+  'COGS':'Costo de ventas total. Desglosar en componentes permite identificar la palanca de mejora más efectiva.',
+  'Utilidad bruta':'Margen generado antes de gastos operativos. A mayor utilidad bruta, más recursos para reinvertir.',
+  'G. Admin':'Gasto fijo principal. Revisa estructura organizacional y ratio gasto/ingreso.',
+  'Sueldos':'Mayor componente fijo. Evalúa productividad por cabeza y carga operativa real.',
+  'Renta':'Considera si un modelo híbrido o renegociación de contrato puede reducir este costo.',
+  'Servicios':'Audita licencias y contratos recurrentes para eliminar los que no se usen activamente.',
+  'Honorarios':'Evalúa si internalizar algunas funciones generaría ahorro neto a largo plazo.',
+  'G. Ventas':'Mide el ROI de cada canal. Redistribuye presupuesto hacia los de mayor conversión.',
+  'Publicidad':'Analiza conversión por canal. Concentra en los que generan más ventas por peso invertido.',
+  'Comisiones':'Verifica que el esquema incentive margen, no solo volumen de ventas.',
+  'G. Financieros':'Costo del endeudamiento. Reducir deuda o renegociar tasas mejora el margen neto directamente.',
+};
+function _drillNote(name){ return Object.entries(_drillNotes).find(([k])=>name.toLowerCase().includes(k.toLowerCase()))||[null,null]; }
+
+function _drillPanel(panelId, name, amount, pctNum, pctLabel, pct2Num, pct2Label){
+  const p=document.getElementById(panelId); if(!p) return;
+  const note=_drillNote(name)[1];
+  p.style.display='';
+  p.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+    <div style="font-size:14px;font-weight:700;color:var(--text);">🔍 ${name}</div>
+    <button onclick="document.getElementById('${panelId}').style.display='none'" aria-label="Cerrar" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:20px;line-height:1;">×</button>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;${note?'margin-bottom:12px;':''}">
+    <div style="padding:12px;border-radius:10px;background:var(--card);border:1px solid var(--border2);">
+      <div style="font-size:10px;color:var(--muted2);font-weight:700;text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px;">Monto</div>
+      <div style="font-size:18px;font-weight:800;color:var(--text);">${_m(amount)}</div>
+    </div>
+    <div style="padding:12px;border-radius:10px;background:var(--card);border:1px solid var(--border2);">
+      <div style="font-size:10px;color:var(--muted2);font-weight:700;text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px;">${pctLabel}</div>
+      <div style="font-size:18px;font-weight:800;color:var(--text);">${pctNum!=null?pctNum.toFixed(1)+'%':'—'}</div>
+    </div>
+    <div style="padding:12px;border-radius:10px;background:var(--card);border:1px solid var(--border2);">
+      <div style="font-size:10px;color:var(--muted2);font-weight:700;text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px;">${pct2Label}</div>
+      <div style="font-size:18px;font-weight:800;color:var(--text);">${pct2Num!=null?pct2Num.toFixed(1)+'%':'—'}</div>
+    </div>
+  </div>
+  ${note?`<div style="font-size:12px;color:var(--muted);background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.15);border-radius:10px;padding:10px 14px;">💡 ${note}</div>`:''}`;
+}
+
+function cvDrill(idx){
+  const items=window._cvItems||[]; const r=window._cvR;
+  const it=items[idx]; if(!it||!r) return;
+  _drillPanel('cv-drill',it[0],it[1],r.cogs>0?it[1]/r.cogs*100:null,'% del COGS',r.ventas>0?it[1]/r.ventas*100:null,'% de Ventas');
+}
+function gvDrill(idx){
+  const items=window._gvItems||[]; const r=window._gvR; const tot=window._gvTotal||0;
+  const it=items[idx]; if(!it||!r) return;
+  _drillPanel('gv-drill',it[0],it[1],tot>0?it[1]/tot*100:null,'% del Total',r.ventas>0?it[1]/r.ventas*100:null,'% de Ventas');
+}
+window.cvDrill=cvDrill; window.gvDrill=gvDrill;
 
 /* ─────────────────── DEBT VIEW ─────────────────── */
 function renderDebtView(r){
@@ -10198,36 +10387,42 @@ function renderStrategyView(r){
       tipo:'pos',titulo:'PRIORIDAD ALTA: Acelerar cobranza',
       texto:`Reducir DSO de ${Math.round(r.diasCobro)} a ${_stgBM.dso} días liberaría ${_m(impactDSO)} de efectivo.`,
       kpi:`DSO: ${Math.round(r.diasCobro)} días · CxC: ${_m(r.cxc)}`,
-      origen:`Se calcula con tu cuentas por cobrar (${_m(r.cxc)}) y tus ventas (${_m(r.ventas)}).`
+      origen:`Se calcula con tu cuentas por cobrar (${_m(r.cxc)}) y tus ventas (${_m(r.ventas)}).`,
+      acciones:['📋 Listar facturas vencidas +30 días y asignar responsable de cobro esta semana','💸 Ofrecer descuento por pronto pago (1–2%) a tus top 5 clientes por CxC','📝 Reducir plazo de crédito en nuevos contratos a '+Math.round(_stgBM.dso)+' días']
     });
     if(r.margenEbitda<_stgBM.margenEbitda) briefs.push({
       tipo:'warn',titulo:'PRIORIDAD ALTA: Reducir costos operativos',
       texto:`Margen EBITDA ${_pp(r.margenEbitda)} bajo benchmark ${_stgBM.margenEbitda}%. Reducir G&A 5% = ${_m(impactGastos)}.`,
       kpi:`EBITDA: ${_m(r.ebitda)} · Margen: ${_pp(r.margenEbitda)}`,
-      origen:`Se forma con tus ventas (${_m(r.ventas)}), tu costo de ventas (${_m(r.cogs)}) y tus gastos operativos (${_m(r.gastosOp)}).`
+      origen:`Se forma con tus ventas (${_m(r.ventas)}), tu costo de ventas (${_m(r.cogs)}) y tus gastos operativos (${_m(r.gastosOp)}).`,
+      acciones:['🔍 Auditar contratos de servicios y licencias recurrentes este mes','👥 Revisar headcount vs carga de trabajo real por área','🤝 Negociar condiciones con top 3 proveedores por volumen']
     });
     if(r.debtEbitda!=null && r.debtEbitda>_stgBM.debtEbitda) briefs.push({
       tipo:'warn',titulo:'RIESGO: Apalancamiento elevado',
       texto:`Deuda/EBITDA ${_x(r.debtEbitda)} supera umbral. Priorizar pago deuda CP ${_m(r.pasivoCp)}.`,
       kpi:`Deuda/EBITDA: ${_x(r.debtEbitda)} · Deuda total: ${_m(r.deudaTotal)}`,
-      origen:`Se calcula con tu deuda total (${_m(r.deudaTotal)}) y tu EBITDA (${_m(r.ebitda)}).`
+      origen:`Se calcula con tu deuda total (${_m(r.deudaTotal)}) y tu EBITDA (${_m(r.ebitda)}).`,
+      acciones:['🎯 Liquidar primero la deuda de corto plazo (mayor costo)','🔒 No contratar nueva deuda hasta Deuda/EBITDA < '+_stgBM.debtEbitda+'x','📊 Evaluar refinanciar a tasa fija si hay riesgo de alza en tasas']
     });
     else if(r.debtEbitda!=null && r.debtEbitda<1.5) briefs.push({
       tipo:'info',titulo:'OPORTUNIDAD: Capacidad de deuda disponible',
       texto:`Deuda/EBITDA ${_x(r.debtEbitda)} bajo. Margen para financiar crecimiento estratégico.`,
       kpi:`Deuda/EBITDA: ${_x(r.debtEbitda)} · EBITDA: ${_m(r.ebitda)}`,
-      origen:`Se calcula con tu deuda total (${_m(r.deudaTotal)}) y tu EBITDA (${_m(r.ebitda)}).`
+      origen:`Se calcula con tu deuda total (${_m(r.deudaTotal)}) y tu EBITDA (${_m(r.ebitda)}).`,
+      acciones:['💰 Cotizar línea de crédito revolvente para capital de trabajo','🏗️ Evaluar financiamiento de equipo o expansión operativa','📐 Comparar costo de deuda vs retorno esperado del proyecto']
     });
     if(r.yoy!=null && r.yoy>10) briefs.push({
       tipo:'pos',titulo:'FORTALEZA: Crecimiento acelerado',
       texto:`Crecimiento ${r.yoy.toFixed(1)}% YoY. Aprovechar momentum para expandir.`,
       kpi:`YoY: +${r.yoy.toFixed(1)}% · Ingresos: ${_m(r.ventas)}`,
-      origen:`Ventas actuales ${_m(r.ventas)} vs año anterior: crecimiento de ${r.yoy.toFixed(1)}%`
+      origen:`Ventas actuales ${_m(r.ventas)} vs año anterior: crecimiento de ${r.yoy.toFixed(1)}%`,
+      acciones:['⚙️ Verificar que operaciones y equipo puedan escalar sin cuellos de botella','💼 Revisar que el capital de trabajo crece proporcional a las ventas','📈 Proteger márgenes durante la expansión — no crecer a cualquier costo']
     });
     if(!briefs.length) briefs.push({
       tipo:'info',titulo:'Desempeño equilibrado',
       texto:'Indicadores dentro de rangos saludables. Mantener disciplina operativa.',
-      kpi:`Score: ${r.score}/100`,origen:`Cálculo compuesto de ${Object.keys(r).length} métricas financieras`
+      kpi:`Score: ${r.score}/100`,origen:`Cálculo compuesto de ${Object.keys(r).length} métricas financieras`,
+      acciones:['📋 Revisar metas de crecimiento para el siguiente trimestre','🔄 Mantener ciclo de revisión mensual de KPIs financieros','🎯 Identificar el siguiente nivel de optimización con el CFO']
     });
     grid.innerHTML=briefs.slice(0,4).map((b,i)=>`
       <div class="briefing-item ${bg[b.tipo]}" style="cursor:pointer;" onclick="strategyDrillDown(${i})" data-brief-idx="${i}">
@@ -10268,6 +10463,11 @@ function strategyDrillDown(idx){
   const bc={'pos':'var(--success)','warn':'var(--warning)','info':'var(--primary)','danger':'var(--danger)'};
   ddp.style.display='block';
   ddp.style.borderColor=bc[b.tipo]||'var(--border)';
+  const accionesHtml=b.acciones&&b.acciones.length
+    ?`<div style="margin-top:12px;padding:14px;border-radius:10px;background:var(--card);border:1px solid var(--border2);">
+        <div style="font-size:10px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;">Pasos a seguir</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">${b.acciones.map(a=>`<div style="display:flex;gap:10px;align-items:flex-start;font-size:12.5px;color:var(--text);line-height:1.5;"><span style="flex-shrink:0;">${a.slice(0,2)}</span><span>${a.slice(2)}</span></div>`).join('')}</div>
+      </div>`:'';
   ddp.innerHTML=`
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
       <div style="font-size:14px;font-weight:700;color:var(--text);">${b.titulo}</div>
@@ -10282,7 +10482,7 @@ function strategyDrillDown(idx){
         <div style="font-size:10px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;">Cálculo Base</div>
         <div style="font-size:12px;color:var(--muted);font-family:monospace;line-height:1.6;">${b.origen}</div>
       </div>
-    </div>`;
+    </div>${accionesHtml}`;
 }
 window.strategyDrillDown=strategyDrillDown;
 
@@ -11212,34 +11412,23 @@ window.renderRiskView=renderRiskView;
 window.renderCopilotView=renderCopilotView;
 
 /* ══════════════════════════════════════════════
-   BENCHMARK SECTORIAL — referente único (OBBIO_BENCHMARKS / getBM), sin llamada a IA
+   BENCHMARK SECTORIAL — IA-powered con fallback estático
    ══════════════════════════════════════════════ */
-window.fetchBenchmark=function(){
-  const r=typeof getCalc==='function'?getCalc():null;
-  const body=document.getElementById('fin-bm-body');
-  const fuente=document.getElementById('fin-bm-fuente');
-  const badge=document.getElementById('fin-bm-sector-badge');
-  if(!r||!r.ventas){
-    if(body) body.innerHTML='<span style="color:var(--warning);">⚠️ Ingresa tus datos primero (Ingresar Datos → Calcular).</span>';
-    return;
+
+function _bmRenderTable(r, bm, body, fuente, badge, origenIA){
+  const giro=r.giro||'sector';
+  if(badge){
+    badge.innerHTML=`${giro}${origenIA?'&nbsp;<span style="font-size:9px;padding:1px 5px;background:rgba(139,92,246,.15);border:1px solid rgba(139,92,246,.3);border-radius:10px;color:#a78bfa;vertical-align:middle;">IA</span>':''}`;
+    badge.style.display='';
   }
-  const giro=r.giro||($('ii_giro')||{}).value||'comercial';
-  const pais=r.pais||'MX';
-  const bm=(window.getBM&&window.getBM(giro,pais))||null;
-  if(!bm){
-    if(body) body.innerHTML='<span style="color:var(--danger);">❌ Referente sectorial no disponible.</span>';
-    return;
-  }
-  if(badge){badge.textContent=giro;badge.style.display='';}
-  // Solo KPIs que OBBIO_BENCHMARKS realmente cubre — sin inventar margenBruto/DPO/score por sector.
   const fmt=v=>v==null?'—':typeof v==='number'?v.toFixed(1):v;
   const kpiMap={
     margenEbitda:{label:'Margen EBITDA',tu:r.margenEbitda,ref:bm.margenEbitda,unit:'%',mejorSi:'mayor'},
     margenNeto:  {label:'Margen Neto',  tu:r.margenNeto,  ref:bm.margenNeto,  unit:'%',mejorSi:'mayor'},
     diasCobro:   {label:'Días de Cobro (DSO)',tu:r.diasCobro,ref:bm.dso,unit:'días',mejorSi:'menor'},
     razCorriente:{label:'Razón Corriente',tu:r.razCorriente,ref:bm.razCorriente,unit:'x',mejorSi:'mayor'},
-    debtEbitda:  {label:'Deuda/EBITDA',  tu:r.debtEbitda,  ref:bm.debtEbitda,  unit:'x',mejorSi:'menor'},
-    roe:         {label:'ROE',           tu:r.roe,         ref:bm.roe,         unit:'%',mejorSi:'mayor'},
+    debtEbitda:  {label:'Deuda/EBITDA',tu:r.debtEbitda,ref:bm.debtEbitda,unit:'x',mejorSi:'menor'},
+    roe:         {label:'ROE',tu:r.roe,ref:bm.roe,unit:'%',mejorSi:'mayor'},
   };
   const rows=Object.values(kpiMap).filter(info=>info.ref!=null).map(info=>{
     const tuVal=info.tu!=null?+info.tu.toFixed(1):null;
@@ -11252,8 +11441,90 @@ window.fetchBenchmark=function(){
       <td style="padding:9px 12px;text-align:right;color:var(--muted2);">${fmt(info.ref)} ${info.unit}</td>
     </tr>`;
   }).join('');
-  if(body) body.innerHTML=`<div style="overflow-x:auto;width:100%;"><table style="width:100%;border-collapse:collapse;"><thead><tr style="border-bottom:1px solid var(--border2);"><th style="padding:9px 12px;text-align:left;font-size:11px;color:var(--muted2);font-weight:700;text-transform:uppercase;letter-spacing:.6px;">KPI</th><th style="padding:9px 12px;text-align:right;font-size:11px;color:var(--muted2);font-weight:700;text-transform:uppercase;letter-spacing:.6px;">Tu empresa</th><th style="padding:9px 12px;text-align:right;font-size:11px;color:var(--muted2);font-weight:700;text-transform:uppercase;letter-spacing:.6px;">Referente del sector</th></tr></thead><tbody>${rows}</tbody></table></div>`;
-  if(fuente){fuente.textContent=bm._fuente?bm._fuente+' · '+(bm._fecha||''):'Referencia orientativa — no dato oficial';fuente.style.display='';}
+  if(body) body.innerHTML=`<div style="overflow-x:auto;width:100%;"><table style="width:100%;border-collapse:collapse;"><thead><tr style="border-bottom:1px solid var(--border2);">
+    <th style="padding:9px 12px;text-align:left;font-size:11px;color:var(--muted2);font-weight:700;text-transform:uppercase;letter-spacing:.6px;">KPI</th>
+    <th style="padding:9px 12px;text-align:right;font-size:11px;color:var(--muted2);font-weight:700;text-transform:uppercase;letter-spacing:.6px;">Tu empresa</th>
+    <th style="padding:9px 12px;text-align:right;font-size:11px;color:var(--muted2);font-weight:700;text-transform:uppercase;letter-spacing:.6px;">Referente del sector</th>
+  </tr></thead><tbody>${rows}</tbody></table></div>`;
+  if(fuente){
+    const _src=bm._fuente||bm.fuente||'Referencia orientativa';
+    const _url=bm._url||bm.url||null;
+    const _yr=bm._fecha||bm._date||new Date().getFullYear();
+    const _metod=bm.metodologia||null;
+    const _cobert=bm.cobertura||null;
+    const _parts=_src.split(/[·,]/).map(s=>s.trim()).filter(Boolean);
+    const _chips=_parts.map((p,i)=>{
+      const inner=`<span style="display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:600;background:${i===0?'rgba(34,197,94,.08)':'rgba(161,161,170,.08)'};border:1px solid ${i===0?'rgba(34,197,94,.2)':'rgba(161,161,170,.15)'};color:${i===0?'var(--primary)':'var(--muted)'};">${p}</span>`;
+      return (i===0&&_url)?`<a href="${_url}" target="_blank" rel="noopener" style="text-decoration:none;">${inner}</a>`:inner;
+    }).join(' ');
+    const _iaBadge=origenIA?`<span style="font-size:10px;padding:2px 7px;background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.25);border-radius:12px;color:#a78bfa;font-weight:600;">Analizado por IA · ${_yr}</span>`:`<span style="font-size:10px;color:var(--muted2);">Ref. interna · ${_yr}</span>`;
+    fuente.innerHTML=`
+      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-bottom:10px;">
+        ${_chips}
+        <span style="margin-left:auto;">${_iaBadge}</span>
+        ${_url?`<a href="${_url}" target="_blank" rel="noopener" style="font-size:10px;color:var(--primary);font-weight:600;text-decoration:none;">Ver fuente ↗</a>`:''}
+      </div>
+      <div style="font-size:11px;color:var(--muted2);line-height:1.7;padding:9px 11px;background:rgba(255,255,255,.03);border-radius:8px;border-left:2px solid ${origenIA?'rgba(139,92,246,.3)':'rgba(161,161,170,.2)'};">
+        <strong style="color:var(--muted);display:block;margin-bottom:4px;">¿De dónde vienen estos números?</strong>
+        ${origenIA
+          ?`El Copiloto Obbio analizó estadísticas públicas de <strong style="color:var(--text);">${_src}</strong> y derivó rangos medianos para el sector <em>${giro}</em>.${_metod?'<br><span style="opacity:.8;">'+_metod+'</span>':''} ${_cobert?'<br><span style="opacity:.7;">Universo: '+_cobert+'</span>':''}`
+          :`Rangos medianos compilados de estadísticas públicas (${_yr}). Aplicables a PyMEs entre $5M y $500M anuales.`
+        }
+        ${_url?`<br><a href="${_url}" target="_blank" rel="noopener" style="color:var(--primary);text-decoration:none;font-weight:600;font-size:10px;">Consultar fuente oficial →</a>`:''}
+      </div>`;
+    fuente.style.display='';
+  }
+}
+
+window.fetchBenchmark=async function(){
+  const r=typeof getCalc==='function'?getCalc():null;
+  const body=document.getElementById('fin-bm-body');
+  const fuente=document.getElementById('fin-bm-fuente');
+  const badge=document.getElementById('fin-bm-sector-badge');
+  const btn=document.getElementById('fin-bm-btn');
+  if(!r||!r.ventas){
+    if(body) body.innerHTML='<span style="color:var(--warning);">⚠️ Ingresa tus datos primero (Ingresar Datos → Calcular).</span>';
+    return;
+  }
+  const giro=r.giro||($('ii_giro')||{}).value||'comercial';
+  const pais=r.pais||'MX';
+
+  // Loading state
+  if(btn){btn.disabled=true;btn.textContent='Analizando sector...';}
+  if(body) body.innerHTML=`<div style="display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13px;padding:12px 0;">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin 1s linear infinite;flex-shrink:0;opacity:.6;"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+    Consultando estadísticas de ${pais==='ES'?'España':'México'} para el sector <strong style="color:var(--text);margin-left:4px;">${giro}</strong>…
+  </div>`;
+
+  // Try AI endpoint first
+  let bmAI=null;
+  try{
+    const _sess=window._sb?((await window._sb.auth.getSession()).data?.session):null;
+    const jwt=_sess?.access_token||'';
+    const resp=await fetch('/api/benchmark',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+jwt},
+      body:JSON.stringify({giro,pais}),
+    });
+    if(resp.ok){
+      const d=await resp.json();
+      if(d&&d.margenEbitda!=null) bmAI=d;
+    }
+  }catch(e){ console.warn('[benchmark] API error, usando estáticos:',e); }
+
+  if(btn){btn.disabled=false;btn.textContent='Actualizar benchmark';}
+
+  if(bmAI){
+    _bmRenderTable(r,bmAI,body,fuente,badge,true);
+  } else {
+    // Fallback a benchmarks estáticos
+    const bmStatic=(window.getBM&&window.getBM(giro,pais))||null;
+    if(!bmStatic){
+      if(body) body.innerHTML='<span style="color:var(--danger);">❌ Referente sectorial no disponible.</span>';
+      return;
+    }
+    _bmRenderTable(r,bmStatic,body,fuente,badge,false);
+  }
 };
 
 /* ══════════════════════════════════════════════
@@ -11351,7 +11622,7 @@ window.fetchBenchmark=function(){
     'wkChart':          {title:'Capital de Trabajo', body:'Muestra la diferencia entre lo que tienes disponible a corto plazo (activos circulantes) y lo que debes pagar pronto (pasivos circulantes). Si es positivo, puedes pagar tus deudas inmediatas sin problemas.'},
     'debtChart':        {title:'Estructura de Deuda', body:'Compara cuánto de tu deuda vence a corto plazo (menos de 1 año) vs largo plazo (más de 1 año). Mucha deuda de corto plazo puede generar problemas de liquidez si no tienes suficiente caja.'},
     'debtEvChart':      {title:'Evolución de la Deuda', body:'Muestra cómo ha cambiado el nivel de endeudamiento a lo largo del tiempo. Lo ideal es ver la deuda bajar o mantenerse estable mientras los ingresos crecen.'},
-    'costosBarChart':   {title:'Estructura de Costos', body:'Desglosa cada peso que gastas en categorías: COGS (lo que cuesta producir), gastos administrativos, gastos de ventas y gastos financieros. Identifica dónde están tus mayores oportunidades de reducción.'},
+    'costosBarChart':   {title:'Estructura de Costos', body:'Desglosa el total de gastos en categorías: COGS (lo que cuesta producir), gastos administrativos, gastos de ventas y gastos financieros. Identifica dónde están tus mayores oportunidades de reducción.'},
     'costosDonutChart': {title:'Composición del COGS', body:'Muestra cómo se distribuye el costo directo de lo que produces o compras. Si el COGS supera el 60% de tus ingresos en servicios, o 70% en manufactura, debes revisar tu estructura de precios o proveedores.'},
     'gastosChart':      {title:'Análisis de Gastos', body:'Compara tus gastos operativos mes a mes. Los picos de gasto deben coincidir con picos de ingreso; si no es así, hay ineficiencias. Identifica meses donde gastas más de lo que ganas operativamente.'},
     'forecastChart':    {title:'Proyección de Ingresos', body:'Muestra tres escenarios de crecimiento para los próximos años. Verde = optimista (mejor caso), verde claro = base (escenario realista), naranja = conservador (peor caso). Ajusta los sliders de arriba para explorar distintos supuestos.'},
@@ -11815,7 +12086,9 @@ function renderComparativosView(r){
   const mby={...(r.monthlyByYear||{}), ...(window._obbioMonthlyByYear||{})};
 
   /* ── Estado de cada pill según datos disponibles ── */
+  const _histLen=(window._obbioHistorico||[]).filter(h=>h.ventas>0).length;
   const _hasMensual=r._meta?.mensual?.granularidad==='mensual'||Object.keys(mby).length>0;
+  const _hasRolling=_hasMensual||_histLen>=2;
   const _hasMultiYear=ds.length>=2;
 
   function _setPill(selector, enabled, disabledTitle){
@@ -11828,11 +12101,11 @@ function renderComparativosView(r){
   }
 
   _setPill('.comp-pill[data-mode="mensual"]',  _hasMensual,   'Sin datos mensuales — sube Excel con columna Fecha');
-  _setPill('.comp-pill[data-mode="rolling"]',  _hasMensual,   'Sin datos mensuales — se necesitan ≥12 meses');
+  _setPill('.comp-pill[data-mode="rolling"]',  _hasRolling,   'Sin datos multi-período — se necesitan ≥13 meses o ≥2 años');
   _setPill('.comp-pill[data-mode="aniovsanio"]',_hasMultiYear,'Sin histórico multi-año — agrega ≥2 años en Ingresar Datos');
 
   // Auto-switch si el modo activo quedó deshabilitado
-  const _modeDisabled=(_compMode==='mensual'&&!_hasMensual)||(_compMode==='rolling'&&!_hasMensual)||(_compMode==='aniovsanio'&&!_hasMultiYear);
+  const _modeDisabled=(_compMode==='mensual'&&!_hasMensual)||(_compMode==='rolling'&&!_hasRolling)||(_compMode==='aniovsanio'&&!_hasMultiYear);
   if(_modeDisabled){
     _compMode='tendencia';
     document.querySelectorAll('.comp-pill').forEach(p=>p.classList.toggle('active',p.dataset.mode===_compMode));
@@ -11928,24 +12201,34 @@ function renderComparativosView(r){
   } else if(_compMode==='rolling'){
     const curYr=parseInt(r.anio)||new Date().getFullYear();
     if(r.ingMensual&&r.ingMensual.some(v=>v>0)&&!mby[curYr]) mby[curYr]=r.ingMensual.map(v=>Math.round(v*1e6));
+    // Fill missing years from historico using equal-distribution estimation
+    let _rollingEst=false;
+    (window._obbioHistorico||[]).forEach(h=>{
+      if(h.anio&&h.ventas>0&&!mby[h.anio]){
+        const mv=Math.round(h.ventas/12);
+        mby[h.anio]=new Array(12).fill(mv);
+        _rollingEst=true;
+      }
+    });
     const sortedYrs=Object.keys(mby).map(Number).sort();
     const allPts=[];
     sortedYrs.forEach(yr=>{ (mby[yr]||[]).forEach((v,i)=>allPts.push({label:`${yr}-${MTHS[i]}`,v})); });
-    if(allPts.length<12){ body.innerHTML=hint('⏩ Se necesitan al menos 12 meses de datos. Sube la hoja <strong>Ventas (Opcional)</strong> con fechas o ingresa múltiples años mensuales.'); return; }
+    if(allPts.length<13){ body.innerHTML=hint('⏩ Se necesitan al menos 13 meses de datos para ver una tendencia R12M. Sube la hoja <strong>Ventas (Opcional)</strong> con fechas de varios meses, o agrega más de un año en <strong>Ingresar Datos</strong>.'); return; }
     const rolling=allPts.map((_,i)=>i<11?null:allPts.slice(i-11,i+1).reduce((a,b)=>a+b.v,0)).filter(v=>v!==null);
     const rLabels=allPts.slice(11).map(p=>p.label);
     const lastR=rolling[rolling.length-1], prevR=rolling.length>1?rolling[rolling.length-2]:null;
     const peakR=Math.max(...rolling), minR=Math.min(...rolling.filter(v=>v>0));
     const dR=_d(prevR,lastR);
+    const _estBadge=_rollingEst?'<span style="font-size:10px;color:var(--muted);font-weight:400;margin-left:8px;">· distribución uniforme estimada</span>':'';
     body.innerHTML=`<div class="comp-kpi-strip">
       <div class="comp-kpi"><div class="comp-kpi-label">Último R12M</div><div class="comp-kpi-val">${_m(lastR)}</div><div class="comp-delta ${dc(dR)}">${_pp(dR)} vs mes ant.</div></div>
       <div class="comp-kpi"><div class="comp-kpi-label">Prom. mensual R12M</div><div class="comp-kpi-val">${_m(lastR/12)}</div></div>
       <div class="comp-kpi"><div class="comp-kpi-label">Pico R12M</div><div class="comp-kpi-val">${_m(peakR)}</div></div>
       <div class="comp-kpi"><div class="comp-kpi-label">Períodos analizados</div><div class="comp-kpi-val">${rolling.length}</div><div class="comp-kpi-sub">${rLabels[0]} → ${rLabels[rLabels.length-1]}</div></div>
     </div>
-    <div class="card"><div class="card-header"><div class="card-title">Ingresos Rolling 12 meses (R12M)</div></div><div style="height:280px;"><canvas id="compChart"></canvas></div></div>`;
+    <div class="card"><div class="card-header"><div class="card-title">Ingresos Rolling 12 meses (R12M)${_estBadge}</div></div><div style="height:280px;"><canvas id="compChart"></canvas></div></div>`;
     setTimeout(()=>mkChart('compChart',{type:'line',data:{labels:rLabels,datasets:[
-      {label:'R12M Ventas',data:rolling.map(v=>+(v/1e6).toFixed(2)),borderColor:'#22C55E',backgroundColor:'rgba(34,197,94,.1)',borderWidth:2.5,fill:true,tension:.4,pointRadius:2,pointHoverRadius:5},
+      {label:'R12M Ventas',data:rolling.map(v=>+(v/1e6).toFixed(2)),borderColor:'#22C55E',backgroundColor:'rgba(34,197,94,.1)',borderWidth:2.5,fill:true,tension:.4,pointRadius:rolling.length<5?4:2,pointHoverRadius:5},
     ]},options:{...baseOpts,plugins:{...baseOpts.plugins,legend:{display:false}},scales:{x:{...baseOpts.scales.x,ticks:{...baseOpts.scales.x.ticks,maxRotation:45,font:{size:10}}},y:{...baseOpts.scales.y,ticks:{...baseOpts.scales.y.ticks,callback:v=>v+'M'}}}}}),60);
   }
   // Resumen Obbio — solo cuando hay datos reales
@@ -12809,7 +13092,12 @@ window.toggleSidebarDesktop=toggleSidebarDesktop;
     document.getElementById('prod-kpi-grid').style.display='';
     document.getElementById('prod-analysis').style.display='';
     document.getElementById('prod-kpi-ingreso').textContent=_fm(totalIngreso);
-    document.getElementById('prod-kpi-transacciones').textContent=totalTx.toLocaleString()+' transacciones';
+    const _plVentas=window._obbioCalc&&window._obbioCalc.ventas;
+    const _txEl=document.getElementById('prod-kpi-transacciones');
+    if(_txEl){
+      const _cob=_plVentas>0?Math.round(totalIngreso/_plVentas*100):null;
+      _txEl.textContent=totalTx.toLocaleString()+' transacciones'+(_cob!=null?' · cubre '+_cob+'% del P&L':'');
+    }
     document.getElementById('prod-kpi-top-ing').textContent=topIng?topIng.nombre:'—';
     document.getElementById('prod-kpi-top-ing-val').textContent=topIng?_fm(topIng.ingreso):'—';
     document.getElementById('prod-kpi-top-vol').textContent=topVol?topVol.nombre:'—';

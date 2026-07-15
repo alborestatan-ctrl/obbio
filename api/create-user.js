@@ -27,7 +27,8 @@ function supabaseReq(path, method, body, token) {
 async function verifyAdmin(callerJwt) {
   const res = await supabaseReq('/auth/v1/user', 'GET', null, callerJwt);
   if (res.status !== 200) return false;
-  return res.body?.user_metadata?.role === 'admin';
+  return res.body?.app_metadata?.role === 'admin'
+      || res.body?.user?.app_metadata?.role === 'admin';
 }
 
 module.exports = async (req, res) => {
@@ -60,6 +61,26 @@ module.exports = async (req, res) => {
       const msg = result.body?.msg || result.body?.message || result.body?.error_description || 'Error al crear usuario';
       return res.status(400).json({ error: msg });
     }
+
+    // Precrear la fila en `empresas` para que la tarjeta de ajustes (plan, modulos,
+    // moneda, umbrales) exista desde el alta, sin esperar al primer login del cliente.
+    const defaultConfig = {
+      plan: 'basico',
+      modulosVisibles: null,
+      moneda: null,
+      ivaTasa: null,
+      umbrales: { margenEbitdaMin: null, razCorrienteMin: null, debtEbitdaMax: null, dsoMax: null },
+    };
+    const empresaResult = await supabaseReq('/rest/v1/empresas', 'POST', {
+      user_id: result.body.id,
+      nombre: 'Sin nombre',
+      data: { config: defaultConfig },
+      updated_at: new Date().toISOString(),
+    }, srk);
+    if (empresaResult.status !== 200 && empresaResult.status !== 201) {
+      console.error('[create-user] No se pudo precrear empresas:', empresaResult.status, empresaResult.body);
+    }
+
     return res.status(200).json({ id: result.body.id, email: result.body.email });
   }
 
