@@ -8301,6 +8301,7 @@ async function downloadTemplate(){
     const ns=window.jspdf||window.jsPDF;const JsPDF=ns&&(ns.jsPDF||ns);
     if(!JsPDF){if(typeof showNotif==='function') showNotif('Librería PDF no disponible','error');return;}
     if(typeof showNotif==='function') showNotif('Generando Manual de Uso...','success',8000);
+    try{
 
     const doc=new JsPDF({orientation:'portrait',unit:'pt',format:'a4'});
     const W=doc.internal.pageSize.getWidth(), H=doc.internal.pageSize.getHeight();
@@ -8337,13 +8338,15 @@ async function downloadTemplate(){
       });
     };
     const STEP=(n,t,desc)=>{
-      ensure(40);
-      sf(...C.green);doc.roundedRect(ML,y,22,22,4,4,'F');
-      doc.setFont('helvetica','bold');doc.setFontSize(11);sc(...C.white);doc.text(String(n),ML+7,y+15);
-      doc.setFont('helvetica','bold');doc.setFontSize(10);sc(...C.ink);doc.text(_t(t),ML+30,y+10);
+      ensure(56);
+      const sy=y;
+      sf(...C.green);doc.rect(ML,sy,20,20,'F');
+      doc.setFont('helvetica','bold');doc.setFontSize(11);sc(...C.white);doc.text(String(n),ML+5,sy+14);
+      doc.setFont('helvetica','bold');doc.setFontSize(9.5);sc(...C.ink);doc.text(_t(t),ML+28,sy+10);
       doc.setFont('helvetica','normal');doc.setFontSize(8.5);sc(...C.muted);
-      doc.splitTextToSize(_t(desc),CW-34).forEach(ln=>{doc.text(ln,ML+30,y+=12);});
-      y+=16;
+      const lines=doc.splitTextToSize(_t(desc),CW-32);
+      lines.forEach((ln,i)=>{y=sy+22+(i*12);ensure(12);doc.text(ln,ML+28,y);});
+      y=sy+22+(lines.length*12)+8;
     };
     const GLINE=(term,def)=>{
       ensure(28);
@@ -8562,6 +8565,10 @@ async function downloadTemplate(){
     FOOTER();
     doc.save('Manual_Obbio_v1.pdf');
     if(typeof showNotif==='function') showNotif('Manual descargado correctamente','success',4000);
+    }catch(e){
+      console.error('[ManualPDF]',e);
+      if(typeof showNotif==='function') showNotif('Error al generar PDF: '+e.message,'error',8000);
+    }
   };
 
   window.generarReportePDF=generarReportePDF;
