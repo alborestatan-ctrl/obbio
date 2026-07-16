@@ -1073,6 +1073,7 @@ th[data-tip]{cursor:default;}
       <p class="page-subtitle" id="pageSubtitle">Transformando datos en decisiones estratégicas · —</p>
     </div>
     <div class="topbar-actions">
+      <a href="/Manual_Obbio.pdf" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border:1px solid var(--border2);border-radius:10px;color:var(--text);font-size:12px;font-weight:600;text-decoration:none;">📖 Manual de uso</a>
       <button onclick="generarReportePDF&&generarReportePDF()" style="padding:8px 16px;border-radius:9px;border:1px solid rgba(34,197,94,.35);background:var(--primary-dim);color:var(--primary);font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">📄 PDF</button>
       <button id="dash-clear-btn" onclick="limpiarSistema()" style="display:none;padding:8px 16px;border-radius:9px;border:1px solid rgba(244,92,92,.35);background:rgba(244,92,92,.08);color:var(--danger);font-size:12px;font-weight:700;cursor:pointer;transition:.15s;" onmouseover="this.style.background='rgba(244,92,94,.2)'" onmouseout="this.style.background='rgba(244,92,92,.08)'">🗑 Eliminar datos</button>
       <button onclick="openCFOWith('¿Cómo está la salud general de mi empresa y qué debería mejorar primero?')" style="padding:8px 14px;border-radius:9px;border:1px solid rgba(167,139,250,.35);background:rgba(167,139,250,.08);color:#a78bfa;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:background .15s;" onmouseover="this.style.background='rgba(167,139,250,.18)'" onmouseout="this.style.background='rgba(167,139,250,.08)'">🤖 Preguntar al CFO</button>
@@ -1430,10 +1431,17 @@ th[data-tip]{cursor:default;}
     <div class="card-header">
       <div class="card-title">📊 Benchmark Sectorial</div>
       <span class="card-badge" id="fin-bm-sector-badge" style="display:none;">—</span>
-      <button id="fin-bm-btn" onclick="fetchBenchmark()" style="padding:7px 14px;border-radius:9px;border:1px solid rgba(34,197,94,.4);background:rgba(34,197,94,.08);color:var(--primary);font-size:12px;font-weight:700;cursor:pointer;">Ver Benchmark del Sector</button>
     </div>
-    <div id="fin-bm-body" style="min-height:56px;display:flex;align-items:center;color:var(--muted);font-size:13px;">
-      Ingresa datos y presiona <strong style="color:var(--primary);margin-left:4px;">Generar Benchmark IA</strong> para comparar tu empresa vs el sector.
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px;">
+      <input id="fin-bm-giro-input" type="text"
+        placeholder="Describe tu sector: ej. restaurante de comida mexicana, software B2B para PyMEs, distribuidora de refacciones…"
+        style="flex:1;padding:9px 14px;border-radius:10px;border:1px solid var(--border);background:var(--card2);color:var(--text);font-size:13px;outline:none;font-family:inherit;"
+        onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'"
+        onkeydown="if(event.key==='Enter')fetchBenchmark()">
+      <button id="fin-bm-btn" onclick="fetchBenchmark()" style="padding:9px 16px;border-radius:10px;border:1px solid rgba(34,197,94,.4);background:rgba(34,197,94,.08);color:var(--primary);font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">Analizar →</button>
+    </div>
+    <div id="fin-bm-body" style="min-height:40px;color:var(--muted);font-size:13px;">
+      Describe tu sector con detalle y el Copiloto buscará benchmarks reales de fuentes oficiales.
     </div>
     <div id="fin-bm-fuente" style="display:none;margin-top:14px;border-top:1px solid var(--border2);padding-top:12px;"></div>
   </div>
@@ -2470,7 +2478,10 @@ Mapa Estratégico de Impacto
 
 </div>
 
-</div>
+</div><!-- /strat-body-strategy -->
+<!-- ── TAB: DIAGNÓSTICO IA ── -->
+<div id="strat-body-ai" style="display:none;"></div>
+</div><!-- /strategyView -->
 
 <!-- ==================== ANÁLISIS DE COSTOS ==================== -->
 <!-- ==================== COSTOS Y GASTOS (merged) ==================== -->
@@ -2822,7 +2833,7 @@ Saludable
 
 
 <!-- ESTADO DE RESULTADOS -->
-<div id="incomeStatement" class="financial-tab">
+<div class="financial-tab">
 
 <div class="card">
 
@@ -2882,9 +2893,7 @@ Saludable
 
 </div>
 <!-- BALANCE GENERAL -->
-<div id="balanceSheet"
-class="financial-tab"
-style="display:none;">
+<div class="financial-tab" style="display:none;">
 
 <div class="card">
 
@@ -3081,10 +3090,6 @@ background:#10B981;
 
 </div>
 
-</div><!-- /strat-body-strategy -->
-<!-- ── TAB: DIAGNÓSTICO IA ── -->
-<div id="strat-body-ai" style="display:none;"></div>
-</div><!-- /strategyView -->
 
 <!-- ==================== AI ==================== -->
 <div id="aiView" class="view" style="display:none;">
@@ -5551,12 +5556,11 @@ function mostrarResultados(r){
           <tr style="border-bottom:1px solid var(--border2);"><td style="padding:9px 12px;color:var(--muted);">(−) G. Administración</td><td style="padding:9px 12px;font-weight:700;text-align:right;color:var(--danger);">(${fmt(r.gadmin)})</td></tr>
           <tr style="border-bottom:1px solid var(--border2);"><td style="padding:9px 12px;color:var(--muted);">(−) G. Ventas</td><td style="padding:9px 12px;font-weight:700;text-align:right;color:var(--danger);">(${fmt(r.gventas)})</td></tr>
           <tr style="border-bottom:1px solid var(--border2);background:rgba(34,197,94,.06);"><td style="padding:9px 12px;font-weight:700;">= EBIT</td><td style="padding:9px 12px;font-weight:700;text-align:right;">${fmt(r.ebit)} <small style="color:var(--muted);font-weight:400;">${fmtPct(r.margenOp)}</small></td></tr>
-          <tr style="border-bottom:1px solid var(--border2);"><td style="padding:9px 12px;color:var(--muted);">(+) Depreciación${badgeEstimado(r._meta?.dep)}</td><td style="padding:9px 12px;font-weight:700;text-align:right;color:var(--success);">+${fmt(r.dep)}</td></tr>
-          <tr style="border-bottom:1px solid var(--border2);background:rgba(34,197,94,.1);"><td style="padding:9px 12px;font-weight:800;color:var(--primary);">= EBITDA${badgeEstimado(r._meta?.ebitda)}</td><td style="padding:9px 12px;font-weight:800;text-align:right;color:var(--primary);">${fmt(r.ebitda)} <small style="font-weight:400;">${fmtPct(r.margenEbitda)}</small></td></tr>
           <tr style="border-bottom:1px solid var(--border2);"><td style="padding:9px 12px;color:var(--muted);">(−) G. Financieros</td><td style="padding:9px 12px;font-weight:700;text-align:right;color:var(--danger);">(${fmt(r.gfin)})</td></tr>
           <tr style="border-bottom:1px solid var(--border2);"><td style="padding:9px 12px;color:var(--muted);">= UAI</td><td style="padding:9px 12px;font-weight:700;text-align:right;">${fmt(r.uai)}</td></tr>
           <tr style="border-bottom:1px solid var(--border2);"><td style="padding:9px 12px;color:var(--muted);">(−) ${(r.fiscal?.etiquetaImpuesto||'ISR')} estimado${badgeEstimado(r._meta?.isr)}</td><td style="padding:9px 12px;font-weight:700;text-align:right;color:var(--warning);">(${fmt(r.isr)})</td></tr>
           <tr style="background:rgba(34,211,160,.08);"><td style="padding:11px 12px;font-weight:800;font-size:14px;">= UTILIDAD NETA</td><td style="padding:11px 12px;font-weight:800;text-align:right;font-size:15px;color:${r.utilNeta>=0?'var(--success)':'var(--danger)'};">${fmt(r.utilNeta)} <small style="font-size:11px;font-weight:400;">${fmtPct(r.margenNeto)}</small></td></tr>
+          <tr style="border-top:2px dashed var(--border2);opacity:.7;"><td style="padding:8px 12px;color:var(--muted);font-style:italic;">EBITDA (informativo)${badgeEstimado(r._meta?.ebitda)}</td><td style="padding:8px 12px;font-weight:700;text-align:right;color:var(--primary);">${fmt(r.ebitda)} <small style="font-weight:400;">${fmtPct(r.margenEbitda)}</small></td></tr>
         </table>
       </div>
     </div>
@@ -6818,6 +6822,10 @@ function applyExcelData(){
   }
   // ── Aviso de campos no reconocidos (parser gap warning) ──
   _checkParserWarnings(d);
+  // ── Ventas por producto desde el Excel principal ──
+  if(d._ventasRows&&d._ventasRows.length&&typeof window.prodInjectRows==='function'){
+    window.prodInjectRows(d._ventasRows, d._fileName||'Excel principal');
+  }
   // ── Motor: deriva TODOS los indicadores y refresca dashboard + gráficas ──
   if(typeof calcularYAplicar==='function') calcularYAplicar();
   // Show data preview instead of jumping directly to dashboard
@@ -8306,6 +8314,7 @@ function noDataHtml(icon,msg,detail){
     <div style="font-size:40px;margin-bottom:12px;">${icon}</div>
     <div style="font-size:16px;font-weight:700;margin-bottom:6px;color:var(--text);">${msg}</div>
     <div style="font-size:13px;color:var(--muted);">${detail}</div>
+    <div style="margin-top:12px;"><a onclick="showView('ingresodatosView')" style="cursor:pointer;color:var(--primary);font-weight:700;">→ Ir a Ingresar Datos</a></div>
   </div>`;
 }
 /* ── skeletonHtml: pantalla de carga animada ── */
@@ -8683,7 +8692,7 @@ function renderDashboardView(r){
     'Ingresos':'💡 Total de ventas del período sin IVA.\nCuánto dinero entró a tu empresa.',
     'EBITDA':'💡 Ganancias antes de intereses, impuestos y depreciación.\nMide qué tan rentable es tu operación, sin considerar deudas ni impuestos.\nRef. '+_sector+': '+_pp(_BM.margenEbitda)+' · ROE ref: '+_pp(_BM.roe)+'.',
     'Flujo de Caja':'💡 Dinero real que generó o consumió tu operación.\nDiferente a la utilidad: aquí importa el efectivo, no los registros contables.',
-    'Margen EBITDA':'💡 De cada $100 que vendes, cuántos son ganancia operativa pura.\nRef. '+_sector+': '+_pp(_BM.margenEbitda)+' · Excelente: +'+_pp(_BM.margenEbitda*1.35)+'.\nDSO ref: '+_BM.dso+'d · CCC ref: '+_BM.ccc+'d.',
+    'Margen EBITDA':'💡 De cada '+(window._currSym||'$')+'100 que vendes, cuántos son ganancia operativa pura.\nRef. '+_sector+': '+_pp(_BM.margenEbitda)+' · Excelente: +'+_pp(_BM.margenEbitda*1.35)+'.\nDSO ref: '+_BM.dso+'d · CCC ref: '+_BM.ccc+'d.',
     'Clientes Activos':'💡 Número de clientes que te compran regularmente.\nConcentración alta (+80% en 3 clientes) = riesgo.',
     'Score Financiero':'💡 Calificación global de tu salud financiera (0-100).\n80+ Excelente · 60-79 Saludable · 40-59 Atención · <40 Riesgo.'
   };
@@ -8846,6 +8855,12 @@ function renderFinanceView(r){
   if(!r||!r.ventas){
     const g=el.querySelector('.kpi-grid'); if(g) g.insertAdjacentHTML('beforebegin',noDataHtml('💰','Sin datos financieros','Ingresa tus datos y presiona "Calcular y Aplicar".'));
     return;
+  }
+  // Pre-rellenar sector input si el usuario no lo ha escrito ya
+  const _bmInp=document.getElementById('fin-bm-giro-input');
+  if(_bmInp&&!_bmInp.value&&r.giro){
+    const _gl=typeof giroLabel==='function'?giroLabel(r.giro):r.giro;
+    _bmInp.value=_gl||r.giro;
   }
   // KPIs
   const kpis=el.querySelectorAll('.kpi-value');
@@ -10060,10 +10075,12 @@ function renderFinancialCenterView(r){
           <tr style="border-bottom:1px solid var(--border2);background:rgba(34,197,94,.04);"><td style="padding:10px 14px;font-weight:700;">= Utilidad Bruta</td><td style="padding:10px 14px;text-align:right;font-weight:800;color:var(--success);">${_m(r.utilBruta)}</td><td style="padding:10px 14px;text-align:right;font-weight:700;">${_pp(r.margenBruto)}</td></tr>
           <tr style="border-bottom:1px solid var(--border2);"><td style="padding:10px 14px;color:var(--muted);">(−) G. Administración</td><td style="padding:10px 14px;text-align:right;font-weight:700;color:var(--danger);">(${_m(r.gadmin)})</td><td style="padding:10px 14px;text-align:right;">${_pp(r.gadmin/r.ventas*100)}</td></tr>
           <tr style="border-bottom:1px solid var(--border2);"><td style="padding:10px 14px;color:var(--muted);">(−) G. Ventas</td><td style="padding:10px 14px;text-align:right;font-weight:700;color:var(--danger);">(${_m(r.gventas)})</td><td style="padding:10px 14px;text-align:right;">${_pp(r.gventas/r.ventas*100)}</td></tr>
-          <tr style="border-bottom:1px solid var(--border2);background:rgba(34,197,94,.08);"><td style="padding:10px 14px;font-weight:800;color:var(--primary);">= EBITDA</td><td style="padding:10px 14px;text-align:right;font-weight:800;color:var(--primary);">${_m(r.ebitda)}</td><td style="padding:10px 14px;text-align:right;font-weight:700;color:var(--primary);">${_pp(r.margenEbitda)}</td></tr>
+          <tr style="border-bottom:1px solid var(--border2);background:rgba(34,197,94,.06);"><td style="padding:10px 14px;font-weight:800;">= EBIT</td><td style="padding:10px 14px;text-align:right;font-weight:800;">${_m(r.ebit)}</td><td style="padding:10px 14px;text-align:right;font-weight:700;">${_pp(r.margenOp)}</td></tr>
           <tr style="border-bottom:1px solid var(--border2);"><td style="padding:10px 14px;color:var(--muted);">(−) G. Financieros</td><td style="padding:10px 14px;text-align:right;font-weight:700;color:var(--danger);">(${_m(r.gfin)})</td><td style="padding:10px 14px;text-align:right;">${_pp(r.gfin/r.ventas*100)}</td></tr>
+          <tr style="border-bottom:1px solid var(--border2);"><td style="padding:10px 14px;color:var(--muted);">= UAI</td><td style="padding:10px 14px;text-align:right;font-weight:700;">${_m(r.uai)}</td><td style="padding:10px 14px;text-align:right;">${_pp(r.uai/r.ventas*100)}</td></tr>
           <tr style="border-bottom:1px solid var(--border2);"><td style="padding:10px 14px;color:var(--muted);">(−) ${r.fiscal?.etiquetaImpuesto||'ISR'} estimado</td><td style="padding:10px 14px;text-align:right;font-weight:700;color:var(--warning);">(${_m(r.isr)})</td><td style="padding:10px 14px;text-align:right;">${_pp(r.isr/r.ventas*100)}</td></tr>
           <tr style="background:rgba(34,211,160,.06);"><td style="padding:11px 14px;font-weight:800;font-size:14px;">= UTILIDAD NETA</td><td style="padding:11px 14px;text-align:right;font-weight:800;font-size:15px;color:${r.utilNeta>=0?'var(--success)':'var(--danger)'};">${_m(r.utilNeta)}</td><td style="padding:11px 14px;text-align:right;font-weight:800;">${_pp(r.margenNeto)}</td></tr>
+          <tr style="border-top:2px dashed var(--border2);opacity:.7;"><td style="padding:8px 14px;color:var(--muted);font-style:italic;">EBITDA (informativo)</td><td style="padding:8px 14px;text-align:right;font-weight:700;color:var(--primary);">${_m(r.ebitda)}</td><td style="padding:8px 14px;text-align:right;color:var(--primary);">${_pp(r.margenEbitda)}</td></tr>
         </tbody>
       </table>
     </div>
@@ -10376,7 +10393,15 @@ function renderStrategyView(r){
   if(kpis[0]) kpis[0].innerHTML=(impactTotal>=0?'+':'')+_m(impactTotal);
   if(kpis[1]) kpis[1].innerHTML=highPriority||ins.length;
   if(kpis[2]) kpis[2].innerHTML=risks;
-  if(kpis[3]) kpis[3].innerHTML=r.score;
+  if(kpis[3]){
+    kpis[3].innerHTML=r.score;
+    const scoreChange=kpis[3].closest('.kpi-card')?.querySelector('.kpi-change');
+    if(scoreChange){
+      const sl=r.score>=80?'Excelente':r.score>=60?'Saludable':r.score>=40?'Atención':'Riesgo';
+      scoreChange.textContent=sl;
+      scoreChange.className='kpi-change '+(r.score>=60?'positive':'negative');
+    }
+  }
 
   // Briefings estratégicos con drill-down
   const bg={'pos':'positive-border','info':'info-border','warn':'warning-border','danger':'danger-border'};
@@ -10388,6 +10413,7 @@ function renderStrategyView(r){
       texto:`Reducir DSO de ${Math.round(r.diasCobro)} a ${_stgBM.dso} días liberaría ${_m(impactDSO)} de efectivo.`,
       kpi:`DSO: ${Math.round(r.diasCobro)} días · CxC: ${_m(r.cxc)}`,
       origen:`Se calcula con tu cuentas por cobrar (${_m(r.cxc)}) y tus ventas (${_m(r.ventas)}).`,
+      accion:'Contacta esta semana a los 3 clientes con más días de atraso y ofrece pronto pago.',
       acciones:['📋 Listar facturas vencidas +30 días y asignar responsable de cobro esta semana','💸 Ofrecer descuento por pronto pago (1–2%) a tus top 5 clientes por CxC','📝 Reducir plazo de crédito en nuevos contratos a '+Math.round(_stgBM.dso)+' días']
     });
     if(r.margenEbitda<_stgBM.margenEbitda) briefs.push({
@@ -10395,6 +10421,7 @@ function renderStrategyView(r){
       texto:`Margen EBITDA ${_pp(r.margenEbitda)} bajo benchmark ${_stgBM.margenEbitda}%. Reducir G&A 5% = ${_m(impactGastos)}.`,
       kpi:`EBITDA: ${_m(r.ebitda)} · Margen: ${_pp(r.margenEbitda)}`,
       origen:`Se forma con tus ventas (${_m(r.ventas)}), tu costo de ventas (${_m(r.cogs)}) y tus gastos operativos (${_m(r.gastosOp)}).`,
+      accion:'Revisa los 3 gastos más grandes de G&A y recorta 5% este mes.',
       acciones:['🔍 Auditar contratos de servicios y licencias recurrentes este mes','👥 Revisar headcount vs carga de trabajo real por área','🤝 Negociar condiciones con top 3 proveedores por volumen']
     });
     if(r.debtEbitda!=null && r.debtEbitda>_stgBM.debtEbitda) briefs.push({
@@ -10402,6 +10429,7 @@ function renderStrategyView(r){
       texto:`Deuda/EBITDA ${_x(r.debtEbitda)} supera umbral. Priorizar pago deuda CP ${_m(r.pasivoCp)}.`,
       kpi:`Deuda/EBITDA: ${_x(r.debtEbitda)} · Deuda total: ${_m(r.deudaTotal)}`,
       origen:`Se calcula con tu deuda total (${_m(r.deudaTotal)}) y tu EBITDA (${_m(r.ebitda)}).`,
+      accion:'No tomes nueva deuda; destina el excedente de caja a pagar el pasivo de corto plazo.',
       acciones:['🎯 Liquidar primero la deuda de corto plazo (mayor costo)','🔒 No contratar nueva deuda hasta Deuda/EBITDA < '+_stgBM.debtEbitda+'x','📊 Evaluar refinanciar a tasa fija si hay riesgo de alza en tasas']
     });
     else if(r.debtEbitda!=null && r.debtEbitda<1.5) briefs.push({
@@ -10409,6 +10437,7 @@ function renderStrategyView(r){
       texto:`Deuda/EBITDA ${_x(r.debtEbitda)} bajo. Margen para financiar crecimiento estratégico.`,
       kpi:`Deuda/EBITDA: ${_x(r.debtEbitda)} · EBITDA: ${_m(r.ebitda)}`,
       origen:`Se calcula con tu deuda total (${_m(r.deudaTotal)}) y tu EBITDA (${_m(r.ebitda)}).`,
+      accion:'Evalúa financiar una inversión de crecimiento con costo menor a tu ROE.',
       acciones:['💰 Cotizar línea de crédito revolvente para capital de trabajo','🏗️ Evaluar financiamiento de equipo o expansión operativa','📐 Comparar costo de deuda vs retorno esperado del proyecto']
     });
     if(r.yoy!=null && r.yoy>10) briefs.push({
@@ -10416,18 +10445,21 @@ function renderStrategyView(r){
       texto:`Crecimiento ${r.yoy.toFixed(1)}% YoY. Aprovechar momentum para expandir.`,
       kpi:`YoY: +${r.yoy.toFixed(1)}% · Ingresos: ${_m(r.ventas)}`,
       origen:`Ventas actuales ${_m(r.ventas)} vs año anterior: crecimiento de ${r.yoy.toFixed(1)}%`,
+      accion:'Asegura capital de trabajo para sostener el crecimiento antes de escalar.',
       acciones:['⚙️ Verificar que operaciones y equipo puedan escalar sin cuellos de botella','💼 Revisar que el capital de trabajo crece proporcional a las ventas','📈 Proteger márgenes durante la expansión — no crecer a cualquier costo']
     });
     if(!briefs.length) briefs.push({
       tipo:'info',titulo:'Desempeño equilibrado',
       texto:'Indicadores dentro de rangos saludables. Mantener disciplina operativa.',
       kpi:`Score: ${r.score}/100`,origen:`Cálculo compuesto de ${Object.keys(r).length} métricas financieras`,
+      accion:'Mantén la disciplina; revisa mensualmente los KPIs en ámbar.',
       acciones:['📋 Revisar metas de crecimiento para el siguiente trimestre','🔄 Mantener ciclo de revisión mensual de KPIs financieros','🎯 Identificar el siguiente nivel de optimización con el CFO']
     });
     grid.innerHTML=briefs.slice(0,4).map((b,i)=>`
       <div class="briefing-item ${bg[b.tipo]}" style="cursor:pointer;" onclick="strategyDrillDown(${i})" data-brief-idx="${i}">
         <div class="briefing-title">${b.titulo}</div>
         <div class="briefing-text">${b.texto}</div>
+        ${b.accion?`<div style="margin-top:8px;padding:7px 10px;background:rgba(34,197,94,.10);border-radius:6px;font-size:11.5px;color:var(--primary);font-weight:700;">→ Qué hacer: <span style="font-weight:500;color:var(--text);">${b.accion}</span></div>`:''}
         <div style="font-size:10px;color:var(--muted2);margin-top:6px;">Toca para ver detalle →</div>
       </div>`).join('');
     // Panel drill-down oculto
@@ -11482,11 +11514,17 @@ window.fetchBenchmark=async function(){
   const fuente=document.getElementById('fin-bm-fuente');
   const badge=document.getElementById('fin-bm-sector-badge');
   const btn=document.getElementById('fin-bm-btn');
+  const giroInput=(document.getElementById('fin-bm-giro-input')||{}).value?.trim();
+  if(!giroInput){
+    const inp=document.getElementById('fin-bm-giro-input');
+    if(inp){inp.style.borderColor='var(--warning)';inp.placeholder='Describe tu sector primero…';inp.focus();}
+    return;
+  }
   if(!r||!r.ventas){
     if(body) body.innerHTML='<span style="color:var(--warning);">⚠️ Ingresa tus datos primero (Ingresar Datos → Calcular).</span>';
     return;
   }
-  const giro=r.giro||($('ii_giro')||{}).value||'comercial';
+  const giro=giroInput;
   const pais=r.pais||'MX';
 
   // Loading state
@@ -11575,11 +11613,11 @@ window.fetchBenchmark=async function(){
     'ISR':                'Impuesto Sobre la Renta estimado que deberás pagar al SAT sobre tu utilidad del período. Es un estimado basado en la tasa estándar del 30%.',
     'IS Estimado':        'Impuesto de Sociedades estimado que deberás pagar a la AEAT sobre tu base imponible. Estimado basado en el tipo general del 25%.',
     'IS':                 'Impuesto de Sociedades. Grava el beneficio neto de la sociedad al tipo general del 25%. Gestionado ante la AEAT.',
-    'IVA por Enterar':    'Diferencia entre el IVA que cobraste a tus clientes y el que tú pagaste a tus proveedores. Ese saldo es lo que debes entregar al SAT.',
-    'IVA Trasladado':     'El IVA que cobraste a tus clientes en tus ventas (16% en México). Este dinero no es tuyo — debes entregarlo al SAT.',
+    'IVA por Enterar':    'Diferencia entre el IVA que cobraste a tus clientes y el que tú pagaste a tus proveedores. Ese saldo es lo que debes entregar a la autoridad fiscal.',
+    'IVA Trasladado':     'El IVA que cobraste a tus clientes en tus ventas. Este dinero no es tuyo — debes entregarlo a la autoridad fiscal (SAT en MX · AEAT en ES).',
     'IVA Repercutido':    'El IVA que repercutes a tus clientes en tus facturas (21% tipo general en España). Debes ingresarlo en la AEAT mediante el Modelo 303.',
     'IVA Soportado':      'El IVA que pagaste en tus compras y gastos. Puedes deducirlo del IVA repercutido, reduciendo la cuota a ingresar en la AEAT.',
-    'IVA Acreditable':    'El IVA que tú pagaste en tus compras y gastos. Puedes descontarlo del IVA que cobraste, reduciendo lo que entregas al SAT.',
+    'IVA Acreditable':    'El IVA que tú pagaste en tus compras y gastos. Puedes descontarlo del IVA que cobraste, reduciendo lo que debes pagar a la autoridad fiscal.',
     'Carga Fiscal Total': 'El total de impuestos del período (ISR/IS + IVA neto). Representa qué porcentaje de tus ingresos va destinado a obligaciones fiscales.',
     'Cumplimiento Fiscal':'Indicador de qué tan al día estás con tus obligaciones fiscales (SAT en MX / AEAT en ES). Verde = sin alertas visibles. Rojo = revisar declaraciones.',
     'Riesgo Fiscal':      'Nivel de exposición a revisiones fiscales basado en tus ratios financieros. Un IVA muy alto, márgenes negativos o inconsistencias pueden generar actuaciones de la autoridad.',
@@ -11671,11 +11709,12 @@ window.fetchBenchmark=async function(){
   /* ── Buscar definición para un texto de label ── */
   function findDef(text){
     const t = text.trim();
-    if(KPI_DEFS[t]) return {key:t, def:KPI_DEFS[t]};
+    const _cur=s=>s.replace(/\$(?=\d)/g, window._currSym||'$');
+    if(KPI_DEFS[t]) return {key:t, def:_cur(KPI_DEFS[t])};
     // búsqueda parcial (primer match)
     for(const k of Object.keys(KPI_DEFS)){
       if(t.toLowerCase().includes(k.toLowerCase()) || k.toLowerCase().includes(t.toLowerCase())){
-        return {key:k, def:KPI_DEFS[k]};
+        return {key:k, def:_cur(KPI_DEFS[k])};
       }
     }
     return null;
@@ -12213,7 +12252,7 @@ function renderComparativosView(r){
     const sortedYrs=Object.keys(mby).map(Number).sort();
     const allPts=[];
     sortedYrs.forEach(yr=>{ (mby[yr]||[]).forEach((v,i)=>allPts.push({label:`${yr}-${MTHS[i]}`,v})); });
-    if(allPts.length<13){ body.innerHTML=hint('⏩ Se necesitan al menos 13 meses de datos para ver una tendencia R12M. Sube la hoja <strong>Ventas (Opcional)</strong> con fechas de varios meses, o agrega más de un año en <strong>Ingresar Datos</strong>.'); return; }
+    if(allPts.length<13){ body.innerHTML=hint(`⏩ Tendencia Rolling 12M: llevas ${allPts.length} de 13 meses necesarios. Sube más meses en <strong>Ventas (Opcional)</strong> o agrega otro año en <strong>Ingresar Datos</strong>.`); return; }
     const rolling=allPts.map((_,i)=>i<11?null:allPts.slice(i-11,i+1).reduce((a,b)=>a+b.v,0)).filter(v=>v!==null);
     const rLabels=allPts.slice(11).map(p=>p.label);
     const lastR=rolling[rolling.length-1], prevR=rolling.length>1?rolling[rolling.length-2]:null;
@@ -13195,6 +13234,7 @@ window.toggleSidebarDesktop=toggleSidebarDesktop;
     document.getElementById('prod-top10-body').innerHTML='';
   };
 })();
+window.renderProductosView=function(){ if(typeof prodRenderView==='function') prodRenderView(); };
 
 /* ══════════════════════════════════════════════════════════════
    DYNAMIC TABLE ENGINE  ·  tooltips · sort · col-toggle · hover
