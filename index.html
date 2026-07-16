@@ -1234,8 +1234,8 @@ th[data-tip]{cursor:default;}
       <span class="card-badge success" id="mainChartYoyBadge" style="display:none;"></span>
     </div>
     <div class="chart-legend">
-      <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#22C55E;"></div><span id="mainChartLegIng">Ingresos (MXN M)</span></div>
-      <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#10B981;"></div><span id="mainChartLegEbitda">EBITDA (MXN M)</span></div>
+      <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#22C55E;"></div><span id="mainChartLegIng">Ingresos (M)</span></div>
+      <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#10B981;"></div><span id="mainChartLegEbitda">EBITDA (M)</span></div>
     </div>
     <div id="insight-mainChart" class="chart-insight"></div>
     <div class="chart-container">
@@ -1261,7 +1261,7 @@ th[data-tip]{cursor:default;}
     <div class="card">
       <div class="card-header">
         <div class="card-title">Desempeño Regional</div>
-        <span class="card-badge" id="mainChartBadgeIng">Ingresos MXN M</span>
+        <span class="card-badge" id="mainChartBadgeIng">Ingresos (M)</span>
       </div>
       <p id="regChartDesc" style="font-size:11.5px;color:var(--muted);margin:-4px 0 10px;">Compara el ingreso generado por zona geográfica o sucursal. Detecta dónde concentrar recursos comerciales.</p>
       <div class="chart-container small">
@@ -11621,7 +11621,7 @@ function _updateFxBadge(){
 }
 
 function _updateCurrencySymbols(){
-  const pais=(document.getElementById('ii_pais')||{}).value||'MX';
+  const pais=(window._obbioCalc&&window._obbioCalc.pais)||(document.getElementById('ii_pais')||{}).value||'MX';
   const L=LOCALE[pais]||LOCALE.MX;
   // Forzar moneda nativa del país en ambos selectores
   ['ii_moneda','dashSelMoneda'].forEach(id=>{ const el=document.getElementById(id); if(el&&el.value!==L.moneda) el.value=L.moneda; });
