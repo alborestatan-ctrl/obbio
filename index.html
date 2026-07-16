@@ -9229,14 +9229,7 @@ function renderFinanceView(r){
   // Badge en topbar
   const yoyEl=el.querySelector('.kpi-change');
   if(yoyEl && r.yoy!=null){ const s=r.yoy>=0?'positive':'negative'; yoyEl.className='kpi-change '+s; yoyEl.innerHTML=(r.yoy>=0?'▲':'▼')+' '+Math.abs(r.yoy).toFixed(1)+'%'; }
-  _obbioResumen('Inteligencia Financiera',[
-    {label:'Ingresos',value:r.ventas?_m(r.ventas):null},
-    {label:'Margen Bruto',value:r.margenBruto!=null?r.margenBruto.toFixed(1)+'%':null},
-    {label:'EBITDA',value:r.ebitda!=null?_m(r.ebitda):null},
-    {label:'Margen EBITDA',value:r.margenEbitda!=null?r.margenEbitda.toFixed(1)+'%':null},
-    {label:'Utilidad Neta',value:r.utilNeta!=null?_m(r.utilNeta):null},
-    {label:'Margen Neto',value:r.margenNeto!=null?r.margenNeto.toFixed(1)+'%':null},
-  ],'resumen-financeView');
+  /* resumen-financeView eliminado (duplicaba el panel de Inteligencia Financiera) */
 }
 
 /* ─────────────────── ANALYTICS VIEW ─────────────────── */
@@ -11706,6 +11699,7 @@ window.updateNavStates=updateNavStates;
 /* ─────────────────── renderAllViews: llamado tras calcularYAplicar ─────────────────── */
 function renderAllViews(r){
   if(r) window._obbioCalc=r;
+  _updateCurrencySymbols();
   updateAnalyticsNav(r);
   updateNavStates(r);
   // Solo renderizar la vista activa en este momento
