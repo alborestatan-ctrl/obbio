@@ -1073,7 +1073,8 @@ th[data-tip]{cursor:default;}
       <p class="page-subtitle" id="pageSubtitle">Transformando datos en decisiones estratégicas · —</p>
     </div>
     <div class="topbar-actions">
-      <button onclick="generarManualPDF&&generarManualPDF()" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border:1px solid var(--border2);border-radius:10px;background:none;color:var(--text);font-size:12px;font-weight:600;cursor:pointer;">📖 Manual de uso</button>
+      <button onclick="window.open('/Manual_Obbio.pdf','_blank','noopener')" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border:1px solid var(--border2);border-radius:10px;background:none;color:var(--text);font-size:12px;font-weight:600;cursor:pointer;">📖 Manual de uso</button>
+      <a onclick="mostrarDeteccion()" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border:1px solid var(--border2);border-radius:10px;color:var(--text);font-size:12px;font-weight:600;cursor:pointer;">🔍 ¿Qué leyó Obbio?</a>
       <button onclick="generarReportePDF&&generarReportePDF()" style="padding:8px 16px;border-radius:9px;border:1px solid rgba(34,197,94,.35);background:var(--primary-dim);color:var(--primary);font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">📄 PDF</button>
       <button id="dash-clear-btn" onclick="limpiarSistema()" style="display:none;padding:8px 16px;border-radius:9px;border:1px solid rgba(244,92,92,.35);background:rgba(244,92,92,.08);color:var(--danger);font-size:12px;font-weight:700;cursor:pointer;transition:.15s;" onmouseover="this.style.background='rgba(244,92,94,.2)'" onmouseout="this.style.background='rgba(244,92,92,.08)'">🗑 Eliminar datos</button>
       <button onclick="openCFOWith('¿Cómo está la salud general de mi empresa y qué debería mejorar primero?')" style="padding:8px 14px;border-radius:9px;border:1px solid rgba(167,139,250,.35);background:rgba(167,139,250,.08);color:#a78bfa;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:background .15s;" onmouseover="this.style.background='rgba(167,139,250,.18)'" onmouseout="this.style.background='rgba(167,139,250,.08)'">🤖 Preguntar al CFO</button>
@@ -1329,7 +1330,7 @@ th[data-tip]{cursor:default;}
       <div class="kpi-value" id="anlKpi1" style="font-size:20px;">—</div>
       <div class="kpi-bottom"><div class="kpi-change neutral" id="anlKpiC1">Sin datos</div></div>
     </div>
-    <div class="kpi-card accent-teal">
+    <div class="kpi-card accent-teal" style="display:none;">
       <div class="kpi-top"><div class="kpi-label" id="anlKpiL2">Margen EBITDA</div><div class="kpi-icon teal">⚡</div></div>
       <div class="kpi-value" id="anlKpi2">—</div>
       <div class="kpi-bottom"><div class="kpi-change neutral" id="anlKpiC2">Sin datos</div></div>
@@ -2406,7 +2407,7 @@ PRIORIDAD ALTA
 <div class="briefing-text">
 
 Incrementar cobranza en 10 días podría liberar
-aproximadamente $850K de efectivo operativo.
+efectivo operativo.
 
 </div>
 
@@ -2421,7 +2422,7 @@ PRIORIDAD ALTA
 <div class="briefing-text">
 
 Optimizar gastos administrativos generaría
-ahorros estimados de $420K anuales.
+ahorros anuales.
 
 </div>
 
@@ -2859,32 +2860,32 @@ Saludable
 
 <tr>
 <td>Ventas Netas</td>
-<td>$12.8M</td>
+<td>—</td>
 </tr>
 
 <tr>
 <td>Costo de Ventas</td>
-<td>$5.1M</td>
+<td>—</td>
 </tr>
 
 <tr>
 <td>Utilidad Bruta</td>
-<td>$7.7M</td>
+<td>—</td>
 </tr>
 
 <tr>
 <td>Gastos Operativos</td>
-<td>$3.3M</td>
+<td>—</td>
 </tr>
 
 <tr>
 <td>EBITDA</td>
-<td>$3.2M</td>
+<td>—</td>
 </tr>
 
 <tr>
 <td>Utilidad Neta</td>
-<td>$1.9M</td>
+<td>—</td>
 </tr>
 
 </tbody>
@@ -2916,27 +2917,27 @@ Saludable
 
 <tr>
 <td>Activo Circulante</td>
-<td>$8.4M</td>
+<td>—</td>
 </tr>
 
 <tr>
 <td>Activo Fijo</td>
-<td>$14.1M</td>
+<td>—</td>
 </tr>
 
 <tr>
 <td>Total Activos</td>
-<td>$22.5M</td>
+<td>—</td>
 </tr>
 
 <tr>
 <td>Pasivos</td>
-<td>$6.3M</td>
+<td>—</td>
 </tr>
 
 <tr>
 <td>Capital</td>
-<td>$16.2M</td>
+<td>—</td>
 </tr>
 
 </tbody>
@@ -2965,27 +2966,27 @@ Flujo de Efectivo
 
 <tr>
 <td>Flujo Operativo</td>
-<td>$2.7M</td>
+<td>—</td>
 </tr>
 
 <tr>
 <td>Inversión CAPEX</td>
-<td>-$0.8M</td>
+<td>—</td>
 </tr>
 
 <tr>
 <td>Flujo Financiamiento</td>
-<td>-$0.3M</td>
+<td>—</td>
 </tr>
 
 <tr>
 <td>Flujo Libre</td>
-<td>$1.6M</td>
+<td>—</td>
 </tr>
 
 <tr>
 <td>Caja Final</td>
-<td>$3.4M</td>
+<td>—</td>
 </tr>
 
 </tbody>
@@ -3315,7 +3316,7 @@ background:#10B981;
 
   <section class="kpi-grid" id="prod-kpi-grid" style="display:none;">
     <div class="kpi-card accent-green">
-      <div class="kpi-top"><div class="kpi-label">Ingreso Total</div><div class="kpi-icon green">💰</div></div>
+      <div class="kpi-top"><div class="kpi-label">Ventas desglosadas (productos)</div><div class="kpi-icon green">💰</div></div>
       <div class="kpi-value" id="prod-kpi-ingreso">—</div>
       <div class="kpi-bottom"><div class="kpi-change positive" id="prod-kpi-transacciones">— transacciones</div></div>
     </div>
@@ -6074,8 +6075,10 @@ function parseExcelWorkbook(wb){
     const VTA=['venta','market','publicidad','comercial','comision','distribuci'];
     const FIN=['financier','interes','banco','credito','prestamo','deuda','arrendami'];
     const DEP=['deprecia','amortiz','d&a'];
+    const _gastosRows=[];
     rG.forEach(r=>{
-      const cat=norm(colStr(r,'categ','tipo','concepto'));
+      const rawName=colStr(r,'concepto','descripcion','nombre','categ','tipo')||'Gasto';
+      const cat=norm(rawName);
       const monto=col(r,'monto','importe','amount','valor');
       const m=monthOf(colStr(r,'fecha','date'));
       const tipo=DEP.some(k=>cat.includes(k))?'dep':FIN.some(k=>cat.includes(k))?'fin':VTA.some(k=>cat.includes(k))?'vta':'adm';
@@ -6083,7 +6086,9 @@ function parseExcelWorkbook(wb){
       else if(tipo==='vta'){ gVta+=monto; if(m>=0&&m<12) mGv[m]+=monto; }
       else if(tipo==='fin'){ gFin+=monto; if(m>=0&&m<12) mGf[m]+=monto; }
       else gDep+=monto;
+      _gastosRows.push({concepto:rawName,categoria:tipo,monto:monto,mes:m});
     });
+    if(_gastosRows.length) data._gastosRows=_gastosRows;
     if(gAdmin>0){ data.gadmin=String(Math.round(gAdmin)); if(mA.some(x=>x>0)) data.m_gadmin=mA.map(Math.round).join(','); }
     if(gVta>0){   data.gventas=String(Math.round(gVta));  if(mGv.some(x=>x>0)) data.m_gventas=mGv.map(Math.round).join(','); }
     if(gFin>0){   data.gfin=String(Math.round(gFin));     if(mGf.some(x=>x>0)) data.m_gfin=mGf.map(Math.round).join(','); }
@@ -6096,11 +6101,13 @@ function parseExcelWorkbook(wb){
       sumSal+=col(r,'salida','pago','retiro','cargo');
     });
     if(sumEnt-sumSal>0) data.caja=String(Math.round(sumEnt-sumSal));
+    if(rB.length) data._bancosRows=rB.map(x=>({concepto:colStr(x,'concepto','descripcion','detalle')||'Movimiento',entrada:col(x,'entrada','deposito','cobro','abono'),salida:col(x,'salida','pago','retiro','cargo'),fecha:colStr(x,'fecha','date')}));
 
     const rF=parseRows(getSheet('fiscal'),['iva','trasladado','fecha']);
     let sumIvaTras=0,sumIvaAcred=0;
     rF.forEach(r=>{ sumIvaTras+=col(r,'trasladado'); sumIvaAcred+=col(r,'acreditable'); });
     if(sumIvaTras>0) data._iva_neto=String(Math.round(sumIvaTras-sumIvaAcred));
+    if(rF.length) data._fiscalRows=rF.map(x=>({concepto:colStr(x,'concepto','descripcion')||'IVA',trasladado:col(x,'trasladado'),acreditable:col(x,'acreditable')}));
 
     const rD=parseRows(getSheet('deuda'),['saldo','credito','fecha']);
     const deudaMap={}; let sumInteresDeuda=0;
@@ -6109,6 +6116,7 @@ function parseExcelWorkbook(wb){
       const saldo=col(r,'saldo','balance'); const interes=col(r,'interes','interest');
       if(cred) deudaMap[cred]=saldo; sumInteresDeuda+=interes;
     });
+    if(rD.length) data._deudaRows=rD.map(x=>({acreedor:colStr(x,'credito','acreedor','banco','concepto')||'Crédito',saldo:col(x,'saldo','monto'),interes:col(x,'interes','tasa')}));
     const totalDeuda=Object.values(deudaMap).reduce((a,b)=>a+b,0);
     if(totalDeuda>0) data.pasivo_lp=String(Math.round(totalDeuda));
     if(sumInteresDeuda>0&&!parseFloat(data.gfin||0)) data.gfin=String(Math.round(sumInteresDeuda));
@@ -6826,6 +6834,7 @@ function applyExcelData(){
   if(d._ventasRows&&d._ventasRows.length&&typeof window.prodInjectRows==='function'){
     window.prodInjectRows(d._ventasRows, d._fileName||'Excel principal');
   }
+  window._gastosRows = d._gastosRows || null;
   // ── Motor: deriva TODOS los indicadores y refresca dashboard + gráficas ──
   if(typeof calcularYAplicar==='function') calcularYAplicar();
   // Show data preview instead of jumping directly to dashboard
@@ -8827,7 +8836,7 @@ function renderDashboardView(r){
   if(!r||!r.ventas){
     ['fcSales','fcEbitda'].forEach(id=>{const e=document.getElementById(id);if(e)e.innerHTML='—';});
     document.querySelectorAll('#dashboardView .kpi-value').forEach(e=>e.innerHTML='—');
-    document.querySelectorAll('#dashboardView .kpi-change').forEach(e=>{e.className='kpi-change neutral';e.innerHTML='Sin datos';});
+    document.querySelectorAll('#dashboardView .kpi-change').forEach(e=>{e.className='kpi-change negative';e.innerHTML='Falta el dato';});
     renderDiagEjecutivo(null);
     return;
   }
@@ -9131,6 +9140,9 @@ function renderDashboardView(r){
   }
 }
 
+function _sem(val,good,warn,invert){ if(val==null) return 'negative'; const ok=invert?val<=good:val>=good; const mid=invert?val<=warn:val>=warn; return ok?'positive':mid?'neutral':'negative'; }
+/* Regla: verde=bien, ámbar=vigilar, rojo=mal O sin dato. invert=true para métricas donde MENOS es mejor (deuda, días). */
+
 /* ─────────────────── FINANCE VIEW ─────────────────── */
 function renderFinanceView(r){
   const el=document.getElementById('financeView'); if(!el) return;
@@ -9154,9 +9166,9 @@ function renderFinanceView(r){
   // KPI changes (limpiar "Sin datos" y poner datos reales)
   const kpiCh=el.querySelectorAll('#financeView .kpi-change');
   if(kpiCh[0]){const s=r.yoy!=null&&r.yoy>=0?'positive':r.yoy!=null?'negative':'neutral';kpiCh[0].className='kpi-change '+s;kpiCh[0].innerHTML=r.yoy!=null?(r.yoy>=0?'▲ +':'▼ ')+Math.abs(r.yoy).toFixed(1)+'% vs año ant.':'Ventas totales del período';}
-  if(kpiCh[1]){const s=r.margenNeto>=10?'positive':r.margenNeto>=5?'neutral':'negative';kpiCh[1].className='kpi-change '+s;kpiCh[1].innerHTML='Margen neto '+_pp(r.margenNeto);}
-  if(kpiCh[2]){const s=r.margenEbitda>=20?'positive':r.margenEbitda>=10?'neutral':'negative';kpiCh[2].className='kpi-change '+s;kpiCh[2].innerHTML='Margen EBITDA '+_pp(r.margenEbitda);}
-  if(kpiCh[3]){const s=r.roe>=15?'positive':r.roe>=8?'neutral':'negative';kpiCh[3].className='kpi-change '+s;kpiCh[3].innerHTML='ROE '+_pp(r.roe);}
+  if(kpiCh[1]){const s=_sem(r.margenNeto,10,5);kpiCh[1].className='kpi-change '+s;kpiCh[1].innerHTML='Margen neto '+_pp(r.margenNeto);}
+  if(kpiCh[2]){const s=_sem(r.margenEbitda,20,10);kpiCh[2].className='kpi-change '+s;kpiCh[2].innerHTML='Margen EBITDA '+_pp(r.margenEbitda);}
+  if(kpiCh[3]){const s=_sem(r.roe,15,8);kpiCh[3].className='kpi-change '+s;kpiCh[3].innerHTML='ROE '+_pp(r.roe);}
   // Estado de resultados — cascada P&L por ID (no por índice)
   const _sv=id=>document.getElementById(id);
   if(_sv('fin-sv-ventas')) _sv('fin-sv-ventas').innerHTML=_m(r.ventas);
@@ -9498,7 +9510,7 @@ function renderCashflowView(r){
     if(_cfTitle) _cfTitle.textContent='Flujo de Caja Anual';
     const _cfBadge=document.querySelector('#cashflowView .card-badge.success');
     if(_cfBadge) _cfBadge.textContent=r.anio||'Anual';
-    mkChart('cashFlowChart',{type:'bar',data:{labels:_cfLabels,datasets:[{data:_cfVals,backgroundColor:_cfColors,borderRadius:8,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},datalabels:{display:false},tooltip:{backgroundColor:'#1E1E22',callbacks:{label:ctx=>` ${_cfLabels[ctx.dataIndex]}: ${_m(ctx.parsed.y*1e6)}`}}},scales:{x:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',font:{size:12}}},y:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',callback:v=>(v>=0?'$':'-$')+Math.abs(v).toFixed(1)+'M'}}}}});
+    mkChart('cashFlowChart',{type:'bar',data:{labels:_cfLabels,datasets:[{data:_cfVals,backgroundColor:_cfColors,borderRadius:8,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},datalabels:{display:false},tooltip:{backgroundColor:'#1E1E22',callbacks:{label:ctx=>` ${_cfLabels[ctx.dataIndex]}: ${_m(ctx.parsed.y*1e6)}`}}},scales:{x:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',font:{size:12}}},y:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',callback:v=>(v>=0?(window._currSym||'$'):'-'+(window._currSym||'$'))+Math.abs(v).toFixed(1)+'M'}}}}});
   } else {
     if(_charts['cashFlowChart']){try{_charts['cashFlowChart'].destroy();}catch(e){}delete _charts['cashFlowChart'];}
     if(_cfWrap&&!_cfWrap.querySelector('[data-nodata]')) _cfWrap.insertAdjacentHTML('afterbegin',`<div data-nodata="1" style="text-align:center;padding:32px 16px;font-size:12px;color:var(--muted);">📅 Sin detalle mensual — sube un Excel con flujos por mes para activar esta gráfica.</div>`);
@@ -9728,7 +9740,7 @@ const _drillNotes={
 };
 function _drillNote(name){ return Object.entries(_drillNotes).find(([k])=>name.toLowerCase().includes(k.toLowerCase()))||[null,null]; }
 
-function _drillPanel(panelId, name, amount, pctNum, pctLabel, pct2Num, pct2Label){
+function _drillPanel(panelId, name, amount, pctNum, pctLabel, pct2Num, pct2Label, rows){
   const p=document.getElementById(panelId); if(!p) return;
   const note=_drillNote(name)[1];
   p.style.display='';
@@ -9751,6 +9763,10 @@ function _drillPanel(panelId, name, amount, pctNum, pctLabel, pct2Num, pct2Label
     </div>
   </div>
   ${note?`<div style="font-size:12px;color:var(--muted);background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.15);border-radius:10px;padding:10px 14px;">💡 ${note}</div>`:''}`;
+  if(rows&&rows.length){
+    p.innerHTML += '<div style="margin-top:6px;font-size:11px;color:var(--muted2);text-transform:uppercase;letter-spacing:.6px;font-weight:700;margin-bottom:4px;">Conceptos</div>'
+      + rows.map(x=>`<div style="display:flex;justify-content:space-between;padding:7px 10px;border-bottom:1px solid var(--border2);font-size:12.5px;"><span style="color:var(--text);">${esc(x.concepto)}</span><span style="font-weight:700;">${_m(x.monto)} <span style="color:var(--muted2);font-weight:400;">${x.pct!=null?x.pct.toFixed(1)+'%':''}</span></span></div>`).join('');
+  }
 }
 
 function cvDrill(idx){
@@ -9761,7 +9777,10 @@ function cvDrill(idx){
 function gvDrill(idx){
   const items=window._gvItems||[]; const r=window._gvR; const tot=window._gvTotal||0;
   const it=items[idx]; if(!it||!r) return;
-  _drillPanel('gv-drill',it[0],it[1],tot>0?it[1]/tot*100:null,'% del Total',r.ventas>0?it[1]/r.ventas*100:null,'% de Ventas');
+  const key={'G. Admin':'adm','G. Administración':'adm','G. Ventas':'vta','G. Financieros':'fin'}[it[0]]||null;
+  const rows=(window._gastosRows||[]).filter(g=>g.categoria===key).sort((a,b)=>b.monto-a.monto)
+    .map(g=>({concepto:g.concepto,monto:g.monto,pct:it[1]>0?g.monto/it[1]*100:null}));
+  _drillPanel('gv-drill',it[0],it[1],tot>0?it[1]/tot*100:null,'% del Total',r.ventas>0?it[1]/r.ventas*100:null,'% de Ventas',rows);
 }
 window.cvDrill=cvDrill; window.gvDrill=gvDrill;
 
@@ -10006,7 +10025,7 @@ const TaxNarratives=(function(){
 function renderTaxView(r){
   const el=document.getElementById('taxView'); if(!el) return;
   if(!r||!r.ventas){
-    el.innerHTML=`<header class="topbar"><div><h2 class="page-title">🏛️ Inteligencia Fiscal</h2><p class="page-subtitle">Auditoría fiscal inteligente · SAT / AEAT</p></div></header>`
+    el.innerHTML=`<header class="topbar"><div><h2 class="page-title">🏛️ Inteligencia Fiscal</h2><p class="page-subtitle">Auditoría fiscal inteligente · SAT / AEAT</p><p style="font-size:11px;color:var(--muted2);margin-top:2px;">Referencias fiscales: México — SAT / INEGI · España — AEAT / Banco de España. Valores estimados con fines informativos.</p></div></header>`
       +noDataHtml('🏛️','Sin datos fiscales','Ingresa ventas y gastos para activar el motor de análisis tributario.');
     return;
   }
@@ -10046,6 +10065,7 @@ function renderTaxView(r){
         <span style="font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;background:rgba(34,197,94,.15);color:var(--primary);border:1px solid rgba(34,197,94,.3);">${isMX?'SAT · IVA 16% · ISR':'AEAT · IVA 21% · IS 25%'}</span>
       </h2>
       <p class="page-subtitle">${esc(r.empresa||'Empresa')} · Período ${r.anio||'—'} · Análisis tributario automatizado</p>
+      <p style="font-size:11px;color:var(--muted2);margin-top:2px;">Referencias fiscales: México — SAT / INEGI · España — AEAT / Banco de España. Valores estimados con fines informativos.</p>
     </div>
     <div style="display:flex;gap:8px;align-items:center;">
       <button onclick="openCFOWith('¿Qué oportunidades fiscales tengo según mis datos?')" style="padding:8px 14px;border-radius:9px;border:1px solid rgba(167,139,250,.35);background:rgba(167,139,250,.08);color:#a78bfa;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">🤖 Preguntar al CFO</button>
@@ -11915,7 +11935,7 @@ window.fetchBenchmark=async function(){
     'Clientes Activos':   'Número de clientes que te compraron en el período. Una base amplia reduce el riesgo — si dependes de muy pocos clientes, un solo adiós puede golpear fuerte.',
     // ── Forecast y estrategia ──
     'Ventas Proyectadas': 'Estimación de los ingresos esperados para el siguiente período, calculada desde tu tasa de crecimiento histórica.',
-    'Enterprise Value':   'Valor total estimado de tu empresa en el mercado, calculado como múltiplo de tu EBITDA. Es el precio de referencia si alguien quisiera comprar tu negocio.',
+    'Enterprise Value':   'Valor total de la empresa. Se calcula como EBITDA × el múltiplo EV/EBITDA de tu sector. Representa cuánto valdría el negocio completo (deuda + capital), no solo lo que tienes en caja.',
     'Margen Neto Proy':   'El margen neto esperado al final del período proyectado, considerando las tasas de crecimiento aplicadas.',
     // ── Analíticas ──
     'Crecimiento mensual':'Variación porcentual de los ingresos respecto al mes anterior. Positivo = tu empresa crece. Negativo = necesitas revisar qué está pasando.',
@@ -12535,7 +12555,7 @@ function renderComparativosView(r){
     const sortedYrs=Object.keys(mby).map(Number).sort();
     const allPts=[];
     sortedYrs.forEach(yr=>{ (mby[yr]||[]).forEach((v,i)=>allPts.push({label:`${yr}-${MTHS[i]}`,v})); });
-    if(allPts.length<13){ body.innerHTML=hint(`⏩ Tendencia Rolling 12M: llevas ${allPts.length} de 13 meses necesarios. Sube más meses en <strong>Ventas (Opcional)</strong> o agrega otro año en <strong>Ingresar Datos</strong>.`); return; }
+    if(allPts.length<13){ body.innerHTML=hint(`⏩ Tendencia Rolling 12M: llevas ${allPts.length} de 13 meses. Un promedio móvil de 12 meses necesita 12 meses para su primer valor y 1 más para poder dibujar la tendencia. Sube más meses en <strong>Ventas (Opcional)</strong> o agrega otro año en <strong>Ingresar Datos</strong>.`); return; }
     const rolling=allPts.map((_,i)=>i<11?null:allPts.slice(i-11,i+1).reduce((a,b)=>a+b.v,0)).filter(v=>v!==null);
     const rLabels=allPts.slice(11).map(p=>p.label);
     const lastR=rolling[rolling.length-1], prevR=rolling.length>1?rolling[rolling.length-2]:null;
@@ -13418,7 +13438,7 @@ window.toggleSidebarDesktop=toggleSidebarDesktop;
     const _txEl=document.getElementById('prod-kpi-transacciones');
     if(_txEl){
       const _cob=_plVentas>0?Math.round(totalIngreso/_plVentas*100):null;
-      _txEl.textContent=totalTx.toLocaleString()+' transacciones'+(_cob!=null?' · cubre '+_cob+'% del P&L':'');
+      _txEl.innerHTML=totalTx.toLocaleString()+' transacciones'+(_cob!=null?` · <span style="color:var(--muted);">${_cob}% de ${_fm(_plVentas)} en ventas (P&L)</span>`:'');
     }
     document.getElementById('prod-kpi-top-ing').textContent=topIng?topIng.nombre:'—';
     document.getElementById('prod-kpi-top-ing-val').textContent=topIng?_fm(topIng.ingreso):'—';
@@ -13670,6 +13690,32 @@ function _updateThemeUI(){
   if(saved==='light') document.documentElement.dataset.theme='light';
   document.addEventListener('DOMContentLoaded',_updateThemeUI);
 })();
+
+window.mostrarDeteccion=function(){
+  const r=window._obbioCalc; if(!r){alert('Carga tus datos primero');return;}
+  const m=r._meta||{};
+  const badge=o=>({capturado:['#22C55E','Detectado'],derivado:['#6366F1','Derivado'],estimado:['#F5A623','Estimado'],sin_dato:['#8892A8','Sin dato']}[o]||['#8892A8','—']);
+  const chip=o=>{const b=badge(o);return `<span style="background:${b[0]}22;color:${b[0]};font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;">${b[1]}</span>`;};
+  const fnum=v=>v==null?'—':(typeof _m==='function'?_m(v):v);
+  const filas=[
+    ['Ventas',r.ventas,'capturado'],['Costo de ventas',r.cogs,'capturado'],
+    ['Gastos de administración',r.gadmin,'capturado'],['Gastos de ventas',r.gventas,'capturado'],
+    ['Depreciación',r.dep,(m.dep&&m.dep.origen)||'derivado'],
+    ['EBITDA',r.ebitda,(m.ebitda&&m.ebitda.origen)||'derivado'],
+    ['Utilidad neta',r.utilNeta,'derivado'],
+    ['Flujo operativo',r.flujoOp,(m.flujoOp&&m.flujoOp.origen)||'derivado'],
+  ];
+  const idn=[
+    ['Utilidad Bruta = Ventas − Costo', Math.abs((r.utilBruta)-(r.ventas-r.cogs))<1],
+    ['EBIT = Utilidad Bruta − Gastos Op', Math.abs((r.ebit)-((r.ventas-r.cogs)-(r.gadmin+r.gventas)))<1],
+    ['Utilidad Neta = UAI − ISR', Math.abs((r.utilNeta)-((r.uai)-(r.isr)))<1],
+    ['Activos = Pasivos + Capital', !r.balanceDesbalanceado],
+  ];
+  const rowsF=filas.map(f=>`<tr><td style="padding:8px 6px;border-bottom:1px solid var(--border2);">${f[0]}</td><td style="padding:8px 6px;text-align:right;font-weight:700;border-bottom:1px solid var(--border2);">${fnum(f[1])}</td><td style="padding:8px 6px;text-align:right;border-bottom:1px solid var(--border2);">${chip(f[2])}</td></tr>`).join('');
+  const rowsI=idn.map(x=>`<tr><td style="padding:7px 6px;border-bottom:1px solid var(--border2);">${x[0]}</td><td style="padding:7px 6px;text-align:right;border-bottom:1px solid var(--border2);color:${x[1]?'#22C55E':'#F45C5C'};font-weight:700;">${x[1]?'✓ cuadra':'✗ revisar'}</td></tr>`).join('');
+  const html=`<div style="position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;" onclick="if(event.target===this)this.remove()"><div style="background:var(--card);border:1px solid var(--border);border-radius:14px;max-width:620px;width:100%;max-height:85vh;overflow:auto;padding:22px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><h3 style="margin:0;color:var(--text);font-size:17px;">🔍 ¿Qué leyó Obbio?</h3><button onclick="this.closest('div[style*=fixed]').remove()" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;">×</button></div><p style="color:var(--muted);font-size:12px;margin:0 0 14px;">Cada número, de dónde salió y si las cuentas cuadran. Verde = detectado de tu Excel; morado = calculado; ámbar = estimado.</p><table style="width:100%;border-collapse:collapse;font-size:12.5px;color:var(--text);"><thead><tr><th style="text-align:left;padding:6px;color:var(--muted);font-size:10.5px;text-transform:uppercase;">Dato</th><th style="text-align:right;padding:6px;color:var(--muted);font-size:10.5px;text-transform:uppercase;">Valor</th><th style="text-align:right;padding:6px;color:var(--muted);font-size:10.5px;text-transform:uppercase;">Origen</th></tr></thead><tbody>${rowsF}</tbody></table><h4 style="color:var(--text);font-size:13px;margin:18px 0 6px;">Chequeo de consistencia</h4><table style="width:100%;border-collapse:collapse;font-size:12.5px;color:var(--text);"><tbody>${rowsI}</tbody></table></div></div>`;
+  const d=document.createElement('div'); d.innerHTML=html; document.body.appendChild(d.firstChild);
+};
 </script>
 </body>
 </html>
