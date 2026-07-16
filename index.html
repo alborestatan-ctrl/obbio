@@ -1073,7 +1073,7 @@ th[data-tip]{cursor:default;}
       <p class="page-subtitle" id="pageSubtitle">Transformando datos en decisiones estratégicas · —</p>
     </div>
     <div class="topbar-actions">
-      <a href="/Manual_Obbio.pdf" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border:1px solid var(--border2);border-radius:10px;color:var(--text);font-size:12px;font-weight:600;text-decoration:none;">📖 Manual de uso</a>
+      <button onclick="generarManualPDF&&generarManualPDF()" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border:1px solid var(--border2);border-radius:10px;background:none;color:var(--text);font-size:12px;font-weight:600;cursor:pointer;">📖 Manual de uso</button>
       <button onclick="generarReportePDF&&generarReportePDF()" style="padding:8px 16px;border-radius:9px;border:1px solid rgba(34,197,94,.35);background:var(--primary-dim);color:var(--primary);font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">📄 PDF</button>
       <button id="dash-clear-btn" onclick="limpiarSistema()" style="display:none;padding:8px 16px;border-radius:9px;border:1px solid rgba(244,92,92,.35);background:rgba(244,92,92,.08);color:var(--danger);font-size:12px;font-weight:700;cursor:pointer;transition:.15s;" onmouseover="this.style.background='rgba(244,92,94,.2)'" onmouseout="this.style.background='rgba(244,92,92,.08)'">🗑 Eliminar datos</button>
       <button onclick="openCFOWith('¿Cómo está la salud general de mi empresa y qué debería mejorar primero?')" style="padding:8px 14px;border-radius:9px;border:1px solid rgba(167,139,250,.35);background:rgba(167,139,250,.08);color:#a78bfa;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:background .15s;" onmouseover="this.style.background='rgba(167,139,250,.18)'" onmouseout="this.style.background='rgba(167,139,250,.08)'">🤖 Preguntar al CFO</button>
@@ -8288,6 +8288,282 @@ async function downloadTemplate(){
     doc.save('Reporte_Obbio_'+(_t(r.empresa||'Empresa').replace(/[^a-z0-9]/gi,'_'))+'_'+(r.anio||new Date().getFullYear())+'.pdf');
     if(typeof showNotif==='function') showNotif('Reporte PDF completo generado exitosamente');
   }
+  window.generarReportePDF=generarReportePDF;
+  window.generarDiagnostico=generarDiagnostico;
+  window.generarCFOInsights=generarCFOInsights;
+  window.getBM=getBM;
+  window._obbmSectorKey=_obbmSectorKey;
+
+  /* ══════════════════════════════════════════════════════
+     MANUAL DE USO + GLOSARIO  —  PDF generado client-side
+  ══════════════════════════════════════════════════════ */
+  window.generarManualPDF=async function(){
+    const ns=window.jspdf||window.jsPDF;const JsPDF=ns&&(ns.jsPDF||ns);
+    if(!JsPDF){if(typeof showNotif==='function') showNotif('Librería PDF no disponible','error');return;}
+    if(typeof showNotif==='function') showNotif('Generando Manual de Uso...','success',8000);
+
+    const doc=new JsPDF({orientation:'portrait',unit:'pt',format:'a4'});
+    const W=doc.internal.pageSize.getWidth(), H=doc.internal.pageSize.getHeight();
+    const ML=40,MR=40,MT=56,CW=W-ML-MR;
+    const C={ink:[15,23,42],white:[255,255,255],green:[34,197,94],greenDk:[21,128,61],
+      slate:[51,65,85],muted:[100,116,139],border:[226,232,240],card:[249,250,251],
+      amber:[245,158,11],red:[220,38,38],blue:[59,130,246]};
+    const _t=s=>String(s==null?'':s).replace(/[^\x00-\xFF]/g,'?').replace(/−/g,'-').replace(/—|–/g,'-').replace(/'|'/g,"'").replace(/"|"/g,'"').replace(/…/g,'...');
+    const sf=(...c)=>doc.setFillColor(...(c.length===1?c[0]:c));
+    const ss=(...c)=>doc.setDrawColor(...(c.length===1?c[0]:c));
+    const sc=(...c)=>doc.setTextColor(...(c.length===1?c[0]:c));
+    let y=MT;
+    const ensure=h=>{if(y+h>H-52){doc.addPage();y=MT;}};
+
+    const P=(t,o={})=>{
+      doc.setFont('helvetica',o.b?'bold':'normal');doc.setFontSize(o.s||9.5);sc(...(o.c||C.ink));
+      doc.splitTextToSize(_t(t),CW-(o.ind||0)).forEach(ln=>{ensure(o.lh||14);doc.text(ln,ML+(o.ind||0),y);y+=(o.lh||14);});
+      if(o.mb) y+=o.mb;
+    };
+    const SEC=(title,emoji)=>{
+      ensure(54);
+      sf(...C.green);doc.rect(ML,y,3,22,'F');
+      doc.setFont('helvetica','bold');doc.setFontSize(13);sc(...C.ink);doc.text(_t(emoji+' '+title),ML+10,y+16);
+      ss(...C.border);doc.setLineWidth(.4);doc.line(ML+10,y+24,W-MR,y+24);
+      y+=38;
+    };
+    const BULLET=(t,indent=0)=>{
+      ensure(16);
+      sf(...C.green);doc.circle(ML+indent+4,y-3.5,2,'F');
+      doc.setFont('helvetica','normal');doc.setFontSize(9);sc(...C.ink);
+      doc.splitTextToSize(_t(t),CW-indent-14).forEach((ln,i)=>{
+        if(i>0){ensure(13);doc.text(ln,ML+indent+14,y);y+=13;}
+        else{doc.text(ln,ML+indent+14,y);y+=13;}
+      });
+    };
+    const STEP=(n,t,desc)=>{
+      ensure(40);
+      sf(...C.green);doc.roundedRect(ML,y,22,22,4,4,'F');
+      doc.setFont('helvetica','bold');doc.setFontSize(11);sc(...C.white);doc.text(String(n),ML+7,y+15);
+      doc.setFont('helvetica','bold');doc.setFontSize(10);sc(...C.ink);doc.text(_t(t),ML+30,y+10);
+      doc.setFont('helvetica','normal');doc.setFontSize(8.5);sc(...C.muted);
+      doc.splitTextToSize(_t(desc),CW-34).forEach(ln=>{doc.text(ln,ML+30,y+=12);});
+      y+=16;
+    };
+    const GLINE=(term,def)=>{
+      ensure(28);
+      doc.setFont('helvetica','bold');doc.setFontSize(8.5);sc(...C.green);doc.text(_t(term),ML,y);
+      doc.setFont('helvetica','normal');doc.setFontSize(8.5);sc(...C.ink);
+      doc.splitTextToSize(_t(def),CW-4).forEach((ln,i)=>{
+        if(i===0){doc.text(ln,ML,y+=12);}else{ensure(12);doc.text(ln,ML,y+=12);}
+      });
+      ss(...C.border);doc.setLineWidth(.3);doc.line(ML,y+6,W-MR,y+6);
+      y+=14;
+    };
+
+    // ── FOOTER en todas las páginas ──
+    const FOOTER=()=>{
+      const tot=doc.getNumberOfPages();
+      for(let i=1;i<=tot;i++){
+        doc.setPage(i);
+        sf(...C.green);doc.rect(0,0,W,3,'F');
+        doc.setFont('helvetica','bold');doc.setFontSize(7);sc(...C.green);doc.text('OBBIO',ML,18);
+        doc.setFont('helvetica','normal');doc.setFontSize(7);sc(...C.muted);doc.text('Finance - Strategy - Intelligence',ML+32,18);
+        doc.setFontSize(7);doc.text('Manual de Uso  v1.0',W/2,18,{align:'center'});
+        ss(...C.border);doc.setLineWidth(.4);doc.line(ML,H-30,W-MR,H-30);
+        doc.setFont('helvetica','normal');doc.setFontSize(7);sc(...C.muted);doc.text('Confidencial - solo para usuarios autorizados',ML,H-16);
+        doc.setFont('helvetica','bold');doc.setFontSize(7);sc(...C.slate);doc.text('Pag. '+i+' / '+tot,W-MR,H-16,{align:'right'});
+      }
+    };
+
+    // ══════════════════════════════════════════════
+    //  PORTADA
+    // ══════════════════════════════════════════════
+    sf(...C.ink);doc.rect(0,0,W,H,'F');
+    sf(...C.green);doc.rect(0,H-8,W,8,'F');
+    sf(...C.green);doc.rect(0,0,W,4,'F');
+    doc.setFont('helvetica','bold');doc.setFontSize(42);sc(...C.green);doc.text('OBBIO',ML,140);
+    doc.setFont('helvetica','normal');doc.setFontSize(16);sc(...C.white);doc.text('Manual de Uso',ML,170);
+    doc.setFont('helvetica','normal');doc.setFontSize(11);sc(...[100,116,139]);doc.text('Finance - Strategy - Intelligence',ML,196);
+    // linea decorativa
+    sf(...C.green);doc.rect(ML,220,80,2,'F');
+    doc.setFont('helvetica','normal');doc.setFontSize(10);sc(...[100,116,139]);doc.text('Dashboard financiero inteligente para PyMEs',ML,260);
+    doc.text('Mexico y Espana',ML,278);
+    // version y fecha
+    doc.setFontSize(8);doc.text('v1.0  -  '+new Date().getFullYear(),ML,H-60);
+    sf(...C.white);doc.setFontSize(8);doc.text('obbio.app',W-MR,H-60,{align:'right'});
+
+    // ══════════════════════════════════════════════
+    //  PAG 2 - INDICE
+    // ══════════════════════════════════════════════
+    doc.addPage();y=MT;
+    doc.setFont('helvetica','bold');doc.setFontSize(18);sc(...C.ink);doc.text('Contenido',ML,y);y+=8;
+    ss(...C.green);doc.setLineWidth(1.5);doc.line(ML,y,ML+60,y);y+=24;
+    const idx=[
+      ['1.','Que es Obbio',3],['2.','Como empezar (5 pasos)',3],
+      ['3.','Vistas principales',3],['4.','CFO Inteligente (IA)',4],
+      ['5.','Benchmark sectorial',4],['6.','Ventas por Producto',4],
+      ['7.','Modelo Financiero',4],['8.','Glosario de KPIs',5],
+      ['9.','Preguntas frecuentes',7],['10.','Notas de uso',7],
+    ];
+    idx.forEach(([n,t,p])=>{
+      doc.setFont('helvetica','bold');doc.setFontSize(9.5);sc(...C.slate);doc.text(n,ML,y);
+      doc.setFont('helvetica','normal');sc(...C.ink);doc.text(_t(t),ML+20,y);
+      sc(...C.muted);doc.text(''+p,W-MR,y,{align:'right'});
+      ss(...C.border);doc.setLineWidth(.3);doc.line(ML+20,y+2,W-MR-12,y+2);
+      y+=20;
+    });
+
+    // ══════════════════════════════════════════════
+    //  PAG 3 - QUE ES / INICIO
+    // ══════════════════════════════════════════════
+    doc.addPage();y=MT;
+    SEC('Que es Obbio','1.');
+    P('Obbio es un dashboard financiero inteligente disenado para duenos y directores de PyMEs en Mexico y Espana. Convierte tus datos contables en indicadores accionables, estrategia automatica e inteligencia fiscal, sin necesidad de conocimientos financieros avanzados.',{mb:10});
+    P('Caracteristicas principales:',{b:true,mb:6});
+    ['Dashboard con +15 KPIs financieros en tiempo real','Analisis de Estado de Resultados, Balance y Flujo de Caja','Estrategia y diagnostico automatico con IA','Inteligencia fiscal (SAT / AEAT)','Benchmark sectorial comparado con tu industria','Ventas por producto y sucursal','Modelo financiero y proyecciones','CFO virtual disponible 24/7','Exportacion a PDF profesional','Compatible con Excel estandar'].forEach(b=>BULLET(b));
+    y+=10;
+    SEC('Como empezar (5 pasos)','2.');
+    STEP(1,'Crea tu cuenta','Registe con tu correo en obbio.app. Recibes acceso inmediato.');
+    STEP(2,'Prepara tu Excel','Usa el template descargable o tu propio Excel con columnas de Ventas, Costos y Gastos.');
+    STEP(3,'Carga tus datos','Ve a [Ingresar / Actualizar Datos] y arrastra tu archivo. El sistema detecta columnas automaticamente.');
+    STEP(4,'Revisa el preview','Confirma que los datos se mapearon correctamente y haz clic en [Generar mi Dashboard].');
+    STEP(5,'Explora y actua','Navega por las vistas, consulta al CFO y exporta tu reporte PDF.');
+
+    // ══════════════════════════════════════════════
+    //  PAG 4 - VISTAS
+    // ══════════════════════════════════════════════
+    doc.addPage();y=MT;
+    SEC('Vistas principales','3.');
+    const vistas=[
+      ['Dashboard','Vision general: KPIs clave, grafica de ingresos/EBITDA, flujo de caja y score financiero de un vistazo.'],
+      ['Centro Financiero','Estado de Resultados, Balance General, Flujo de Efectivo y Ratios Financieros detallados.'],
+      ['Estrategia & Diagnostico IA','Briefings automaticos de prioridades, riesgos y oportunidades. Tab separado con diagnostico completo IA.'],
+      ['Costos & Gastos','Desglose de COGS y gastos operativos con graficas interactivas. Haz clic en cada barra para ver el drill-down.'],
+      ['Inteligencia Fiscal','IVA, ISR/IS estimados, alertas de cumplimiento y calendario de obligaciones (SAT / AEAT).'],
+      ['Capital de Trabajo','Liquidez, CCC, DSO, DIO y analisis de ciclo operativo.'],
+      ['Deuda','Apalancamiento, cobertura de intereses y estructura de pasivos.'],
+      ['Benchmark Sectorial','Compara tus margenes y ratios contra la mediana de tu sector usando IA y fuentes oficiales.'],
+      ['Ventas por Producto','Ranking ABC, ticket promedio y correlacion producto x sucursal (requiere hoja Ventas en tu Excel).'],
+      ['Proyecciones','Forecast a 12 meses con escenarios optimista, base y conservador.'],
+      ['Modelo Financiero','Simula cambios en precios, costos y volumen con sliders interactivos.'],
+      ['Comparativos','Evolucion de KPIs entre anos si has subido multiples periodos.'],
+    ];
+    vistas.forEach(([t,d])=>{
+      ensure(32);
+      doc.setFont('helvetica','bold');doc.setFontSize(9.5);sc(...C.green);doc.text(_t(t),ML,y);
+      doc.setFont('helvetica','normal');doc.setFontSize(8.5);sc(...C.ink);
+      doc.splitTextToSize(_t(d),CW-10).forEach(ln=>{ensure(12);doc.text(ln,ML+10,y+=12);});
+      y+=8;
+    });
+
+    // ══════════════════════════════════════════════
+    //  PAG 5 - CFO IA / BENCHMARK / VENTAS / MODELO
+    // ══════════════════════════════════════════════
+    doc.addPage();y=MT;
+    SEC('CFO Inteligente (IA)','4.');
+    P('El CFO virtual responde preguntas financieras en lenguaje natural, usando el contexto de tus propios datos.',{mb:8});
+    P('Como usarlo:',{b:true,mb:4});
+    BULLET('Haz clic en el boton [Preguntar al CFO] que aparece en varias vistas.');
+    BULLET('Escribe tu pregunta: "?Cuanto puedo invertir sin descapitalizarme?", "?Que margen necesito para cubrir mis gastos fijos?"');
+    BULLET('El asistente recuerda el contexto de tu empresa durante la sesion (ultimas 3 preguntas).');
+    BULLET('Puedes hacer preguntas de seguimiento sin repetir el contexto.');
+    y+=10;
+    SEC('Benchmark Sectorial','5.');
+    P('Compara tus KPIs contra la mediana de empresas similares en tu pais.',{mb:8});
+    BULLET('Ve al Centro Financiero y ubica la tarjeta [Benchmark Sectorial].');
+    BULLET('Describe tu sector con detalle: "restaurante de comida mexicana casual" o "software B2B para logistica".');
+    BULLET('Haz clic en [Analizar]. La IA consulta fuentes oficiales (INEGI, Banco de Espana) y devuelve los rangos de referencia.');
+    BULLET('Los resultados incluyen: margen EBITDA, margen neto, liquidez, Deuda/EBITDA, DSO y ROE del sector.');
+    y+=10;
+    SEC('Ventas por Producto','6.');
+    P('Analiza que productos o servicios generan mas ingresos y en que sucursales.',{mb:8});
+    BULLET('Agrega una hoja llamada [Ventas] o [Ventas (Opcional)] a tu Excel con columnas: fecha, producto, cantidad, precio, sucursal.');
+    BULLET('Obbio detecta automaticamente las columnas al cargar el archivo.');
+    BULLET('La vista muestra: ranking ABC, ticket promedio, top por volumen y mapa de calor producto x sucursal.');
+    y+=10;
+    SEC('Modelo Financiero','7.');
+    P('Simula escenarios de negocio en tiempo real con sliders interactivos.',{mb:8});
+    BULLET('Ajusta volumen de ventas, precio promedio, COGS y gastos con los controles deslizantes.');
+    BULLET('El dashboard se recalcula instantaneamente mostrando el impacto en EBITDA y Utilidad Neta.');
+    BULLET('Usa el tab [Planeacion Fiscal] para ver la proyeccion de impuestos en el escenario simulado.');
+
+    // ══════════════════════════════════════════════
+    //  PAG 6+ - GLOSARIO
+    // ══════════════════════════════════════════════
+    doc.addPage();y=MT;
+    SEC('Glosario de KPIs','8.');
+    P('Definiciones de los indicadores financieros que aparecen en Obbio.',{mb:14,c:C.muted});
+
+    const GLOSARIO=[
+      ['Ingresos / Ventas','Todo el dinero que entro a tu empresa por ventas en el periodo, antes de descontar cualquier costo.'],
+      ['Utilidad Bruta','Lo que te queda despues de pagar lo que costo producir o comprar lo que vendiste. Formula: Ventas - COGS.'],
+      ['Margen Bruto','Que porcentaje de cada venta queda como utilidad bruta. Ejemplo: margen 40% = de $100 vendidos quedan $40 tras el costo.'],
+      ['EBIT (Resultado Operativo)','Ganancias antes de intereses e impuestos. Mide la rentabilidad operativa pura sin considerar la estructura financiera.'],
+      ['EBITDA','Ganancia operativa antes de intereses, impuestos y depreciacion. Mide rentabilidad sin distorsiones contables ni financieras.'],
+      ['Margen EBITDA','De cada $100 que vendes, cuantos son ganancia operativa pura. Benchmark saludable: 15%. Por arriba de 20% es excelente.'],
+      ['UAI (Utilidad Antes de Impuestos)','Lo que queda despues de pagar todos los gastos operativos y financieros, antes de impuestos. Formula: EBIT - G.Financieros.'],
+      ['Utilidad Neta','La ganancia real despues de pagar absolutamente todo: costos, gastos, intereses e impuestos.'],
+      ['Margen Neto','De cada $100 que vendes, cuantos terminan siendo ganancia real. Un 10% significa que por cada $100 ganas $10 netos.'],
+      ['COGS (Costo de Ventas)','Costo directo de producir o comprar lo que vendiste: materia prima, mano de obra directa, maquila.'],
+      ['Gastos Operativos','Gastos necesarios para operar el negocio que no son costo directo: administracion, ventas, nomina indirecta.'],
+      ['Gastos Financieros','Costo de la deuda: intereses de creditos, arrendamientos financieros. Aparecen despues del EBIT.'],
+      ['ISR (Mexico) / IS (Espana)','Impuesto sobre la renta o de sociedades. Estimado sobre la utilidad antes de impuestos (UAI). Tasa general: 30% MX / 25% ES.'],
+      ['IVA Trasladado','El IVA que cobraste a tus clientes. Debes entregarlo a la autoridad fiscal (SAT en MX / AEAT en ES).'],
+      ['IVA Acreditable','El IVA que pagaste en tus compras. Puedes descontarlo del IVA trasladado, reduciendo lo que debes pagar.'],
+      ['Razon Corriente (Liquidez)','Cuantas veces tus activos circulantes cubren tus pasivos a corto plazo. Mayor a 1.5x es saludable; menor a 1.0x es alerta.'],
+      ['Prueba Acida','Liquidez sin contar el inventario. Mas conservadora. Mayor a 1.0x es ideal.'],
+      ['Capital de Trabajo Neto','Activo circulante menos pasivo circulante. Si es positivo, puedes cubrir deudas de corto plazo.'],
+      ['DSO (Dias de Cobranza)','Cuantos dias tarda un cliente en pagarte en promedio. Menos dias = mejor flujo. Referente saludable: menos de 45 dias.'],
+      ['DIO (Dias de Inventario)','Cuantos dias tardas en vender tu inventario. Menos dias = mas eficiente.'],
+      ['DPO (Dias de Pago)','Cuantos dias tardas en pagar a proveedores. Mas dias = mejor para tu caja, sin danar la relacion comercial.'],
+      ['CCC (Ciclo de Conversion de Efectivo)','DSO + DIO - DPO. Cuantos dias tarda tu dinero en dar "una vuelta completa". Menos dias = mas eficiente.'],
+      ['ROE (Retorno sobre Capital)','Cuanto rinde el dinero que pusieron los socios. Si es 15%, por cada $100 invertidos la empresa genero $15 de utilidad.'],
+      ['ROA (Retorno sobre Activos)','Que tan bien usa la empresa sus activos para generar ganancias. Mayor a 10% es excelente.'],
+      ['Deuda / EBITDA','Cuantos anos de EBITDA necesitarias para pagar toda la deuda. Menos de 3x es saludable; mas de 5x es alerta.'],
+      ['Cobertura de Intereses','Cuantas veces el EBITDA cubre los intereses anuales. Mayor a 3x es solido; menor a 2x es riesgo.'],
+      ['Apalancamiento','Que proporcion de los activos esta financiada con deuda. Mayor a 70% requiere atencion.'],
+      ['Score Financiero','Calificacion global de salud financiera de 0 a 100. 80+ = Excelente; 60-79 = Saludable; 40-59 = Atencion; menos de 40 = Riesgo.'],
+      ['Flujo de Caja Operativo','Efectivo que genera (o consume) la operacion diaria, sin incluir inversiones ni deuda.'],
+      ['EBITDA Proyectado','Estimacion de la ganancia operativa esperada para el siguiente periodo, basada en la tendencia historica.'],
+      ['YoY (Crecimiento Anual)','Variacion porcentual de las ventas respecto al mismo periodo del ano anterior. Positivo = crecimiento.'],
+      ['Clasificacion ABC','Sistema de priorizacion: A = productos o clientes que generan el 80% del ingreso; B = siguiente 15%; C = el resto.'],
+      ['Ticket Promedio','Ingreso promedio por transaccion o linea de venta. Util para medir el valor de cada operacion.'],
+      ['Benchmark Sectorial','Mediana de los KPIs de empresas similares en tu sector y pais. Permite comparar tu desempeno contra el mercado.'],
+    ];
+    GLOSARIO.forEach(([t,d])=>GLINE(t,d));
+
+    // ══════════════════════════════════════════════
+    //  FAQ
+    // ══════════════════════════════════════════════
+    doc.addPage();y=MT;
+    SEC('Preguntas frecuentes','9.');
+    const faqs=[
+      ['?Que columnas necesita mi Excel?','Las columnas minimas son: Ventas (o Ingresos) y Costo de Ventas. Obbio detecta automaticamente variantes de nombre (sales, revenue, ventas, ingresos, etc.). Para analisis completo agrega: Gastos Admin, Gastos Ventas, Gastos Financieros, Caja, CxC, Inventario, Activo Fijo, Pasivos.'],
+      ['?Puedo cargar varios anos?','Si. Agrega pestanas con el nombre del ano (2022, 2023, 2024) en el mismo Excel. Obbio los integra automaticamente para la vista de Comparativos y el calculo de YoY.'],
+      ['?Mis datos estan seguros?','Los datos financieros se procesan en tu navegador y se almacenan en tu cuenta de Supabase con cifrado. No se comparten con terceros. Las consultas al CFO se envian a la IA solo con el contexto de tu sesion.'],
+      ['?Por que el EBITDA y la Utilidad Neta no cuadran?','El Estado de Resultados de Obbio sigue la formula estandar: Ventas - COGS - Gastos Operativos = EBIT; EBIT - Gastos Financieros = UAI; UAI - ISR = Utilidad Neta. El EBITDA (EBIT + Depreciacion) se muestra como linea informativa adicional.'],
+      ['?Que idioma entiende el CFO?','Espanol principalmente, pero puedes escribirle en ingles. Responde siempre en el idioma en que le preguntas.'],
+      ['?Puedo exportar a Excel?','Por ahora la exportacion es a PDF. La exportacion a Excel esta en la hoja de ruta.'],
+    ];
+    faqs.forEach(([q,a])=>{
+      ensure(50);
+      doc.setFont('helvetica','bold');doc.setFontSize(9.5);sc(...C.ink);
+      doc.splitTextToSize(_t(q),CW).forEach(ln=>{doc.text(ln,ML,y);y+=13;});
+      doc.setFont('helvetica','normal');doc.setFontSize(8.5);sc(...C.muted);
+      doc.splitTextToSize(_t(a),CW).forEach(ln=>{ensure(12);doc.text(ln,ML,y);y+=12;});
+      y+=10;
+    });
+
+    // ══════════════════════════════════════════════
+    //  NOTAS FINALES
+    // ══════════════════════════════════════════════
+    SEC('Notas de uso','10.');
+    P('- Los calculos son estimaciones basadas en los datos que el usuario ingresa. No sustituyen asesoria financiera, contable o fiscal profesional.',{mb:6,c:C.muted});
+    P('- Las referencias de benchmark son medianas sectoriales orientativas obtenidas de fuentes publicas (INEGI, Banco de Espana, INE). Los valores reales de cada empresa pueden variar significativamente.',{mb:6,c:C.muted});
+    P('- El ISR/IS estimado usa la tasa nominal configurada. El calculo real depende de deducciones, creditos fiscales y regimen especifico de cada empresa.',{mb:6,c:C.muted});
+    P('- Para soporte: alborestatan@gmail.com',{mb:6,c:C.slate,b:true});
+
+    FOOTER();
+    doc.save('Manual_Obbio_v1.pdf');
+    if(typeof showNotif==='function') showNotif('Manual descargado correctamente','success',4000);
+  };
+
   window.generarReportePDF=generarReportePDF;
   window.generarDiagnostico=generarDiagnostico;
   window.generarCFOInsights=generarCFOInsights;
