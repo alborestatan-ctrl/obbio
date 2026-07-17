@@ -1073,7 +1073,7 @@ th[data-tip]{cursor:default;}
       <p class="page-subtitle" id="pageSubtitle">Transformando datos en decisiones estratégicas · —</p>
     </div>
     <div class="topbar-actions">
-      <button onclick="window.open('/Manual_Obbio.pdf','_blank','noopener')" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border:1px solid var(--border2);border-radius:10px;background:none;color:var(--text);font-size:12px;font-weight:600;cursor:pointer;">📖 Manual de uso</button>
+      <button onclick="window.open('/api/manual','_blank','noopener')" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border:1px solid var(--border2);border-radius:10px;background:none;color:var(--text);font-size:12px;font-weight:600;cursor:pointer;">📖 Manual de uso</button>
       <a onclick="mostrarDeteccion()" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border:1px solid var(--border2);border-radius:10px;color:var(--text);font-size:12px;font-weight:600;cursor:pointer;">🔍 ¿Qué leyó Obbio?</a>
       <button onclick="generarReportePDF&&generarReportePDF()" style="padding:8px 16px;border-radius:9px;border:1px solid rgba(34,197,94,.35);background:var(--primary-dim);color:var(--primary);font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">📄 PDF</button>
       <button id="dash-clear-btn" onclick="limpiarSistema()" style="display:none;padding:8px 16px;border-radius:9px;border:1px solid rgba(244,92,92,.35);background:rgba(244,92,92,.08);color:var(--danger);font-size:12px;font-weight:700;cursor:pointer;transition:.15s;" onmouseover="this.style.background='rgba(244,92,94,.2)'" onmouseout="this.style.background='rgba(244,92,92,.08)'">🗑 Eliminar datos</button>
@@ -13691,69 +13691,89 @@ window.mostrarDeteccion=function(){
     capturado:{color:'#22C55E',label:'Detectado',icon:'↓'},
     derivado: {color:'#818CF8',label:'Calculado', icon:'⚙'},
     estimado: {color:'#F5A623',label:'Estimado',  icon:'~'},
-    sin_dato: {color:'#8892A8',label:'Sin dato',  icon:'—'},
+    sin_dato: {color:'#EF4444',label:'Falta dato',icon:'!'},
   };
   const chip=o=>{const b=BADGE[o]||BADGE.sin_dato;return `<span style="display:inline-flex;align-items:center;gap:3px;background:${b.color}18;color:${b.color};font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;border:1px solid ${b.color}35;white-space:nowrap;">${b.icon} ${b.label}</span>`;};
   const fnum=v=>v==null?'—':(typeof _m==='function'?_m(v):v);
+  // origen: si el valor es null/0 y se esperaría un dato, marcar como sin_dato
+  const origenReal=(val,orig)=>(val==null||val===0&&orig==='capturado')?'sin_dato':orig;
   const filas=[
-    ['Ventas',r.ventas,'capturado'],
-    ['Costo de ventas',r.cogs,'capturado'],
-    ['Gastos de administración',r.gadmin,'capturado'],
-    ['Gastos de ventas',r.gventas,'capturado'],
-    ['Depreciación',r.dep,(m.dep&&m.dep.origen)||'derivado'],
-    ['EBITDA',r.ebitda,(m.ebitda&&m.ebitda.origen)||'derivado'],
-    ['Utilidad neta',r.utilNeta,'derivado'],
-    ['Flujo operativo',r.flujoOp,(m.flujoOp&&m.flujoOp.origen)||'derivado'],
+    {n:'Ventas',         v:r.ventas,   o:origenReal(r.ventas,'capturado'),   solicitarA:'cliente',  nota:'Columna "ventas", "ingresos" o "total" en tu Excel'},
+    {n:'Costo de ventas',v:r.cogs,     o:origenReal(r.cogs,'capturado'),     solicitarA:'cliente',  nota:'Columna "costo", "COGS" o "costo de ventas"'},
+    {n:'G. Administración',v:r.gadmin, o:origenReal(r.gadmin,'capturado'),   solicitarA:'cliente',  nota:'Hoja de gastos, concepto "adm" o "administración"'},
+    {n:'G. Ventas',      v:r.gventas,  o:origenReal(r.gventas,'capturado'),  solicitarA:'cliente',  nota:'Hoja de gastos, concepto "vta" o "ventas"'},
+    {n:'Depreciación',   v:r.dep,      o:(m.dep&&m.dep.origen)||'derivado',  solicitarA:'cliente',  nota:'Columna "dep" o "depreciacion" (opcional)'},
+    {n:'ISR / Impuestos',v:r.isr,      o:origenReal(r.isr,(m.isr&&m.isr.origen)||'derivado'), solicitarA:'cliente', nota:'Columna "isr", "impuesto" o fiscal del cliente'},
+    {n:'EBITDA',         v:r.ebitda,   o:(m.ebitda&&m.ebitda.origen)||'derivado', solicitarA:null, nota:'Calculado: Ventas − Costo − Gastos + Dep'},
+    {n:'Utilidad neta',  v:r.utilNeta, o:'derivado',                         solicitarA:null,       nota:'Calculado: EBIT − Gastos fin. − ISR'},
+    {n:'Flujo operativo',v:r.flujoOp,  o:(m.flujoOp&&m.flujoOp.origen)||'derivado', solicitarA:null, nota:'Calculado o estimado desde EBITDA'},
+    {n:'Activos totales',v:r.activos,  o:origenReal(r.activos,(m.activos&&m.activos.origen)||'capturado'), solicitarA:'cliente', nota:'Hoja de balance, fila "total activos"'},
+    {n:'Pasivos totales',v:r.pasivos,  o:origenReal(r.pasivos,(m.pasivos&&m.pasivos.origen)||'capturado'), solicitarA:'cliente', nota:'Hoja de balance, fila "total pasivos"'},
   ];
-  const maxVal=Math.max(...filas.map(f=>Math.abs(f[1]||0)),1);
+  const maxVal=Math.max(...filas.map(f=>Math.abs(f.v||0)),1);
   const makeRow=f=>{
-    const b=BADGE[f[2]]||BADGE.sin_dato;
-    const pct=Math.min(100,Math.abs(f[1]||0)/maxVal*100);
-    const neg=f[1]<0; const barC=neg?'#F45C5C':b.color; const valC=neg?'#F45C5C':'var(--text)';
-    return `<div style="display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;margin-bottom:2px;transition:background .12s;" onmouseover="this.style.background='rgba(255,255,255,.04)'" onmouseout="this.style.background='transparent'">
-      <div style="flex:1;font-size:13px;color:var(--text);min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${f[0]}</div>
-      <div style="width:72px;flex-shrink:0;"><div style="height:3px;background:var(--border2);border-radius:2px;overflow:hidden;"><div style="height:3px;background:${barC};border-radius:2px;width:${pct}%;"></div></div></div>
-      <div style="min-width:68px;text-align:right;font-size:13px;font-weight:700;color:${valC};font-variant-numeric:tabular-nums;">${fnum(f[1])}</div>
-      <div style="min-width:96px;text-align:right;">${chip(f[2])}</div>
+    const b=BADGE[f.o]||BADGE.sin_dato;
+    const pct=Math.min(100,Math.abs(f.v||0)/maxVal*100);
+    const neg=f.v<0; const noData=f.o==='sin_dato';
+    const barC=noData?'#EF444450':neg?'#F45C5C':b.color;
+    const valC=noData?'#EF4444':neg?'#F45C5C':'var(--text)';
+    const rowBg=noData?'rgba(239,68,68,.04)':'transparent';
+    return `<div style="display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;margin-bottom:2px;background:${rowBg};transition:background .12s;" onmouseover="this.style.background='${noData?'rgba(239,68,68,.08)':'rgba(255,255,255,.04)'}'" onmouseout="this.style.background='${rowBg}'" title="${f.nota}">
+      <div style="flex:1;font-size:13px;color:${noData?'#EF4444':'var(--text)'};min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:${noData?'600':'400'};">${f.n}</div>
+      <div style="width:64px;flex-shrink:0;"><div style="height:3px;background:var(--border2);border-radius:2px;overflow:hidden;"><div style="height:3px;background:${barC};border-radius:2px;width:${noData?0:pct}%;"></div></div></div>
+      <div style="min-width:68px;text-align:right;font-size:13px;font-weight:700;color:${valC};font-variant-numeric:tabular-nums;">${noData?'—':fnum(f.v)}</div>
+      <div style="min-width:100px;text-align:right;">${chip(f.o)}</div>
     </div>`;
   };
   const idn=[
-    {label:'Utilidad Bruta = Ventas − Costo', ok:Math.abs((r.utilBruta)-(r.ventas-r.cogs))<1},
-    {label:'EBIT = Utilidad Bruta − Gastos Op', ok:Math.abs((r.ebit)-((r.ventas-r.cogs)-(r.gadmin+r.gventas)))<1},
-    {label:'Utilidad Neta = UAI − ISR', ok:Math.abs((r.utilNeta)-((r.uai)-(r.isr)))<1},
-    {label:'Activos = Pasivos + Capital', ok:!r.balanceDesbalanceado},
+    {label:'Utilidad Bruta = Ventas − Costo',  ok:Math.abs((r.utilBruta)-(r.ventas-r.cogs))<1,             causa:'Puede faltar costo de ventas completo en el Excel del cliente'},
+    {label:'EBIT = Util. Bruta − Gastos Op',   ok:Math.abs((r.ebit)-((r.ventas-r.cogs)-(r.gadmin+r.gventas)))<1, causa:'Pueden existir otros gastos operativos no incluidos en el Excel'},
+    {label:'Utilidad Neta = UAI − ISR',         ok:Math.abs((r.utilNeta)-((r.uai||0)-(r.isr||0)))<1,        causa:'El cliente no proporcionó ISR o impuestos — Obbio los estimó'},
+    {label:'Activos = Pasivos + Capital',        ok:!r.balanceDesbalanceado,                                  causa:'El balance del cliente está incompleto o tiene partidas no clasificadas'},
   ];
-  const makeCheck=x=>`<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;margin-bottom:4px;background:${x.ok?'#22C55E0A':'#F45C5C0A'};border:1px solid ${x.ok?'#22C55E22':'#F45C5C22'};transition:opacity .12s;" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">
-    <span style="font-size:14px;flex-shrink:0;">${x.ok?'✅':'⚠️'}</span>
-    <span style="flex:1;font-size:12.5px;color:var(--text);">${x.label}</span>
-    <span style="font-size:10.5px;font-weight:800;letter-spacing:.4px;color:${x.ok?'#22C55E':'#F45C5C'};text-transform:uppercase;">${x.ok?'Cuadra':'Revisar'}</span>
+  const makeCheck=x=>`<div style="border-radius:10px;margin-bottom:6px;overflow:hidden;border:1px solid ${x.ok?'#22C55E22':'#F45C5C30'};">
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:${x.ok?'#22C55E08':'#F45C5C08'};">
+      <span style="font-size:14px;flex-shrink:0;">${x.ok?'✅':'⚠️'}</span>
+      <span style="flex:1;font-size:12.5px;color:var(--text);font-weight:${x.ok?'400':'500'};">${x.label}</span>
+      <span style="font-size:10px;font-weight:800;letter-spacing:.4px;color:${x.ok?'#22C55E':'#F45C5C'};text-transform:uppercase;white-space:nowrap;">${x.ok?'✓ Cuadra':'✗ Revisar'}</span>
+    </div>
+    ${!x.ok?`<div style="padding:7px 12px 9px 36px;font-size:11.5px;color:#F5A623;border-top:1px solid #F45C5C18;">💡 ${x.causa}</div>`:''}
   </div>`;
-  const det=filas.filter(f=>f[2]==='capturado').length;
-  const der=filas.filter(f=>f[2]==='derivado').length;
-  const est=filas.filter(f=>f[2]==='estimado').length;
+  const det=filas.filter(f=>f.o==='capturado').length;
+  const der=filas.filter(f=>f.o==='derivado').length;
+  const falt=filas.filter(f=>f.o==='sin_dato');
   const chkOk=idn.filter(x=>x.ok).length;
-  const pill=(c,dot,txt)=>`<div style="display:flex;align-items:center;gap:5px;background:${c}12;border:1px solid ${c}30;border-radius:20px;padding:4px 11px;"><div style="width:6px;height:6px;border-radius:50%;background:${c};flex-shrink:0;"></div><span style="font-size:11px;font-weight:600;color:${c};">${txt}</span></div>`;
-  const allOk=chkOk===idn.length;
+  const chkFail=idn.filter(x=>!x.ok).length;
+  const pill=(c,txt)=>`<div style="display:flex;align-items:center;gap:5px;background:${c}12;border:1px solid ${c}30;border-radius:20px;padding:4px 11px;white-space:nowrap;"><div style="width:6px;height:6px;border-radius:50%;background:${c};flex-shrink:0;"></div><span style="font-size:11px;font-weight:600;color:${c};">${txt}</span></div>`;
+  // Banner de acción si hay problemas
+  const accionBanner=()=>{
+    if(falt.length===0&&chkFail===0) return `<div style="background:#22C55E10;border:1px solid #22C55E30;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#22C55E;font-weight:600;">✅ Todo luce completo — no se detectaron datos faltantes ni inconsistencias.</div>`;
+    const lineas=[];
+    if(falt.length>0) lineas.push(`<div style="margin-bottom:6px;"><span style="font-weight:700;color:#EF4444;">📋 Solicitar al cliente (${falt.length} dato${falt.length>1?'s':''} faltante${falt.length>1?'s':''}):</span><div style="margin-top:3px;padding-left:12px;color:var(--muted);font-size:11.5px;">${falt.map(f=>`• ${f.n} — ${f.nota}`).join('<br>')}</div></div>`);
+    if(chkFail>0) lineas.push(`<span style="font-weight:700;color:#F5A623;">⚠️ Inconsistencias detectadas:</span> revisa con el cliente que los datos entregados estén completos y sin errores tipográficos.`);
+    return `<div style="background:#F45C5C08;border:1px solid #F45C5C25;border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:12px;color:var(--text);line-height:1.7;">${lineas.join('')}</div>`;
+  };
   const html=`<div data-obbio-detect style="position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(6px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;" onclick="if(event.target===this)this.remove()">
-  <div style="background:var(--card);border:1px solid var(--border);border-radius:18px;max-width:660px;width:100%;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 32px 80px rgba(0,0,0,.55);">
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:18px;max-width:680px;width:100%;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 32px 80px rgba(0,0,0,.55);">
     <div style="padding:20px 22px 0;">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
-        <div><h3 style="margin:0 0 3px;font-size:17px;font-weight:700;color:var(--text);">🔍 ¿Qué leyó Obbio?</h3><p style="margin:0;font-size:12px;color:var(--muted);">Trazabilidad de cada número en tu análisis</p></div>
+        <div><h3 style="margin:0 0 3px;font-size:17px;font-weight:700;color:var(--text);">🔍 ¿Qué leyó Obbio?</h3><p style="margin:0;font-size:12px;color:var(--muted);">Trazabilidad de cada número · pasa el cursor sobre una fila para ver de dónde viene</p></div>
         <button onclick="this.closest('[data-obbio-detect]').remove()" style="background:var(--bg);border:1px solid var(--border2);color:var(--muted);font-size:13px;cursor:pointer;border-radius:8px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;">✕</button>
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;padding:10px 0;border-top:1px solid var(--border2);border-bottom:1px solid var(--border2);margin-bottom:4px;">
-        ${pill('#22C55E','',''+det+' detectado'+(det!==1?'s':'')+' de Excel')}
-        ${pill('#818CF8','',''+der+' calculado'+(der!==1?'s':''))}
-        ${est>0?pill('#F5A623','',''+est+' estimado'+(est!==1?'s':'')):''}
-        <div style="margin-left:auto;">${pill(allOk?'#22C55E':'#F5A623','',''+chkOk+'/'+idn.length+' verificaciones ✓')}</div>
+        ${pill('#22C55E',''+det+' detectado'+(det!==1?'s':''))}
+        ${pill('#818CF8',''+der+' calculado'+(der!==1?'s':''))}
+        ${falt.length>0?pill('#EF4444',''+falt.length+' faltante'+(falt.length>1?'s':'')):''}
+        <div style="margin-left:auto;">${pill(chkFail===0?'#22C55E':'#F5A623',''+chkOk+'/'+idn.length+' verificaciones ✓')}</div>
       </div>
     </div>
-    <div style="overflow-y:auto;padding:12px 22px 22px;flex:1;">
+    <div style="overflow-y:auto;padding:14px 22px 22px;flex:1;">
+      ${accionBanner()}
       <div style="display:flex;gap:10px;padding:0 10px 6px;margin-bottom:2px;">
         <div style="flex:1;font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);">Dato</div>
-        <div style="width:72px;flex-shrink:0;"></div>
+        <div style="width:64px;flex-shrink:0;"></div>
         <div style="min-width:68px;text-align:right;font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);">Valor</div>
-        <div style="min-width:96px;text-align:right;font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);">Origen</div>
+        <div style="min-width:100px;text-align:right;font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);">Origen</div>
       </div>
       ${filas.map(makeRow).join('')}
       <div style="margin-top:18px;">
