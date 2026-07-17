@@ -1073,7 +1073,7 @@ th[data-tip]{cursor:default;}
       <p class="page-subtitle" id="pageSubtitle">Transformando datos en decisiones estratégicas · —</p>
     </div>
     <div class="topbar-actions">
-      <button onclick="window.open('/api/manual','_blank','noopener')" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border:1px solid var(--border2);border-radius:10px;background:none;color:var(--text);font-size:12px;font-weight:600;cursor:pointer;">📖 Manual de uso</button>
+      <button onclick="const _a=document.createElement('a');_a.href='/api/manual';_a.download='Manual_Obbio.pdf';document.body.appendChild(_a);_a.click();document.body.removeChild(_a);" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border:1px solid var(--border2);border-radius:10px;background:none;color:var(--text);font-size:12px;font-weight:600;cursor:pointer;">📖 Manual de uso</button>
       <a onclick="mostrarDeteccion()" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border:1px solid var(--border2);border-radius:10px;color:var(--text);font-size:12px;font-weight:600;cursor:pointer;">🔍 ¿Qué leyó Obbio?</a>
       <button onclick="generarReportePDF&&generarReportePDF()" style="padding:8px 16px;border-radius:9px;border:1px solid rgba(34,197,94,.35);background:var(--primary-dim);color:var(--primary);font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">📄 PDF</button>
       <button id="dash-clear-btn" onclick="limpiarSistema()" style="display:none;padding:8px 16px;border-radius:9px;border:1px solid rgba(244,92,92,.35);background:rgba(244,92,92,.08);color:var(--danger);font-size:12px;font-weight:700;cursor:pointer;transition:.15s;" onmouseover="this.style.background='rgba(244,92,94,.2)'" onmouseout="this.style.background='rgba(244,92,92,.08)'">🗑 Eliminar datos</button>
@@ -2161,7 +2161,7 @@ th[data-tip]{cursor:default;}
       <div class="fin-kpi"><div class="fin-kpi-title">Flujo Libre (FCF)</div><div class="fin-kpi-value" id="projCash">—</div></div>
       <div class="fin-kpi"><div class="fin-kpi-title">Enterprise Value</div><div class="fin-kpi-value" id="enterpriseValue" style="color:var(--purple)">—</div></div>
       <div class="fin-kpi"><div class="fin-kpi-title">Intereses anuales</div><div class="fin-kpi-value" id="projIntereses">—</div></div>
-      <div class="fin-kpi"><div class="fin-kpi-title" id="scnIsrTitle">ISR Estimado</div><div class="fin-kpi-value" id="projISR" style="color:var(--warning)">—</div></div>
+      <div class="fin-kpi"><div class="fin-kpi-title" id="scnIsrTitle">ISR</div><div class="fin-kpi-value" id="projISR" style="color:var(--warning)">—</div></div>
       <div class="fin-kpi"><div class="fin-kpi-title">Margen Neto</div><div class="fin-kpi-value" id="projMargenNeto">—</div></div>
     </div>
     <!-- ESCENARIOS RESUMEN -->
@@ -2565,7 +2565,7 @@ Mapa Estratégico de Impacto
 
     <div class="kpi-card accent-blue">
         <div class="kpi-top">
-            <div class="kpi-label" id="taxKpiIsrLbl">ISR Estimado</div>
+            <div class="kpi-label" id="taxKpiIsrLbl">ISR</div>
             <div class="kpi-icon blue">💰</div>
         </div>
 
@@ -4160,7 +4160,7 @@ function updateModel(){
   const elIsrLbl=document.getElementById('modelIsrLabel');
   if(elIsrLbl) elIsrLbl.textContent='🏛️ Tasa '+_ft.impuesto;
   const projISRTitle=document.querySelector('#projISR')?.closest('.fin-kpi')?.querySelector('.fin-kpi-title');
-  if(projISRTitle) projISRTitle.textContent=_ft.impuesto+' Estimado';
+  if(projISRTitle) projISRTitle.textContent=_ft.impuesto;
 
   // Escenarios
   const _sym=window._currSym||'$';
@@ -5206,13 +5206,7 @@ function calcFinanciero(){
   };
 }
 
-/* ── badgeEstimado: helper para marcar datos estimados en pantalla (FASE 3) ── */
-function badgeEstimado(metaCampo){
-  if(!metaCampo||metaCampo.origen==='capturado'||metaCampo.origen==='derivado') return '';
-  if(metaCampo.origen==='sin_dato') return '';
-  const tip=metaCampo.supuesto?` · ${metaCampo.supuesto}`:'';
-  return `<span class="badge-est" title="Estimado${tip}" aria-label="Estimado">ⓘ</span>`;
-}
+function badgeEstimado(){ return ''; }
 
 /* Nota visible de datos faltantes para Flujo de Caja (usa los supuesto del motor) */
 function notaEstimadosFlujo(meta){
@@ -5539,10 +5533,10 @@ function mostrarResultados(r){
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px;">
     <div class="res-kpi"><div class="res-kpi-label">Ingresos</div><div class="res-kpi-val">${fmt(r.ventas)}</div><div class="res-kpi-sub">Base de cálculo</div></div>
     <div class="res-kpi"><div class="res-kpi-label">Utilidad Bruta</div><div class="res-kpi-val" style="color:${r.utilBruta>=0?'var(--success)':'var(--danger)'}">${fmt(r.utilBruta)}</div><div class="res-kpi-sub">Margen ${fmtPct(r.margenBruto)}</div></div>
-    <div class="res-kpi"><div class="res-kpi-label">EBITDA${badgeEstimado(r._meta?.ebitda)}</div><div class="res-kpi-val" style="color:var(--primary)">${fmt(r.ebitda)}</div><div class="res-kpi-sub">Margen ${fmtPct(r.margenEbitda)}</div></div>
+    <div class="res-kpi"><div class="res-kpi-label">EBITDA</div><div class="res-kpi-val" style="color:var(--primary)">${fmt(r.ebitda)}</div><div class="res-kpi-sub">Margen ${fmtPct(r.margenEbitda)}</div></div>
     <div class="res-kpi"><div class="res-kpi-label">Utilidad Neta</div><div class="res-kpi-val" style="color:${r.utilNeta>=0?'var(--success)':'var(--danger)'}">${fmt(r.utilNeta)}</div><div class="res-kpi-sub">Margen ${fmtPct(r.margenNeto)}</div></div>
     <div class="res-kpi"><div class="res-kpi-label">Flujo de Caja</div><div class="res-kpi-val" style="color:${r.flujoNeto>=0?'var(--success)':'var(--danger)'}">${fmt(r.flujoNeto)}</div><div class="res-kpi-sub">Operativo: ${fmt(r.flujoOp)}</div></div>
-    <div class="res-kpi"><div class="res-kpi-label">${(r.fiscal?.etiquetaImpuesto||'ISR')} Estimado${badgeEstimado(r._meta?.isr)}</div><div class="res-kpi-val" style="color:var(--warning)">${fmt(r.isr)}</div><div class="res-kpi-sub">Tasa ${fmtPct(r.isr/Math.max(r.uai,1)*100)}</div></div>
+    <div class="res-kpi"><div class="res-kpi-label">${(r.fiscal?.etiquetaImpuesto||'ISR')}</div><div class="res-kpi-val" style="color:var(--warning)">${fmt(r.isr)}</div><div class="res-kpi-sub">Tasa ${fmtPct(r.isr/Math.max(r.uai,1)*100)}</div></div>
   </div>
 
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
@@ -5559,9 +5553,9 @@ function mostrarResultados(r){
           <tr style="border-bottom:1px solid var(--border2);background:rgba(34,197,94,.06);"><td style="padding:9px 12px;font-weight:700;">= EBIT</td><td style="padding:9px 12px;font-weight:700;text-align:right;">${fmt(r.ebit)} <small style="color:var(--muted);font-weight:400;">${fmtPct(r.margenOp)}</small></td></tr>
           <tr style="border-bottom:1px solid var(--border2);"><td style="padding:9px 12px;color:var(--muted);">(−) G. Financieros</td><td style="padding:9px 12px;font-weight:700;text-align:right;color:var(--danger);">(${fmt(r.gfin)})</td></tr>
           <tr style="border-bottom:1px solid var(--border2);"><td style="padding:9px 12px;color:var(--muted);">= UAI</td><td style="padding:9px 12px;font-weight:700;text-align:right;">${fmt(r.uai)}</td></tr>
-          <tr style="border-bottom:1px solid var(--border2);"><td style="padding:9px 12px;color:var(--muted);">(−) ${(r.fiscal?.etiquetaImpuesto||'ISR')} estimado${badgeEstimado(r._meta?.isr)}</td><td style="padding:9px 12px;font-weight:700;text-align:right;color:var(--warning);">(${fmt(r.isr)})</td></tr>
+          <tr style="border-bottom:1px solid var(--border2);"><td style="padding:9px 12px;color:var(--muted);">(−) ${(r.fiscal?.etiquetaImpuesto||'ISR')}</td><td style="padding:9px 12px;font-weight:700;text-align:right;color:var(--warning);">(${fmt(r.isr)})</td></tr>
           <tr style="background:rgba(34,211,160,.08);"><td style="padding:11px 12px;font-weight:800;font-size:14px;">= UTILIDAD NETA</td><td style="padding:11px 12px;font-weight:800;text-align:right;font-size:15px;color:${r.utilNeta>=0?'var(--success)':'var(--danger)'};">${fmt(r.utilNeta)} <small style="font-size:11px;font-weight:400;">${fmtPct(r.margenNeto)}</small></td></tr>
-          <tr style="border-top:2px dashed var(--border2);opacity:.7;"><td style="padding:8px 12px;color:var(--muted);font-style:italic;">EBITDA (informativo)${badgeEstimado(r._meta?.ebitda)}</td><td style="padding:8px 12px;font-weight:700;text-align:right;color:var(--primary);">${fmt(r.ebitda)} <small style="font-weight:400;">${fmtPct(r.margenEbitda)}</small></td></tr>
+          <tr style="border-top:2px dashed var(--border2);opacity:.7;"><td style="padding:8px 12px;color:var(--muted);font-style:italic;">EBITDA (informativo)</td><td style="padding:8px 12px;font-weight:700;text-align:right;color:var(--primary);">${fmt(r.ebitda)} <small style="font-weight:400;">${fmtPct(r.margenEbitda)}</small></td></tr>
         </table>
       </div>
     </div>
@@ -8074,13 +8068,13 @@ async function downloadTemplate(){
     const isrEst=r.isr||f.isr||0;
     const cargaTotal=isrEst+ivaN;
     const txW=(CW-12)/4,txH=60;ensure(txH+2);
-    KCARD(ML,           y,txW,txH,isMX?'ISR Estimado':'Imp. Soc.',_mv(isrEst),isrEst>0?_pv(isrEst/r.ventas*100)+' ventas':'N/D',C.red);
+    KCARD(ML,           y,txW,txH,isMX?'ISR':'Imp. Soc.',_mv(isrEst),isrEst>0?_pv(isrEst/r.ventas*100)+' ventas':'N/D',C.red);
     KCARD(ML+txW+4,     y,txW,txH,'IVA Trasladado',  _mv(ivaT),  isMX?'IVA cobrado 16%':'IVA 21%',C.slate);
     KCARD(ML+2*(txW+4), y,txW,txH,'IVA Acreditable', _mv(ivaA),  'IVA pagado deducible',C.teal);
     KCARD(ML+3*(txW+4), y,txW,txH,'IVA Neto a Pagar',_mv(ivaN),  ivaN>0?'Pago al '+(isMX?'SAT':'AEAT'):'Saldo a favor',ivaN>0?C.amber:C.green);
     y+=txH+10;
     TABLE(['Concepto Fiscal','Importe','% Ventas'],
-      [[isMX?'ISR estimado':'Impuesto Sociedades',_mv(isrEst),r.ventas>0?_pv(isrEst/r.ventas*100):'N/D'],
+      [[isMX?'ISR':'Impuesto Sociedades',_mv(isrEst),r.ventas>0?_pv(isrEst/r.ventas*100):'N/D'],
        ['IVA trasladado',_mv(ivaT),r.ventas>0?_pv(ivaT/r.ventas*100):'N/D'],
        ['IVA acreditable',_mv(ivaA),r.ventas>0?_pv(ivaA/r.ventas*100):'N/D'],
        ['IVA neto',_mv(ivaN),r.ventas>0?_pv(ivaN/r.ventas*100):'N/D'],
@@ -8447,7 +8441,7 @@ async function downloadTemplate(){
       ['Centro Financiero','Estado de Resultados, Balance General, Flujo de Efectivo y Ratios Financieros detallados.'],
       ['Estrategia & Diagnostico IA','Briefings automaticos de prioridades, riesgos y oportunidades. Tab separado con diagnostico completo IA.'],
       ['Costos & Gastos','Desglose de COGS y gastos operativos con graficas interactivas. Haz clic en cada barra para ver el drill-down.'],
-      ['Inteligencia Fiscal','IVA, ISR/IS estimados, alertas de cumplimiento y calendario de obligaciones (SAT / AEAT).'],
+      ['Inteligencia Fiscal','IVA, ISR/IS calculados, alertas de cumplimiento y calendario de obligaciones (SAT / AEAT).'],
       ['Capital de Trabajo','Liquidez, CCC, DSO, DIO y analisis de ciclo operativo.'],
       ['Deuda','Apalancamiento, cobertura de intereses y estructura de pasivos.'],
       ['Benchmark Sectorial','Compara tus margenes y ratios contra la mediana de tu sector usando IA y fuentes oficiales.'],
@@ -8515,7 +8509,7 @@ async function downloadTemplate(){
       ['COGS (Costo de Ventas)','Costo directo de producir o comprar lo que vendiste: materia prima, mano de obra directa, maquila.'],
       ['Gastos Operativos','Gastos necesarios para operar el negocio que no son costo directo: administracion, ventas, nomina indirecta.'],
       ['Gastos Financieros','Costo de la deuda: intereses de creditos, arrendamientos financieros. Aparecen despues del EBIT.'],
-      ['ISR (Mexico) / IS (Espana)','Impuesto sobre la renta o de sociedades. Estimado sobre la utilidad antes de impuestos (UAI). Tasa general: 30% MX / 25% ES.'],
+      ['ISR (Mexico) / IS (Espana)','Impuesto sobre la renta o de sociedades. Calculado sobre la utilidad antes de impuestos (UAI). Tasa general: 30% MX / 25% ES.'],
       ['IVA Trasladado','El IVA que cobraste a tus clientes. Debes entregarlo a la autoridad fiscal (SAT en MX / AEAT en ES).'],
       ['IVA Acreditable','El IVA que pagaste en tus compras. Puedes descontarlo del IVA trasladado, reduciendo lo que debes pagar.'],
       ['Razon Corriente (Liquidez)','Cuantas veces tus activos circulantes cubren tus pasivos a corto plazo. Mayor a 1.5x es saludable; menor a 1.0x es alerta.'],
@@ -10018,7 +10012,7 @@ const TaxNarratives=(function(){
 function renderTaxView(r){
   const el=document.getElementById('taxView'); if(!el) return;
   if(!r||!r.ventas){
-    el.innerHTML=`<header class="topbar"><div><h2 class="page-title">🏛️ Inteligencia Fiscal</h2><p class="page-subtitle">Auditoría fiscal inteligente · SAT / AEAT</p><p style="font-size:11px;color:var(--muted2);margin-top:2px;">Referencias fiscales: México — SAT / INEGI · España — AEAT / Banco de España. Valores estimados con fines informativos.</p></div></header>`
+    el.innerHTML=`<header class="topbar"><div><h2 class="page-title">🏛️ Inteligencia Fiscal</h2><p class="page-subtitle">Auditoría fiscal inteligente · SAT / AEAT</p></div></header>`
       +noDataHtml('🏛️','Sin datos fiscales','Ingresa ventas y gastos para activar el motor de análisis tributario.');
     return;
   }
@@ -10058,7 +10052,6 @@ function renderTaxView(r){
         <span style="font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;background:rgba(34,197,94,.15);color:var(--primary);border:1px solid rgba(34,197,94,.3);">${isMX?'SAT · IVA 16% · ISR':'AEAT · IVA 21% · IS 25%'}</span>
       </h2>
       <p class="page-subtitle">${esc(r.empresa||'Empresa')} · Período ${r.anio||'—'} · Análisis tributario automatizado</p>
-      <p style="font-size:11px;color:var(--muted2);margin-top:2px;">Referencias fiscales: México — SAT / INEGI · España — AEAT / Banco de España. Valores estimados con fines informativos.</p>
     </div>
     <div style="display:flex;gap:8px;align-items:center;">
       <button onclick="openCFOWith('¿Qué oportunidades fiscales tengo según mis datos?')" style="padding:8px 14px;border-radius:9px;border:1px solid rgba(167,139,250,.35);background:rgba(167,139,250,.08);color:#a78bfa;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">🤖 Preguntar al CFO</button>
@@ -10067,10 +10060,10 @@ function renderTaxView(r){
     </div>
   </header>
 
-  <!-- ── DISCLAIMER ESTIMACIÓN FISCAL ── -->
-  <div style="padding:10px 16px;border-radius:10px;background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.2);margin-bottom:14px;display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted);">
-    <span style="font-size:15px;flex-shrink:0;">ℹ️</span>
-    <span><strong style="color:var(--text);">Información orientativa. No constituye asesoría fiscal oficial.</strong> Los cálculos son estimaciones basadas en tus cifras y tasas configurables. El IVA acreditable se estima solo sobre el costo de ventas (excluye IVA de gastos operativos), por lo que el IVA neto puede estar sobreestimado, especialmente en empresas de servicios. No constituyen declaración fiscal ni dato oficial del ${isMX?'SAT':'AEAT'}. Consulta a tu especialista Obbio (si aplica).</span>
+  <!-- ── NOTA FISCAL ── -->
+  <div style="padding:10px 16px;border-radius:10px;background:rgba(99,102,241,.07);border:1px solid rgba(99,102,241,.2);margin-bottom:14px;display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted);">
+    <span style="font-size:15px;flex-shrink:0;">🏛️</span>
+    <span>Análisis fiscal calculado con base en los datos del cliente y tasas oficiales configuradas (${isMX?'SAT México — tasa ISR 30%':'AEAT España — tipo IS 25%'}). No constituye declaración fiscal ni asesoría legal.</span>
   </div>
   <div id="resumen-taxView" class="obbio-resumen" style="display:none;"></div>
   <p id="insight-taxView" class="chart-insight"></p>
@@ -10262,7 +10255,7 @@ function renderTaxView(r){
         <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--warning);margin-bottom:8px;">ISR Intelligence</div>
         <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="font-size:12px;color:var(--muted);">Base gravable (UAI)</span><span style="font-size:12px;font-weight:700;">${_m(r.uai)}</span></div>
         <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="font-size:12px;color:var(--muted);">Tasa nominal</span><span style="font-size:12px;font-weight:700;">30%</span></div>
-        <div style="display:flex;justify-content:space-between;padding-top:6px;border-top:1px solid var(--border2);"><span style="font-size:12px;font-weight:700;">ISR estimado</span><span style="font-size:13px;font-weight:800;color:var(--warning);">${_m(r.isr)}</span></div>
+        <div style="display:flex;justify-content:space-between;padding-top:6px;border-top:1px solid var(--border2);"><span style="font-size:12px;font-weight:700;">ISR</span><span style="font-size:13px;font-weight:800;color:var(--warning);">${_m(r.isr)}</span></div>
       </div>
       <div style="padding:14px;border-radius:10px;background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.15);">
         <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--success);margin-bottom:8px;">CFDI & Cumplimiento</div>
@@ -10322,7 +10315,7 @@ function renderTaxView(r){
   if(insTax){insTax.textContent=`Tax Health Score: ${score}/100 — ${score>=80?'riesgo bajo, posición fiscal saludable':score>=60?'riesgo moderado, revisar anomalías identificadas':'riesgo alto, atender hallazgos prioritarios'}.`;insTax.classList.add('visible');}
   _obbioResumen('Inteligencia Fiscal',[
     {label:'Tax Health Score',value:score+'/100'},
-    {label:(r.fiscal?.etiquetaImpuesto||'ISR')+' estimado',value:r.isr?_m(r.isr):null},
+    {label:(r.fiscal?.etiquetaImpuesto||'ISR'),value:r.isr?_m(r.isr):null},
     {label:'Carga fiscal total',value:r.ventas?_pp(cargaTotal/r.ventas*100):null},
     {label:'Anomalías',value:anoms.length+' hallazgos'},
   ],'resumen-taxView');
@@ -10374,7 +10367,7 @@ function renderFinancialCenterView(r){
           <tr style="border-bottom:1px solid var(--border2);background:rgba(34,197,94,.06);"><td style="padding:10px 14px;font-weight:800;">= EBIT</td><td style="padding:10px 14px;text-align:right;font-weight:800;">${_m(r.ebit)}</td><td style="padding:10px 14px;text-align:right;font-weight:700;">${_pp(r.margenOp)}</td></tr>
           <tr style="border-bottom:1px solid var(--border2);"><td style="padding:10px 14px;color:var(--muted);">(−) G. Financieros</td><td style="padding:10px 14px;text-align:right;font-weight:700;color:var(--danger);">(${_m(r.gfin)})</td><td style="padding:10px 14px;text-align:right;">${_pp(r.gfin/r.ventas*100)}</td></tr>
           <tr style="border-bottom:1px solid var(--border2);"><td style="padding:10px 14px;color:var(--muted);">= UAI</td><td style="padding:10px 14px;text-align:right;font-weight:700;">${_m(r.uai)}</td><td style="padding:10px 14px;text-align:right;">${_pp(r.uai/r.ventas*100)}</td></tr>
-          <tr style="border-bottom:1px solid var(--border2);"><td style="padding:10px 14px;color:var(--muted);">(−) ${r.fiscal?.etiquetaImpuesto||'ISR'} estimado</td><td style="padding:10px 14px;text-align:right;font-weight:700;color:var(--warning);">(${_m(r.isr)})</td><td style="padding:10px 14px;text-align:right;">${_pp(r.isr/r.ventas*100)}</td></tr>
+          <tr style="border-bottom:1px solid var(--border2);"><td style="padding:10px 14px;color:var(--muted);">(−) ${r.fiscal?.etiquetaImpuesto||'ISR'}</td><td style="padding:10px 14px;text-align:right;font-weight:700;color:var(--warning);">(${_m(r.isr)})</td><td style="padding:10px 14px;text-align:right;">${_pp(r.isr/r.ventas*100)}</td></tr>
           <tr style="background:rgba(34,211,160,.06);"><td style="padding:11px 14px;font-weight:800;font-size:14px;">= UTILIDAD NETA</td><td style="padding:11px 14px;text-align:right;font-weight:800;font-size:15px;color:${r.utilNeta>=0?'var(--success)':'var(--danger)'};">${_m(r.utilNeta)}</td><td style="padding:11px 14px;text-align:right;font-weight:800;">${_pp(r.margenNeto)}</td></tr>
           <tr style="border-top:2px dashed var(--border2);opacity:.7;"><td style="padding:8px 14px;color:var(--muted);font-style:italic;">EBITDA (informativo)</td><td style="padding:8px 14px;text-align:right;font-weight:700;color:var(--primary);">${_m(r.ebitda)}</td><td style="padding:8px 14px;text-align:right;color:var(--primary);">${_pp(r.margenEbitda)}</td></tr>
         </tbody>
@@ -11012,7 +11005,7 @@ async function copilotSend(){
 
 function _metaEstimadosLine(r,plain){
   const _meta=r?._meta; if(!_meta) return '';
-  const labels={dep:plain?'depreciacion':'Depreciacion',ebitda:plain?'ganancia operativa':'EBITDA',isr:plain?'impuesto estimado':'ISR',flujoInv:plain?'flujo de inversion':'Flujo de inversion',flujoFin:plain?'flujo financiero':'Flujo financiero',ivaAcreditable:'IVA acreditable',ivaTrasladado:'IVA trasladado'};
+  const labels={dep:plain?'depreciacion':'Depreciacion',ebitda:plain?'ganancia operativa':'EBITDA',isr:plain?'impuesto':'ISR',flujoInv:plain?'flujo de inversion':'Flujo de inversion',flujoFin:plain?'flujo financiero':'Flujo financiero',ivaAcreditable:'IVA acreditable',ivaTrasladado:'IVA trasladado'};
   const items=Object.entries(_meta).filter(([k,v])=>v?.origen==='estimado'&&labels[k]).map(([k,v])=>labels[k]+(v.supuesto?' ('+v.supuesto+')':''));
   if(!items.length) return '';
   return '\nIMPORTANTE: los siguientes datos son ESTIMACIONES internas, no cifras exactas: '+items.join('; ')+'. Al mencionarlos, aclaralo y no los presentes como definitivos.';
@@ -11658,10 +11651,10 @@ function _updateIsrLabel(){
   if(lbl) lbl.textContent='🏛️ Tasa '+L.impuestoUtilidad;
   // Scenario planner KPI title
   const scnT=document.getElementById('scnIsrTitle');
-  if(scnT) scnT.textContent=L.impuestoUtilidad+' Estimado';
+  if(scnT) scnT.textContent=L.impuestoUtilidad;
   // Tax view static placeholder KPI label
   const taxKpi=document.getElementById('taxKpiIsrLbl');
-  if(taxKpi) taxKpi.textContent=L.impuestoUtilidad+' Estimado';
+  if(taxKpi) taxKpi.textContent=L.impuestoUtilidad;
   // Tax view fiscal calendar row
   const taxCal=document.getElementById('taxCalISR');
   if(taxCal) taxCal.textContent=pais==='ES'?'Pago a cuenta IS':'Pago Provisional ISR';
@@ -11905,9 +11898,9 @@ window.fetchBenchmark=async function(){
     'Cobertura Intereses':'Cuántas veces puede tu EBITDA cubrir el pago de intereses de tu deuda. Si es 3x, significa que tus ganancias triplican lo que debes de intereses.',
     'Apalancamiento':     'Qué proporción de tus activos está financiada con deuda. Alto apalancamiento puede amplificar ganancias, pero también amplifica el riesgo.',
     // ── Fiscal ──
-    'ISR Estimado':       'Impuesto Sobre la Renta estimado que deberás pagar al SAT sobre tu utilidad del período. Es un estimado basado en la tasa estándar del 30%.',
-    'ISR':                'Impuesto Sobre la Renta estimado que deberás pagar al SAT sobre tu utilidad del período. Es un estimado basado en la tasa estándar del 30%.',
-    'IS Estimado':        'Impuesto de Sociedades estimado que deberás pagar a la AEAT sobre tu base imponible. Estimado basado en el tipo general del 25%.',
+    'ISR Estimado':       'Impuesto Sobre la Renta calculado sobre tu utilidad del período aplicando la tasa nominal del 30% (art. 9 LISR). El monto real depende de deducciones autorizadas y régimen fiscal específico.',
+    'ISR':                'Impuesto Sobre la Renta calculado sobre tu utilidad del período aplicando la tasa nominal del 30% (art. 9 LISR). El monto real depende de deducciones autorizadas y régimen fiscal específico.',
+    'IS Estimado':        'Impuesto de Sociedades calculado sobre la base imponible al tipo general del 25% (Ley 27/2014 LIS). El importe definitivo depende de ajustes fiscales y deducciones específicas.',
     'IS':                 'Impuesto de Sociedades. Grava el beneficio neto de la sociedad al tipo general del 25%. Gestionado ante la AEAT.',
     'IVA por Enterar':    'Diferencia entre el IVA que cobraste a tus clientes y el que tú pagaste a tus proveedores. Ese saldo es lo que debes entregar a la autoridad fiscal.',
     'IVA Trasladado':     'El IVA que cobraste a tus clientes en tus ventas. Este dinero no es tuyo — debes entregarlo a la autoridad fiscal (SAT en MX · AEAT en ES).',
@@ -13688,28 +13681,29 @@ window.mostrarDeteccion=function(){
   const r=window._obbioCalc; if(!r){alert('Carga tus datos primero');return;}
   const m=r._meta||{};
   const BADGE={
-    capturado:{color:'#22C55E',label:'Detectado',icon:'↓'},
-    derivado: {color:'#818CF8',label:'Calculado', icon:'⚙'},
-    estimado: {color:'#F5A623',label:'Estimado',  icon:'~'},
-    sin_dato: {color:'#EF4444',label:'Falta dato',icon:'!'},
+    capturado:{color:'#22C55E',label:'Detectado', icon:'↓'},
+    derivado: {color:'#818CF8',label:'Calculado',  icon:'⚙'},
+    sin_dato: {color:'#EF4444',label:'Sin dato',   icon:'!'},
   };
   const chip=o=>{const b=BADGE[o]||BADGE.sin_dato;return `<span style="display:inline-flex;align-items:center;gap:3px;background:${b.color}18;color:${b.color};font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;border:1px solid ${b.color}35;white-space:nowrap;">${b.icon} ${b.label}</span>`;};
   const fnum=v=>v==null?'—':(typeof _m==='function'?_m(v):v);
-  // solo los inputs primarios que Obbio no puede calcular pueden ser sin_dato
-  const primario=(val,nota)=>val==null?{o:'sin_dato',solicitarA:'cliente',nota}:{o:'capturado',solicitarA:null,nota};
+  // input(val): detectado si vino del Excel, sin_dato si no existe
+  const input=(val,nota)=>({v:val, o:val!=null?'capturado':'sin_dato', solicitarA:val==null?'cliente':null, nota});
+  // calc(val): calculado por Obbio a partir de inputs reales; sin_dato si no se pudo calcular
+  const calc=(val,nota)=>({v:val, o:val!=null?'derivado':'sin_dato', solicitarA:null, nota});
   const filas=[
-    {...primario(r.ventas, 'Columna "ventas", "ingresos" o "total" en tu Excel'),  n:'Ventas'},
-    {...primario(r.cogs,   'Columna "costo", "COGS" o "costo de ventas"'),         n:'Costo de ventas'},
-    {...primario(r.gadmin, 'Hoja de gastos, concepto "adm" o "administración"'),   n:'G. Administración'},
-    {...primario(r.gventas,'Hoja de gastos, concepto "vta" o "ventas"'),            n:'G. Ventas'},
-    {n:'Depreciación',    v:r.dep,      o:(m.dep&&m.dep.origen)||'estimado',   solicitarA:null, nota:'Obbio la estima si no aparece en el Excel'},
-    {n:'ISR / Impuestos', v:r.isr,      o:'estimado',                          solicitarA:null, nota:'Obbio aplica tasa fiscal según país (MX 30% / ES 25%)'},
-    {n:'EBITDA',          v:r.ebitda,   o:'derivado',                          solicitarA:null, nota:'Calculado: Ventas − Costo − Gastos + Dep'},
-    {n:'Utilidad neta',   v:r.utilNeta, o:'derivado',                          solicitarA:null, nota:'Calculado: EBIT − Gastos fin. − ISR'},
-    {n:'Flujo operativo', v:r.flujoOp,  o:'derivado',                          solicitarA:null, nota:'Derivado desde EBITDA − Capex estimado'},
-    {n:'Activos totales', v:r.activos,  o:r.activos>0?(m.activos&&m.activos.origen||'capturado'):'estimado', solicitarA:null, nota:'Obbio suma activos si hay balance; estima si no'},
-    {n:'Pasivos totales', v:r.pasivos,  o:r.pasivos>0?(m.pasivos&&m.pasivos.origen||'capturado'):'estimado', solicitarA:null, nota:'Obbio suma pasivos si hay balance; estima si no'},
-  ].map(f=>({v:null,...f}));
+    {n:'Ventas',           ...input(r.ventas,   'Columna "ventas", "ingresos" o "total"')},
+    {n:'Costo de ventas',  ...input(r.cogs,     'Columna "costo", "COGS" o "costo de ventas"')},
+    {n:'G. Administración',...input(r.gadmin,   'Hoja de gastos, concepto "adm" o "administración"')},
+    {n:'G. Ventas',        ...input(r.gventas,  'Hoja de gastos, concepto "vta" o "ventas"')},
+    {n:'Depreciación',     ...input(r.dep!=null&&r.dep>0?r.dep:null, 'Columna "dep" o "depreciación" en tu Excel')},
+    {n:'ISR / Impuestos',  ...input(r.isr!=null&&r.isr!==0?r.isr:null, 'Columna "isr" o "impuesto sobre la renta" en tu Excel')},
+    {n:'EBITDA',           ...calc(r.ebitda,    'Ventas − Costo − Gastos Oper. + Depreciación')},
+    {n:'Utilidad neta',    ...calc(r.utilNeta,  'EBIT − Gastos financieros − ISR')},
+    {n:'Flujo operativo',  ...calc(r.flujoOp,   'EBITDA − variación de capital de trabajo')},
+    {n:'Activos totales',  ...input(r.activos>0?r.activos:null,  'Hoja de balance, fila "total activos"')},
+    {n:'Pasivos totales',  ...input(r.pasivos>0?r.pasivos:null,  'Hoja de balance, fila "total pasivos"')},
+  ];
   const maxVal=Math.max(...filas.map(f=>Math.abs(f.v||0)),1);
   const makeRow=f=>{
     const b=BADGE[f.o]||BADGE.sin_dato;
