@@ -13695,21 +13695,21 @@ window.mostrarDeteccion=function(){
   };
   const chip=o=>{const b=BADGE[o]||BADGE.sin_dato;return `<span style="display:inline-flex;align-items:center;gap:3px;background:${b.color}18;color:${b.color};font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;border:1px solid ${b.color}35;white-space:nowrap;">${b.icon} ${b.label}</span>`;};
   const fnum=v=>v==null?'—':(typeof _m==='function'?_m(v):v);
-  // origen: si el valor es null/0 y se esperaría un dato, marcar como sin_dato
-  const origenReal=(val,orig)=>(val==null||val===0&&orig==='capturado')?'sin_dato':orig;
+  // solo los inputs primarios que Obbio no puede calcular pueden ser sin_dato
+  const primario=(val,nota)=>val==null?{o:'sin_dato',solicitarA:'cliente',nota}:{o:'capturado',solicitarA:null,nota};
   const filas=[
-    {n:'Ventas',         v:r.ventas,   o:origenReal(r.ventas,'capturado'),   solicitarA:'cliente',  nota:'Columna "ventas", "ingresos" o "total" en tu Excel'},
-    {n:'Costo de ventas',v:r.cogs,     o:origenReal(r.cogs,'capturado'),     solicitarA:'cliente',  nota:'Columna "costo", "COGS" o "costo de ventas"'},
-    {n:'G. Administración',v:r.gadmin, o:origenReal(r.gadmin,'capturado'),   solicitarA:'cliente',  nota:'Hoja de gastos, concepto "adm" o "administración"'},
-    {n:'G. Ventas',      v:r.gventas,  o:origenReal(r.gventas,'capturado'),  solicitarA:'cliente',  nota:'Hoja de gastos, concepto "vta" o "ventas"'},
-    {n:'Depreciación',   v:r.dep,      o:(m.dep&&m.dep.origen)||'derivado',  solicitarA:'cliente',  nota:'Columna "dep" o "depreciacion" (opcional)'},
-    {n:'ISR / Impuestos',v:r.isr,      o:origenReal(r.isr,(m.isr&&m.isr.origen)||'derivado'), solicitarA:'cliente', nota:'Columna "isr", "impuesto" o fiscal del cliente'},
-    {n:'EBITDA',         v:r.ebitda,   o:(m.ebitda&&m.ebitda.origen)||'derivado', solicitarA:null, nota:'Calculado: Ventas − Costo − Gastos + Dep'},
-    {n:'Utilidad neta',  v:r.utilNeta, o:'derivado',                         solicitarA:null,       nota:'Calculado: EBIT − Gastos fin. − ISR'},
-    {n:'Flujo operativo',v:r.flujoOp,  o:(m.flujoOp&&m.flujoOp.origen)||'derivado', solicitarA:null, nota:'Calculado o estimado desde EBITDA'},
-    {n:'Activos totales',v:r.activos,  o:origenReal(r.activos,(m.activos&&m.activos.origen)||'capturado'), solicitarA:'cliente', nota:'Hoja de balance, fila "total activos"'},
-    {n:'Pasivos totales',v:r.pasivos,  o:origenReal(r.pasivos,(m.pasivos&&m.pasivos.origen)||'capturado'), solicitarA:'cliente', nota:'Hoja de balance, fila "total pasivos"'},
-  ];
+    {...primario(r.ventas, 'Columna "ventas", "ingresos" o "total" en tu Excel'),  n:'Ventas'},
+    {...primario(r.cogs,   'Columna "costo", "COGS" o "costo de ventas"'),         n:'Costo de ventas'},
+    {...primario(r.gadmin, 'Hoja de gastos, concepto "adm" o "administración"'),   n:'G. Administración'},
+    {...primario(r.gventas,'Hoja de gastos, concepto "vta" o "ventas"'),            n:'G. Ventas'},
+    {n:'Depreciación',    v:r.dep,      o:(m.dep&&m.dep.origen)||'estimado',   solicitarA:null, nota:'Obbio la estima si no aparece en el Excel'},
+    {n:'ISR / Impuestos', v:r.isr,      o:'estimado',                          solicitarA:null, nota:'Obbio aplica tasa fiscal según país (MX 30% / ES 25%)'},
+    {n:'EBITDA',          v:r.ebitda,   o:'derivado',                          solicitarA:null, nota:'Calculado: Ventas − Costo − Gastos + Dep'},
+    {n:'Utilidad neta',   v:r.utilNeta, o:'derivado',                          solicitarA:null, nota:'Calculado: EBIT − Gastos fin. − ISR'},
+    {n:'Flujo operativo', v:r.flujoOp,  o:'derivado',                          solicitarA:null, nota:'Derivado desde EBITDA − Capex estimado'},
+    {n:'Activos totales', v:r.activos,  o:r.activos>0?(m.activos&&m.activos.origen||'capturado'):'estimado', solicitarA:null, nota:'Obbio suma activos si hay balance; estima si no'},
+    {n:'Pasivos totales', v:r.pasivos,  o:r.pasivos>0?(m.pasivos&&m.pasivos.origen||'capturado'):'estimado', solicitarA:null, nota:'Obbio suma pasivos si hay balance; estima si no'},
+  ].map(f=>({v:null,...f}));
   const maxVal=Math.max(...filas.map(f=>Math.abs(f.v||0)),1);
   const makeRow=f=>{
     const b=BADGE[f.o]||BADGE.sin_dato;
