@@ -1073,7 +1073,7 @@ th[data-tip]{cursor:default;}
       <p class="page-subtitle" id="pageSubtitle">Transformando datos en decisiones estratégicas · —</p>
     </div>
     <div class="topbar-actions">
-      <button onclick="window.open('/Manual_Obbio.pdf','_blank','noopener')" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border:1px solid var(--border2);border-radius:10px;background:none;color:var(--text);font-size:12px;font-weight:600;cursor:pointer;">📖 Manual de uso</button>
+      <button onclick="generarManualPDF&&generarManualPDF()" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border:1px solid var(--border2);border-radius:10px;background:none;color:var(--text);font-size:12px;font-weight:600;cursor:pointer;">📖 Manual de uso</button>
       <a onclick="mostrarDeteccion()" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border:1px solid var(--border2);border-radius:10px;color:var(--text);font-size:12px;font-weight:600;cursor:pointer;">🔍 ¿Qué leyó Obbio?</a>
       <button onclick="generarReportePDF&&generarReportePDF()" style="padding:8px 16px;border-radius:9px;border:1px solid rgba(34,197,94,.35);background:var(--primary-dim);color:var(--primary);font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">📄 PDF</button>
       <button id="dash-clear-btn" onclick="limpiarSistema()" style="display:none;padding:8px 16px;border-radius:9px;border:1px solid rgba(244,92,92,.35);background:rgba(244,92,92,.08);color:var(--danger);font-size:12px;font-weight:700;cursor:pointer;transition:.15s;" onmouseover="this.style.background='rgba(244,92,94,.2)'" onmouseout="this.style.background='rgba(244,92,92,.08)'">🗑 Eliminar datos</button>
