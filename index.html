@@ -1270,23 +1270,6 @@ th[data-tip]{cursor:default;}
     </div>
   </div>
 
-  <!-- PARETO -->
-  <div class="card" id="paretoCard">
-    <div class="card-header">
-      <div class="card-title" id="paretoTitle">Análisis Pareto 80/20 · Estructura de Costos</div>
-      <span class="card-badge warning" id="paretoBadge">Costos operativos</span>
-    </div>
-    <p style="font-size:11.5px;color:var(--muted);margin:-4px 0 10px;">Principio 80/20: ~20% de tus productos o clientes genera ~80% de tus ingresos. Identifica ese 20% para priorizar esfuerzos y maximizar rentabilidad.</p>
-    <div class="chart-legend" id="paretoLegend">
-      <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#22C55E;"></div><span id="paretoLeg1">Costo ($M)</span></div>
-      <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#F59E0B;"></div>Acumulado (%)</div>
-      <div class="chart-legend-item" id="paretoLeg80" style="display:none;"><div class="chart-legend-dot" style="background:#EF4444;border-radius:0;height:2px;width:20px;"></div>Umbral 80%</div>
-    </div>
-    <div class="chart-container">
-      <canvas id="paretoChart" role="img" aria-label="Pareto chart"></canvas>
-    </div>
-  </div>
-
   <!-- EXECUTIVE BRIEFING -->
   <div class="card">
     <div class="card-header">
@@ -2528,6 +2511,7 @@ Mapa Estratégico de Impacto
 </div>
 <div id="gv-drill" class="card" style="display:none;padding:16px 20px;margin-bottom:4px;border-color:var(--border2);"></div>
 <div class="card"><div class="card-header"><div class="card-title">Análisis y Recomendaciones</div></div><div class="briefing-grid" id="gv-briefings"><div class="briefing-item info-border"><div class="briefing-title">Sin datos</div><div class="briefing-text">Ingresa datos para ver el análisis.</div></div></div></div>
+<div class="card" id="gv-desglose-card" style="display:none;"><div class="card-header"><div class="card-title">🔍 Detalle de gastos clasificados</div><span class="card-badge" id="gv-desglose-badge">—</span></div><p style="font-size:11.5px;color:var(--muted);margin:-4px 0 10px;">Cada movimiento de tu Excel de gastos, con el rubro al que Obbio lo asignó. Así ves exactamente qué compone cada total.</p><div id="gv-desglose-body"></div></div>
 </div>
 </div>
 
@@ -9029,11 +9013,12 @@ function renderDashboardView(r){
   const _catMapRaw=r.categoryMap||window._obbioCategoryMap||null;
   const _catEntries=_catMapRaw&&Object.keys(_catMapRaw).length>=2?Object.entries(_catMapRaw).sort((a,b)=>b[1]-a[1]).slice(0,6):null;
   const _catPalette=['#22C55E','#8B5CF6','#10B981','#F59E0B','#3B82F6','#EC4899'];
-  let qL, qV, _catBgColors;
+  let qL, qV, _catBgColors, _catMode;
   if(_catEntries){
     qL=_catEntries.map(([k])=>k.length>16?k.slice(0,14)+'…':k);
     qV=_catEntries.map(([,v])=>+(v/1e6).toFixed(2));
     _catBgColors=_catPalette.slice(0,qL.length);
+    _catMode='segmento';
   } else {
     const _allColors=_catPalette.concat(['#F97316','#14B8A6','#EAB308','#6366F1','#EC4899','#84CC16']);
     const _mV=r.ingMensual.map(v=>+(v/1e6).toFixed(2));
@@ -9044,6 +9029,7 @@ function renderDashboardView(r){
       qL=_mPairs.map(([m])=>m);
       qV=_mPairs.map(([,v])=>v);
       _catBgColors=_allColors.slice(0,qL.length);
+      _catMode='mes';
     } else {
       // Fallback: datos anuales de historico
       const _hist=r.historico||window._obbioHistorico||[];
@@ -9054,13 +9040,12 @@ function renderDashboardView(r){
       } else {
         qL=[]; qV=[]; _catBgColors=[];
       }
+      _catMode='año';
     }
   }
   // Actualiza badge y leyenda dinámica del donut
   const _catBadgeEl=document.querySelector('#dashboardView .card:has(#categoryChart) .card-badge');
-  const _mHasDataCheck=r.ingMensual.some(v=>v>0);
-  const _histCheck=r.historico||window._obbioHistorico||[];
-  if(_catBadgeEl) _catBadgeEl.textContent=_catEntries?'Por segmento':_mHasDataCheck?'Por mes':'Por año';
+  if(_catBadgeEl) _catBadgeEl.textContent=_catMode==='segmento'?'Por segmento':_catMode==='mes'?'Por mes':'Por año';
   const _catLeg=document.getElementById('categoryLegend');
   if(_catLeg){
     const _catTotal=qV.reduce((a,b)=>a+b,0)||1;
@@ -9069,10 +9054,11 @@ function renderDashboardView(r){
   mkChart('categoryChart',{type:'doughnut',data:{labels:qL,datasets:[{data:qV,backgroundColor:_catBgColors,borderColor:'#18181B',borderWidth:3,hoverOffset:6}]},options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{display:false},tooltip:{backgroundColor:'#1E1E22',callbacks:{label:ctx=>` ${ctx.label}: ${_m(ctx.parsed*1e6)}`}}}}});
   // regionChart — usa nombres reales de sucursal/región si los hay; sino, meses reales
   const _regColors=['#22C55E','#8B5CF6','#10B981','#F59E0B','#3B82F6','#EC4899','#14B8A6','#F97316','#EAB308','#6366F1','#84CC16','#F43F5E'];
-  let _regLabels, _regVals;
+  let _regLabels, _regVals, _regMode;
   if(_regEntries){
     _regLabels=_regEntries.map(([k])=>k.length>14?k.slice(0,13)+'…':k);
     _regVals=_regEntries.map(([,v])=>+(v/1e6).toFixed(2));
+    _regMode='sucursal';
   } else {
     const _mV2=r.ingMensual.map(v=>+(v/1e6).toFixed(2));
     const _mHasData2=_mV2.some(v=>v>0);
@@ -9080,58 +9066,32 @@ function renderDashboardView(r){
       const _mPairs2=_meses.map((m,i)=>([m,_mV2[i]])).filter(([,v])=>v>0);
       _regLabels=_mPairs2.map(([m])=>m);
       _regVals=_mPairs2.map(([,v])=>v);
+      _regMode='mes';
     } else {
       // Fallback anual desde historico
       const _hist2=r.historico||window._obbioHistorico||[];
       _regLabels=_hist2.map(h=>String(h.anio));
       _regVals=_hist2.map(h=>+(h.ventas/1e6).toFixed(2));
+      _regMode='año';
     }
   }
   const _regBadge=document.querySelector('#dashboardView .card:has(#regionChart) .card-badge');
-  const _mHasDataReg=r.ingMensual.some(v=>v>0);
-  if(_regBadge) _regBadge.textContent=_regEntries?'Por sucursal/región':_mHasDataReg?'Por mes':'Por año';
+  if(_regBadge) _regBadge.textContent=_regMode==='sucursal'?'Por sucursal/región':_regMode==='mes'?'Por mes':'Por año';
   const _regTitle=document.querySelector('#dashboardView .card:has(#regionChart) .card-title');
-  if(_regTitle) _regTitle.textContent=_regEntries?'Desempeño Regional':_mHasDataReg?'Ingresos Mensuales':'Tendencia Anual de Ingresos';
+  if(_regTitle) _regTitle.textContent=_regMode==='sucursal'?'Desempeño Regional':_regMode==='mes'?'Ingresos Mensuales':'Tendencia Anual de Ingresos';
   const _catDescEl=document.getElementById('catChartDesc');
   const _regDescEl=document.getElementById('regChartDesc');
   if(_catDescEl){
-    if(_catEntries) _catDescEl.textContent='Cómo se reparten tus ingresos entre segmentos o líneas de negocio. Identifica qué segmento aporta más valor.';
-    else if(_mHasDataCheck) _catDescEl.textContent='Distribución de tus ingresos a lo largo del año, mes por mes. Los meses más altos son tus períodos de mayor venta.';
+    if(_catMode==='segmento') _catDescEl.textContent='Cómo se reparten tus ingresos entre segmentos o líneas de negocio. Identifica qué segmento aporta más valor.';
+    else if(_catMode==='mes') _catDescEl.textContent='Distribución de tus ingresos a lo largo del año, mes por mes. Los meses más altos son tus períodos de mayor venta.';
     else _catDescEl.textContent='Tu Excel no tiene desglose por segmento ni por mes. Se muestra la distribución por año.';
   }
   if(_regDescEl){
     if(_regEntries) _regDescEl.textContent='Compara el ingreso generado por zona geográfica o sucursal. Detecta dónde concentrar recursos comerciales.';
-    else if(_mHasDataReg) _regDescEl.textContent='Evolución de tus ingresos mes a mes durante el año. Identifica los meses de mayor y menor rendimiento.';
+    else if(_regMode==='mes') _regDescEl.textContent='Evolución de tus ingresos mes a mes durante el año. Identifica los meses de mayor y menor rendimiento.';
     else _regDescEl.textContent='Tu Excel no tiene datos de sucursales. Se muestra la tendencia anual de ingresos. Agrega una columna de sucursal/región para ver el análisis geográfico.';
   }
   mkChart('regionChart',{type:'bar',data:{labels:_regLabels,datasets:[{data:_regVals,backgroundColor:_regColors.slice(0,_regLabels.length),borderColor:'transparent',borderRadius:8,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1E1E22',callbacks:{label:ctx=>` ${ctx.label}: ${_m(ctx.parsed.y*1e6)}`}}},scales:{x:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',font:{size:10},maxRotation:30}},y:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',callback:v=>(window._currSym||'$')+v+'M'}}}}});
-  // paretoChart — clientes reales si existen, sino estructura de costos
-  const clienteMap=r.clienteMap||window._obbioClienteMap||null;
-  const ptitle=document.getElementById('paretoTitle');
-  const pbadge=document.getElementById('paretoBadge');
-  const pleg1=document.getElementById('paretoLeg1');
-  const pleg80=document.getElementById('paretoLeg80');
-  if(clienteMap&&Object.keys(clienteMap).length>=3){
-    const entries=Object.entries(clienteMap).sort((a,b)=>b[1]-a[1]).slice(0,10);
-    const total=entries.reduce((s,[,v])=>s+v,0)||1;
-    const vals=entries.map(e=>+(e[1]/1e6).toFixed(2));
-    let cum=0; const cumPct=entries.map(([,v])=>{ cum+=v; return +((cum/total)*100).toFixed(1); });
-    const topPct=_pp(entries[0][1]/total*100);
-    if(ptitle) ptitle.textContent='Pareto 80/20 · Concentración de Clientes';
-    if(pbadge){ pbadge.textContent='Top cliente: '+topPct; pbadge.className='card-badge '+(entries[0][1]/total>0.3?'warning':'success'); }
-    if(pleg1) pleg1.textContent='Ingreso por cliente ($M)';
-    if(pleg80) pleg80.style.display='';
-    mkChart('paretoChart',{type:'bar',data:{labels:entries.map(e=>e[0].length>14?e[0].slice(0,13)+'…':e[0]),datasets:[{type:'bar',label:'Ingreso ($M)',data:vals,backgroundColor:'#22C55ECC',borderRadius:8,yAxisID:'y'},{type:'line',label:'Acumulado',data:cumPct,borderColor:'#F5A623',borderWidth:2.5,pointRadius:5,pointBackgroundColor:'#F5A623',tension:.3,fill:false,yAxisID:'y2'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1E1E22',callbacks:{label:ctx=>ctx.dataset.label==='Acumulado'?` Acum: ${ctx.parsed.y}%`:` ${_m(ctx.parsed.y*1e6)}`}}},scales:{x:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',font:{size:10},maxRotation:30}},y:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',callback:v=>(window._currSym||'$')+v+'M'},position:'left'},y2:{grid:{display:false},ticks:{color:'#F5A623',callback:v=>v+'%'},position:'right',min:0,max:100}}}});
-  } else {
-    const costV=[r.cogs,r.gadmin,r.gventas,r.gfin].map(v=>+(v/1e6).toFixed(2));
-    const totC=costV.reduce((a,b)=>a+b,0)||1; let cumC=0;
-    const cumPct=costV.map(v=>{cumC+=v;return +((cumC/totC)*100).toFixed(1);});
-    if(ptitle) ptitle.textContent='Estructura de Costos · Pareto Operativo';
-    if(pbadge){ pbadge.textContent='COGS+Gastos'; pbadge.className='card-badge'; }
-    if(pleg1) pleg1.textContent='Costo ($M)';
-    if(pleg80) pleg80.style.display='none';
-    mkChart('paretoChart',{type:'bar',data:{labels:['COGS','G.Admin','G.Ventas','G.Fin'],datasets:[{type:'bar',label:'Costo ($M)',data:costV,backgroundColor:'#22C55ECC',borderRadius:8,yAxisID:'y'},{type:'line',label:'Acumulado',data:cumPct,borderColor:'#F5A623',borderWidth:2.5,pointRadius:5,pointBackgroundColor:'#F5A623',tension:.3,fill:false,yAxisID:'y2'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1E1E22'}},scales:{x:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA'}},y:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',callback:v=>(window._currSym||'$')+v+'M'},position:'left'},y2:{grid:{display:false},ticks:{color:'#F5A623',callback:v=>v+'%'},position:'right',min:0,max:100}}}});
-  }
 }
 
 function _sem(val,good,warn,invert){ if(val==null) return 'negative'; const ok=invert?val<=good:val>=good; const mid=invert?val<=warn:val>=warn; return ok?'positive':mid?'neutral':'negative'; }
@@ -9706,6 +9666,26 @@ function renderGastosView(r){
     {label:'G. Ventas',value:r.gventas?_m(r.gventas):null},
     {label:'Margen Operativo',value:r.margenOp!=null?_pp(r.margenOp):null},
   ],'resumen-costosGastosView');
+  // Desglose de gastos clasificados (r.gastosRows viene del parser — T3a)
+  (function(){
+    const card=document.getElementById('gv-desglose-card');
+    const body=document.getElementById('gv-desglose-body');
+    const badge=document.getElementById('gv-desglose-badge');
+    if(!card||!body) return;
+    const rows=(r&&Array.isArray(r.gastosRows))?r.gastosRows:[];
+    if(!rows.length){ card.style.display='none'; return; }
+    card.style.display='';
+    const meta={adm:{n:'Administración',c:'#F59E0B'},vta:{n:'Ventas',c:'#8B5CF6'},fin:{n:'Financieros',c:'#06B6D4'},dep:{n:'Depreciación',c:'#64748B'}};
+    const groups={};
+    rows.forEach(g=>{ (groups[g.tipo]=groups[g.tipo]||[]).push(g); });
+    if(badge) badge.textContent=rows.length+' movimientos';
+    body.innerHTML=Object.keys(meta).filter(t=>groups[t]&&groups[t].length).map(t=>{
+      const items=groups[t].slice().sort((a,b)=>b.monto-a.monto);
+      const sub=items.reduce((s,x)=>s+x.monto,0);
+      const li=items.map(x=>`<div style="display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:12px;"><span style="color:var(--text);">${esc(x.nombre)}</span><span style="font-weight:700;color:var(--muted);white-space:nowrap;">${_m(x.monto)}</span></div>`).join('');
+      return `<div style="margin-bottom:16px;"><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="width:9px;height:9px;border-radius:2px;background:${meta[t].c};display:inline-block;"></span><span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted2);">G. ${meta[t].n}</span><span style="margin-left:auto;font-size:12px;font-weight:700;">${_m(sub)}</span></div>${li}</div>`;
+    }).join('');
+  })();
 }
 
 const _drillNotes={
@@ -10478,14 +10458,14 @@ function renderForecastView(r){
           </div>
         </div>
         <div>
-          <span style="font-size:11px;font-weight:700;color:var(--muted2);text-transform:uppercase;display:block;margin-bottom:6px;">🚀 Delta Optimista</span>
+          <span style="font-size:11px;font-weight:700;color:var(--muted2);text-transform:uppercase;display:block;margin-bottom:6px;">🚀 Optimista</span>
           <div style="display:flex;align-items:center;gap:10px;">
             <input type="range" id="slDeltaOpt" min="1" max="25" step="1" value="12" oninput="document.getElementById('lblDeltaOpt').textContent='+'+this.value+'%';updateForecastSliders()" style="flex:1;accent-color:#10B981;">
             <span id="lblDeltaOpt" style="font-size:13px;font-weight:700;min-width:36px;text-align:right;">+12%</span>
           </div>
         </div>
         <div>
-          <span style="font-size:11px;font-weight:700;color:var(--muted2);text-transform:uppercase;display:block;margin-bottom:6px;">🛡️ Delta Conservador</span>
+          <span style="font-size:11px;font-weight:700;color:var(--muted2);text-transform:uppercase;display:block;margin-bottom:6px;">🛡️ Conservador</span>
           <div style="display:flex;align-items:center;gap:10px;">
             <input type="range" id="slDeltaCons" min="1" max="25" step="1" value="13" oninput="document.getElementById('lblDeltaCons').textContent='-'+this.value+'%';updateForecastSliders()" style="flex:1;accent-color:#F59E0B;">
             <span id="lblDeltaCons" style="font-size:13px;font-weight:700;min-width:36px;text-align:right;">-13%</span>
