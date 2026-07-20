@@ -933,8 +933,7 @@ th[data-tip]{cursor:default;}
         <span><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="url(#ob-g)" d="M11.8 10.9C9.53 10.31 8.8 9.7 8.8 8.75C8.8 7.66 9.81 6.9 11.5 6.9C13.28 6.9 13.94 7.75 14 9H16.21C16.14 7.28 15.09 5.7 13 5.19V3H10V5.16C8.06 5.58 6.5 6.84 6.5 8.77C6.5 11.08 8.41 12.23 11.2 12.9C13.7 13.5 14.2 14.38 14.2 15.31C14.2 16 13.71 17.1 11.5 17.1C9.44 17.1 8.63 16.18 8.5 15H6.32C6.44 17.19 8.08 18.42 10 18.83V21H13V18.85C14.95 18.48 16.5 17.35 16.5 15.3C16.5 12.46 14.07 11.49 11.8 10.9Z"/></svg>Finanzas</span><span class="nav-arrow">▶</span>
       </div>
       <div class="nav-group-items">
-        <button onclick="showView('cashflowView',this)"><span class="nav-icon"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="url(#ob-g)" d="M12 2C12 2 6 9 6 13.5C6 16.54 8.69 19 12 19C15.31 19 18 16.54 18 13.5C18 9 12 2 12 2ZM12 17C9.79 17 8 15.43 8 13.5C8 11.14 10.21 7.58 12 5.03C13.79 7.58 16 11.14 16 13.5C16 15.43 14.21 17 12 17Z"/></svg></span>Flujo de Caja</button>
-        <button onclick="showView('workingCapitalView',this)"><span class="nav-icon"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="url(#ob-g)" d="M12 3L2 8H4V9H2V11H22V9H20V8H22L12 3ZM12 5.28L18.47 8H5.53L12 5.28ZM6 12V18H4V20H20V18H18V12H16V18H13V12H11V18H8V12H6Z"/></svg></span>Capital de Trabajo</button>
+        <button onclick="showView('liquidezView',this)"><span class="nav-icon"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="url(#ob-g)" d="M12 2C12 2 6 9 6 13.5C6 16.54 8.69 19 12 19C15.31 19 18 16.54 18 13.5C18 9 12 2 12 2ZM12 17C9.79 17 8 15.43 8 13.5C8 11.14 10.21 7.58 12 5.03C13.79 7.58 16 11.14 16 13.5C16 15.43 14.21 17 12 17Z"/></svg></span>Liquidez</button>
         <button onclick="showView('debtView',this)"><span class="nav-icon"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="url(#ob-g)" d="M16 18L18.29 15.71L13.41 10.83L9.41 14.83L2 7.41L3.41 6L9.41 12L13.41 8L19.71 14.29L22 12V18H16Z"/></svg></span>Endeudamiento</button>
         <button onclick="showView('costosGastosView',this)"><span class="nav-icon"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="url(#ob-g)" d="M12 15.5C11.07 15.5 10.2 15.14 9.55 14.55L4 20H20L14.45 14.55C13.8 15.14 12.93 15.5 12 15.5ZM20 4H4V12L9 7V12L14 7V12L20 7V4Z"/></svg></span>Costos y Gastos</button>
         <button onclick="showView('financialCenterView',this)"><span class="nav-icon"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="url(#ob-g)" d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2ZM18 20H6V4H13V9H18V20ZM8 15H16V17H8V15ZM8 11H16V13H8V11Z"/></svg></span>Centro Financiero</button>
@@ -1486,17 +1485,22 @@ th[data-tip]{cursor:default;}
 </div>
 
 <!-- ==================== CASH FLOW CENTER ==================== -->
-<div id="cashflowView" class="view" style="display:none;">
+<div id="liquidezView" class="view" style="display:none;">
 
 <header class="topbar">
     <div>
-        <h2 class="page-title">Centro de Flujo de Caja</h2>
-        <p class="page-subtitle">
-            Flujo de efectivo y posición de caja
-        </p>
+        <h2 class="page-title">Liquidez</h2>
+        <p class="page-subtitle">Flujo de caja y capital de trabajo</p>
     </div>
-    <div class="topbar-actions"><button onclick="openCFOWith('¿Por qué mi flujo de caja está en este nivel y cómo puedo mejorarlo?')" style="padding:8px 14px;border-radius:9px;border:1px solid rgba(167,139,250,.35);background:rgba(167,139,250,.08);color:#a78bfa;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:background .15s;" onmouseover="this.style.background='rgba(167,139,250,.18)'" onmouseout="this.style.background='rgba(167,139,250,.08)'">🤖 Preguntar al CFO</button></div>
+    <div class="topbar-actions"><button id="liq-cfo-btn" onclick="openCFOWith('¿Cómo está la liquidez de mi empresa, el flujo de caja y el capital de trabajo?')" style="padding:8px 14px;border-radius:9px;border:1px solid rgba(167,139,250,.35);background:rgba(167,139,250,.08);color:#a78bfa;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:background .15s;" onmouseover="this.style.background='rgba(167,139,250,.18)'" onmouseout="this.style.background='rgba(167,139,250,.08)'">🤖 Preguntar al CFO</button></div>
 </header>
+
+<div style="display:flex;gap:4px;margin-bottom:20px;background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:4px;width:fit-content;">
+  <button id="liqTab_flujo" onclick="liqSwitch('flujo')" style="padding:8px 20px;border-radius:9px;border:none;background:var(--primary);color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:.15s;">💰 Flujo de Caja</button>
+  <button id="liqTab_capital" onclick="liqSwitch('capital')" style="padding:8px 20px;border-radius:9px;border:none;background:transparent;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;transition:.15s;">⚖️ Capital de Trabajo</button>
+</div>
+
+<div id="liqPanel_flujo">
 <div id="resumen-cashflowView" class="obbio-resumen" style="display:none;"></div>
 
 <section class="kpi-grid">
@@ -1660,23 +1664,9 @@ th[data-tip]{cursor:default;}
 
 </div>
 
-</div>
-<!-- ==================== WORKING CAPITAL ==================== -->
-<div id="workingCapitalView" class="view" style="display:none;">
+</div><!-- /liqPanel_flujo -->
 
-<header class="topbar">
-    <div>
-        <h2 class="page-title">
-            Capital de Trabajo
-        </h2>
-
-        <p class="page-subtitle">
-            Gestión de liquidez operativa
-        </p>
-    </div>
-    <div class="topbar-actions"><button onclick="openCFOWith('¿Cómo está mi capital de trabajo y mi ciclo de efectivo?')" style="padding:8px 14px;border-radius:9px;border:1px solid rgba(167,139,250,.35);background:rgba(167,139,250,.08);color:#a78bfa;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:background .15s;" onmouseover="this.style.background='rgba(167,139,250,.18)'" onmouseout="this.style.background='rgba(167,139,250,.08)'">🤖 Preguntar al CFO</button></div>
-</header>
-
+<div id="liqPanel_capital" style="display:none;">
 <div id="resumen-workingCapitalView" class="obbio-resumen" style="display:none;"></div>
 <section class="kpi-grid">
 
@@ -1825,7 +1815,9 @@ th[data-tip]{cursor:default;}
 
 </div>
 
-</div>
+</div><!-- /liqPanel_capital -->
+
+</div><!-- /liquidezView -->
 <!-- ==================== DEBT INTELLIGENCE ==================== -->
 <div id="debtView" class="view" style="display:none;">
 
@@ -3999,8 +3991,7 @@ function showView(viewId, button){
   const r=getCalc&&getCalc();
   if(viewId==='dashboardView'   && typeof renderDashboardView==='function')  renderDashboardView(r);
   if(viewId==='financeView'     && typeof renderFinanceView==='function')    renderFinanceView(r);
-  if(viewId==='cashflowView'    && typeof renderCashflowView==='function')   renderCashflowView(r);
-  if(viewId==='workingCapitalView' && typeof renderWorkingCapitalView==='function') renderWorkingCapitalView(r);
+  if(viewId==='liquidezView' && typeof renderCashflowView==='function'){ renderCashflowView(r); renderWorkingCapitalView(r); }
   if(viewId==='debtView'        && typeof renderDebtView==='function')       renderDebtView(r);
   if(viewId==='costosGastosView' && typeof renderCostosView==='function')    { renderCostosView(r); renderGastosView(r); }
   if(viewId==='taxView'){ if(typeof planTab==='function'){ showView('modelView',button); planTab('fiscal'); } return; }
@@ -4464,14 +4455,14 @@ function applyData(d){
   set('cf_caja',          d.cf_caja);
 
   // Working Capital
-  const wcKpis = document.querySelectorAll('#workingCapitalView .kpi-value');
+  const wcKpis = document.querySelectorAll('#liqPanel_capital .kpi-value');
   if(wcKpis[0] && d.wc_cobrar)    wcKpis[0].innerHTML = d.wc_cobrar;
   if(wcKpis[1] && d.wc_inventario)wcKpis[1].innerHTML = d.wc_inventario;
   if(wcKpis[2] && d.wc_pagar)     wcKpis[2].innerHTML = d.wc_pagar;
   if(wcKpis[3] && d.wc_neto)      wcKpis[3].innerHTML = d.wc_neto;
 
   // DSO/DIO/DPO/CCC
-  const finKpis = document.querySelectorAll('#workingCapitalView .fin-kpi-value');
+  const finKpis = document.querySelectorAll('#liqPanel_capital .fin-kpi-value');
   if(finKpis[0] && d.dso) finKpis[0].innerHTML = d.dso;
   if(finKpis[1] && d.dio) finKpis[1].innerHTML = d.dio;
   if(finKpis[2] && d.dpo) finKpis[2].innerHTML = d.dpo;
@@ -9399,7 +9390,7 @@ function renderAnalyticsView(r){
 
 /* ─────────────────── CASHFLOW VIEW ─────────────────── */
 function renderCashflowView(r){
-  const el=document.getElementById('cashflowView'); if(!el) return;
+  const el=document.getElementById('liqPanel_flujo'); if(!el) return;
   el.querySelectorAll('[data-nodata]').forEach(n=>n.remove());
   el.querySelectorAll('[data-nota-est]').forEach(n=>n.remove());
   if(!r){
@@ -9453,9 +9444,9 @@ function renderCashflowView(r){
     const _cfLabels=['Flujo Operativo','Flujo Inversión','Flujo Financiero','Flujo Neto'];
     const _cfVals=[r.flujoOp,r.flujoInv,r.flujoFin,r.flujoNeto].map(v=>(v||0)/1e6);
     const _cfColors=_cfVals.map(v=>v>=0?'rgba(20,184,166,.7)':'rgba(239,68,68,.7)');
-    const _cfTitle=document.querySelector('#cashflowView .card-title');
+    const _cfTitle=document.querySelector('#liqPanel_flujo .card-title');
     if(_cfTitle) _cfTitle.textContent='Flujo de Caja Anual';
-    const _cfBadge=document.querySelector('#cashflowView .card-badge.success');
+    const _cfBadge=document.querySelector('#liqPanel_flujo .card-badge.success');
     if(_cfBadge) _cfBadge.textContent=r.anio||'Anual';
     mkChart('cashFlowChart',{type:'bar',data:{labels:_cfLabels,datasets:[{data:_cfVals,backgroundColor:_cfColors,borderRadius:8,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},datalabels:{display:false},tooltip:{backgroundColor:'#1E1E22',callbacks:{label:ctx=>` ${_cfLabels[ctx.dataIndex]}: ${_m(ctx.parsed.y*1e6)}`}}},scales:{x:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',font:{size:12}}},y:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A1A1AA',callback:v=>(v>=0?(window._currSym||'$'):'-'+(window._currSym||'$'))+Math.abs(v).toFixed(1)+'M'}}}}});
   } else {
@@ -9487,7 +9478,7 @@ function renderCashflowView(r){
 
 /* ─────────────────── WORKING CAPITAL VIEW ─────────────────── */
 function renderWorkingCapitalView(r){
-  const el=document.getElementById('workingCapitalView'); if(!el) return;
+  const el=document.getElementById('liqPanel_capital'); if(!el) return;
   el.querySelectorAll('[data-nodata]').forEach(n=>n.remove());
   if(!r){
     const g=el.querySelector('.kpi-grid'); if(g) g.insertAdjacentHTML('beforebegin',noDataHtml('🏦','Sin datos de capital de trabajo','Ingresa cuentas por cobrar, inventario y cuentas por pagar.'));
@@ -10158,7 +10149,7 @@ function renderTaxView(r){
       </thead>
       <tbody>
         <tr style="border-bottom:1px solid var(--border2);">
-          <td style="padding:9px 14px;color:var(--muted);">${f.etiquetaImpuesto} estimado${badgeEstimado(r._meta?.isr)}</td>
+          <td style="padding:9px 14px;color:var(--muted);">${f.etiquetaImpuesto}${badgeEstimado(r._meta?.isr)}</td>
           <td style="padding:9px 14px;text-align:right;font-weight:700;color:var(--warning);">${_m(r.isr)}</td>
           <td style="padding:9px 14px;text-align:right;font-weight:600;">${_pp((r.isr||0)/r.ventas*100)}</td>
           <td style="padding:9px 14px;text-align:right;font-size:11px;color:var(--muted);">9–15%</td>
@@ -11681,8 +11672,7 @@ function renderAllViews(r){
   if(id==='dashboardView')        renderDashboardView(r);
   else if(id==='financeView')     renderFinanceView(r);
   else if(id==='analyticsView')   renderAnalyticsView(r);
-  else if(id==='cashflowView')    renderCashflowView(r);
-  else if(id==='workingCapitalView') renderWorkingCapitalView(r);
+  else if(id==='liquidezView')    { renderCashflowView(r); renderWorkingCapitalView(r); }
   else if(id==='debtView')        renderDebtView(r);
   else if(id==='costosGastosView'){ renderCostosView(r); renderGastosView(r); }
   else if(id==='taxView')         renderTaxView(r);
@@ -13175,6 +13165,25 @@ function cgSwitch(tab){
   }
 }
 window.cgSwitch=cgSwitch;
+
+function liqSwitch(tab){
+  const panels=['flujo','capital'];
+  panels.forEach(t=>{
+    const p=document.getElementById('liqPanel_'+t);
+    const b=document.getElementById('liqTab_'+t);
+    if(!p||!b) return;
+    const active=t===tab;
+    p.style.display=active?'':'none';
+    b.style.background=active?'var(--primary)':'transparent';
+    b.style.color=active?'#fff':'var(--muted)';
+  });
+  const r=window.getCalc&&window.getCalc();
+  if(r){
+    if(tab==='flujo'&&typeof renderCashflowView==='function') renderCashflowView(r);
+    if(tab==='capital'&&typeof renderWorkingCapitalView==='function') renderWorkingCapitalView(r);
+  }
+}
+window.liqSwitch=liqSwitch;
 
 /* ── Onboarding ─────────────────────────────────────────────────── */
 function _obOnboardingDismiss(){
