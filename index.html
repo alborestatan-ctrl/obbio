@@ -880,6 +880,40 @@ th[data-tip]{cursor:default;}
   </div>
 </div>
 
+<!-- ==================== SET-PASSWORD OVERLAY (invite/recovery) ==================== -->
+<div id="sbSetPwOverlay" style="position:fixed;inset:0;background:var(--bg);display:none;align-items:center;justify-content:center;z-index:10000;">
+  <div style="width:100%;max-width:400px;padding:48px 40px;background:var(--card);border:1px solid var(--border);border-radius:20px;box-shadow:0 40px 80px rgba(0,0,0,.65);">
+    <div style="text-align:center;margin-bottom:32px;">
+      <div style="display:inline-flex;align-items:center;justify-content:center;width:56px;height:56px;background:var(--primary-dim);border:1px solid rgba(34,197,94,.4);border-radius:14px;margin-bottom:16px;">
+        <span style="font-size:20px;font-weight:900;color:var(--primary);">OB</span>
+      </div>
+      <h2 style="font-size:22px;font-weight:800;color:var(--text);margin-bottom:6px;">Crea tu contraseña</h2>
+      <p style="font-size:13px;color:var(--muted);">Define una contraseña para activar tu cuenta</p>
+    </div>
+    <div id="sbSetPwError" style="display:none;padding:10px 14px;background:rgba(244,92,92,.09);border:1px solid rgba(244,92,92,.3);border-radius:9px;color:var(--danger);font-size:12px;margin-bottom:16px;"></div>
+    <div style="margin-bottom:14px;">
+      <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px;">Nueva contraseña</label>
+      <input id="sbNewPw" type="password" autocomplete="new-password" placeholder="Mínimo 8 caracteres"
+        style="width:100%;padding:11px 14px;background:var(--card2);border:1px solid var(--border);border-radius:9px;color:var(--text);font-size:13px;outline:none;transition:border .2s;"
+        onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'"
+        onkeydown="if(event.key==='Enter')document.getElementById('sbNewPw2').focus()">
+    </div>
+    <div style="margin-bottom:20px;">
+      <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px;">Confirmar contraseña</label>
+      <input id="sbNewPw2" type="password" autocomplete="new-password" placeholder="Repite la contraseña"
+        style="width:100%;padding:11px 14px;background:var(--card2);border:1px solid var(--border);border-radius:9px;color:var(--text);font-size:13px;outline:none;transition:border .2s;"
+        onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'"
+        onkeydown="if(event.key==='Enter')sbDoSetPassword()">
+    </div>
+    <button id="sbSetPwBtn" onclick="sbDoSetPassword()"
+      style="width:100%;padding:13px;background:var(--primary);border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:.3px;transition:opacity .15s;"
+      onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">
+      Activar cuenta
+    </button>
+    <p style="text-align:center;margin-top:18px;font-size:11px;color:var(--muted2);">Obbio · Acceso seguro</p>
+  </div>
+</div>
+
 <div class="app">
 <svg style="width:0;height:0;position:absolute;overflow:hidden;" aria-hidden="true"><defs><linearGradient id="ob-g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#00e07e"/><stop offset="33%" stop-color="#26a5a5"/><stop offset="64%" stop-color="#1d5ffb" stop-opacity="0.9"/><stop offset="87%" stop-color="#7b24fc"/></linearGradient></defs></svg>
 
@@ -4971,8 +5005,10 @@ function calcFinanciero(){
   // Estado de Resultados
   const utilBruta  = er.ventas-er.cogs;
   const gastosOp   = er.gadmin+er.gventas;
-  const ebit       = utilBruta-gastosOp;
-  const ebitda     = ebit+dep;
+  // La depreciación es una línea propia (ii_depreciacion) y NO está dentro de gastosOp,
+  // así que ventas-cogs-gadmin-gventas ya es EBITDA. El EBIT sale de restarle la depreciación.
+  const ebitda     = utilBruta-gastosOp;
+  const ebit       = ebitda-dep;
   const uai        = ebit-er.gfin;
   const fiscal     = motorFiscal(pais, uai, er.ventas, er.cogs);
   const isr        = fiscal.impuesto;
@@ -5093,7 +5129,7 @@ function calcFinanciero(){
   if(er.mensual){
     ingMensual    = er.mensual.ventas.map(v=>+(v/1e6).toFixed(2));
     ebitdaMensual = er.mensual.ventas.map((v,i)=>{
-      const ub=v-(er.mensual.cogs[i]||0); const eb=ub-((er.gadmin+er.gventas)/12)+dep/12;
+      const ub=v-(er.mensual.cogs[i]||0); const eb=ub-((er.gadmin+er.gventas)/12);
       return +(eb/1e6).toFixed(2);
     });
     const _eSumM=ebitdaMensual.reduce((a,b)=>a+b,0);
@@ -5140,7 +5176,7 @@ function calcFinanciero(){
 
   return {
     ventas:er.ventas,cogs:er.cogs,gadmin:er.gadmin,gventas:er.gventas,gfin:er.gfin,
-    utilBruta,gastosOp,ebit,dep,ebitda,uai,isr,utilNeta,
+    utilBruta,gastosOp,ebit,dep,ebitda,uai,isr,utilNeta,depCapturado:_depCapturado,
     margenBruto,margenOp,margenEbitda,margenNeto,
     caja,cxc,inventario,activoFijo,activoCirc,totalActivos,
     pasivoCp,pasivoLp,cxp,totalPasivos,totalPasivosConCxp,capital,capTrabNeto,capitalNegativo,balanceDesbalanceado,
@@ -5161,6 +5197,9 @@ function calcFinanciero(){
     tasaIVA:fiscal.tasaIVA, ivaTrasladado:fiscal.ivaTrasladado,
     ivaAcreditable:fiscal.ivaAcreditable, ivaNeto:fiscal.ivaNeto,
     historico:window._obbioHistorico||null,
+    cogsBreakdown:window._obbioCogsBreakdown||null,
+    gastosBreakdown:window._obbioGastosBreakdown||null,
+    gastosRows:window._gastosRows||null,
     monthlyByYear:(()=>{ const yr=parseInt(($('ii_anio')||{}).value||new Date().getFullYear()); if(ingMensual.some(v=>v>0)){ if(!window._obbioMonthlyByYear) window._obbioMonthlyByYear={}; window._obbioMonthlyByYear[yr]=ingMensual.map(v=>Math.round(v*1e6)); } return window._obbioMonthlyByYear||{}; })(),
     clienteMap:window._obbioClienteMap||null,
     regionMap:window._obbioRegionMap||null,
@@ -5525,6 +5564,8 @@ function mostrarResultados(r){
           <tr style="border-bottom:1px solid var(--border2);background:rgba(34,197,94,.06);"><td style="padding:9px 12px;font-weight:700;">= Utilidad Bruta</td><td style="padding:9px 12px;font-weight:700;text-align:right;color:var(--success);">${fmt(r.utilBruta)} <small style="color:var(--muted);font-weight:400;">${fmtPct(r.margenBruto)}</small></td></tr>
           <tr style="border-bottom:1px solid var(--border2);"><td style="padding:9px 12px;color:var(--muted);">(−) G. Administración</td><td style="padding:9px 12px;font-weight:700;text-align:right;color:var(--danger);">(${fmt(r.gadmin)})</td></tr>
           <tr style="border-bottom:1px solid var(--border2);"><td style="padding:9px 12px;color:var(--muted);">(−) G. Ventas</td><td style="padding:9px 12px;font-weight:700;text-align:right;color:var(--danger);">(${fmt(r.gventas)})</td></tr>
+          <tr style="border-bottom:1px solid var(--border2);background:rgba(34,197,94,.06);"><td style="padding:9px 12px;font-weight:700;">= EBITDA</td><td style="padding:9px 12px;font-weight:700;text-align:right;color:var(--primary);">${fmt(r.ebitda)} <small style="color:var(--muted);font-weight:400;">${fmtPct(r.margenEbitda)}</small></td></tr>
+          <tr style="border-bottom:1px solid var(--border2);"><td style="padding:9px 12px;color:var(--muted);">(−) Depreciación</td><td style="padding:9px 12px;font-weight:700;text-align:right;color:var(--danger);">(${fmt(r.dep)})</td></tr>
           <tr style="border-bottom:1px solid var(--border2);background:rgba(34,197,94,.06);"><td style="padding:9px 12px;font-weight:700;">= EBIT</td><td style="padding:9px 12px;font-weight:700;text-align:right;">${fmt(r.ebit)} <small style="color:var(--muted);font-weight:400;">${fmtPct(r.margenOp)}</small></td></tr>
           <tr style="border-bottom:1px solid var(--border2);"><td style="padding:9px 12px;color:var(--muted);">(−) G. Financieros</td><td style="padding:9px 12px;font-weight:700;text-align:right;color:var(--danger);">(${fmt(r.gfin)})</td></tr>
           <tr style="border-bottom:1px solid var(--border2);"><td style="padding:9px 12px;color:var(--muted);">= UAI</td><td style="padding:9px 12px;font-weight:700;text-align:right;">${fmt(r.uai)}</td></tr>
@@ -5898,6 +5939,39 @@ function parseExcelWorkbook(wb){
     data.pasivo_lp    = kvGet(balMap,'pasivo a largo','pasivo largo','pasivo no circul','pasivo no corriente','deuda a largo','deuda largo','obligaciones a largo');
     data.capital      = kvGet(balMap,'capital contable','patrimonio neto','patrimonio','equity','fondos propios','capital');
 
+    // Hoja Costos (opcional) — desglose de COGS. La plantilla la genera pero el parser
+    // no la leía, por eso el análisis por componente nunca se activaba.
+    (function(){
+      const cRes=parseKV(getSheet('costos')); if(!cRes) return;
+      const cMap=pickMap(cRes,mostRecent); if(!cMap||!Object.keys(cMap).length) return;
+      const materia =kvN(cMap,'materia prima','materiales','insumo','materia');
+      const mod     =kvN(cMap,'mano de obra','mano obra','operadores','mod');
+      const maquila =kvN(cMap,'subcontrataci','maquila','outsourcing','tercero');
+      const cogsTot =parseFloat(data.cogs)||0;
+      if(materia+mod+maquila<=0) return;
+      const otros=Math.max(0,cogsTot-(materia+mod+maquila));
+      data.cogsBreakdown={materia,mod,maquila,otros};
+    })();
+
+    // Hoja Gastos en formato plantilla (Concepto | Descripción | año...) — desglose por rubro.
+    (function(){
+      const gRes=parseKV(getSheet('gastos')); if(!gRes) return;
+      const gMap=pickMap(gRes,mostRecent); if(!gMap||!Object.keys(gMap).length) return;
+      const sueldos   =kvN(gMap,'sueldos administrativ','sueldos admin','sueldos','nomina administrativ','nomina');
+      const renta     =kvN(gMap,'renta','arrendamiento','alquiler');
+      const servicios =kvN(gMap,'servicios','luz','agua','internet','telefon');
+      const honorarios=kvN(gMap,'honorarios','asesor','consultor','contabilidad');
+      const publicidad=kvN(gMap,'publicidad','marketing','mercadotecnia');
+      const comisiones=kvN(gMap,'comisiones','comision');
+      const admTot=parseFloat(data.gadmin)||0, vtaTot=parseFloat(data.gventas)||0;
+      const admSum=sueldos+renta+servicios+honorarios, vtaSum=publicidad+comisiones;
+      if(admSum+vtaSum<=0) return;
+      data.gastosBreakdown={
+        admin:{sueldos,renta,servicios,honorarios,otros:Math.max(0,admTot-admSum)},
+        ventas:{publicidad,comisiones,otros:Math.max(0,vtaTot-vtaSum)}
+      };
+    })();
+
     // Build historico from prior years in ER + Balance multi-year columns
     const histYears=[...new Set([...erYears.slice(1),...balYears.slice(1)])].sort((a,b)=>a-b);
     const histMap={}; // year → combined object
@@ -5906,7 +5980,7 @@ function parseExcelWorkbook(wb){
       const v=_ventasN(er);
       if(v>0||Object.keys(bal).length>0){
         const _hcg=kvN(er,'costo de venta','costo de lo vendido','costo de produc','coste de venta','coste de las venta','aprovisionamiento','cogs'),_hga=kvN(er,'gastos de administraci','gastos administrativ','administrativ'),_hgv=kvN(er,'gastos de venta','gasto de venta','gastos comercial','comercializaci'),_hdep=kvN(er,'depreci','amortiz');
-        histMap[yr]={anio:yr,ventas:v,ebitda:v>0?v-_hcg-_hga-_hgv+_hdep:0,cogs:_hcg,gadmin:_hga,gventas:_hgv,dep:_hdep,gfin:kvN(er,'gastos financiero','intereses'),caja:kvN(bal,'caja','efectivo'),cxc:kvN(bal,'cuentas por cobrar'),inventario:kvN(bal,'inventario'),activo_fijo:kvN(bal,'activo fijo'),cxp:kvN(bal,'cuentas por pagar'),pasivo_cp:kvN(bal,'pasivo a corto','pasivo corto','pasivo circul'),pasivo_lp:kvN(bal,'pasivo a largo','pasivo largo','pasivo no circul'),capital:kvN(bal,'capital contable','patrimonio','capital')};
+        histMap[yr]={anio:yr,ventas:v,ebitda:v>0?v-_hcg-_hga-_hgv:0,cogs:_hcg,gadmin:_hga,gventas:_hgv,dep:_hdep,gfin:kvN(er,'gastos financiero','intereses'),caja:kvN(bal,'caja','efectivo'),cxc:kvN(bal,'cuentas por cobrar'),inventario:kvN(bal,'inventario'),activo_fijo:kvN(bal,'activo fijo'),cxp:kvN(bal,'cuentas por pagar'),pasivo_cp:kvN(bal,'pasivo a corto','pasivo corto','pasivo circul'),pasivo_lp:kvN(bal,'pasivo a largo','pasivo largo','pasivo no circul'),capital:kvN(bal,'capital contable','patrimonio','capital')};
       }
     });
 
@@ -6148,7 +6222,7 @@ function showExcelPreview(data,filename){
     const v=parseFloat(data.ventas||0),c=parseFloat(data.cogs||0);
     const gA=parseFloat(data.gadmin||0),gV=parseFloat(data.gventas||0),gF=parseFloat(data.gfin||0);
     const caja=parseFloat(data.caja||0),deuda=parseFloat(data.pasivo_lp||0);
-    const margenBruto=pct(v-c,v),ebitda=v-c-gA-gV-gF,margenEbitda=pct(ebitda,v);
+    const margenBruto=pct(v-c,v),ebitda=v-c-gA-gV,margenEbitda=pct(ebitda,v);
     const clientes=parseInt(data.clientes||0);
 
     const kpi=(label,val,sub,c2)=>`
@@ -6454,7 +6528,7 @@ function _periodosToHistorico(periodos){
     });
   }
   const historico=Object.values(byYear)
-    .map(h=>({...h,ebitda:h.ventas>0?h.ventas-h.cogs-h.gadmin-h.gventas+h.dep:0}))
+    .map(h=>({...h,ebitda:h.ventas>0?h.ventas-h.cogs-h.gadmin-h.gventas:0}))
     .filter(h=>h.ventas>0).sort((a,b)=>a.anio-b.anio);
 
   // Series mensuales solo para claves 'YYYY-MM' (excluye periodos anuales tipo 'YYYY-ANUAL')
@@ -6576,6 +6650,7 @@ async function _deletePeriodo(key){
     window._obbioCalc=null; window._obbioHistorico=null;
     window._obbioMonthlyByYear=null; window._pendingExcelData=null;
     window._obbioClienteMap=null; window._obbioRegionMap=null;
+    window._gastosRows=null; window._obbioCogsBreakdown=null; window._obbioGastosBreakdown=null;
     ['ii_ventas','ii_cogs','ii_gadmin','ii_gventas','ii_gfin','ii_dep',
      'ii_caja','ii_cxc','ii_inventario','ii_activo_fijo','ii_pasivo_cp',
      'ii_pasivo_lp','ii_capital'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
@@ -6804,6 +6879,8 @@ function applyExcelData(){
     window.prodInjectRows(d._ventasRows, d._fileName||'Excel principal');
   }
   window._gastosRows = d._gastosRows || null;
+  window._obbioCogsBreakdown   = d.cogsBreakdown   || null;
+  window._obbioGastosBreakdown = d.gastosBreakdown || null;
   // ── Motor: deriva TODOS los indicadores y refresca dashboard + gráficas ──
   if(typeof calcularYAplicar==='function') calcularYAplicar();
   // Show data preview instead of jumping directly to dashboard
@@ -7046,6 +7123,15 @@ async function downloadTemplate(){
     _meta:{
       version:'2025.3',
       nota:'Para actualizar referentes edita SOLO este objeto, no la lógica.',
+      identidad:'CAMPOS CON FUENTE (editar según la publicación): margenEbitda, margenNeto, razCorriente, '
+        +'debtEbitda, cobIntereses, ccc, dso, roe, cogsPct. CAMPOS DERIVADOS (no editar a mano — se calculan): '
+        +'gfinPct = margenEbitda/cobIntereses; gastosPct = (100 - cogsPct - margenEbitda) + gfinPct. '
+        +'gastosPct incluye gasto financiero porque la vista de Gastos compara contra (gadmin+gventas+gfin)/ventas. '
+        +'Si cambias margenEbitda, cogsPct o cobIntereses, vuelve a derivar los dos campos: '
+        +'checkBenchmarks() en consola valida las 18 entradas. Tambien exige margenNeto <= '
+        +'margenEbitda - gfinPct (techo absoluto, con depreciacion e impuesto en cero). '
+        +'construccion.margenNeto se ajusto de 8 a 4 en 2026-08-27: 8 superaba ese techo (7.2) y '
+        +'era aritmeticamente imposible; 4 implica ~1.5pp de depreciacion a tasa estatutaria.',
       fuentes:[
         'INEGI · Censos Económicos 2019/2024 — estadísticas financieras por sector y tamaño de empresa: https://www.inegi.org.mx/programas/ce/',
         'BANXICO · Sistema de Información Económica (SIE) — indicadores financieros sectoriales: https://www.banxico.org.mx/SieInternet/',
@@ -7058,60 +7144,60 @@ async function downloadTemplate(){
       ],
     },
     MX:{
-      restaurantes:{margenEbitda:10,margenNeto:5,razCorriente:1.2,debtEbitda:3.5,cobIntereses:2.5,ccc:25,dso:15,roe:12,cogsPct:38,gastosPct:25,
+      restaurantes:{margenEbitda:10,margenNeto:5,razCorriente:1.2,debtEbitda:3.5,cobIntereses:2.5,ccc:25,dso:15,roe:12,cogsPct:38,gastosPct:56,gfinPct:4,
         _fuente:'INEGI Censos Económicos (Servicios de alimentos y bebidas) · CANIRAC',
         _url:'https://www.inegi.org.mx/programas/ce/2019/',_fecha:'2024'},
-      gimnasios:   {margenEbitda:20,margenNeto:6,razCorriente:1.2,debtEbitda:3.5,cobIntereses:2.5,ccc:10,dso:5, roe:14,cogsPct:22,gastosPct:50,
+      gimnasios:   {margenEbitda:20,margenNeto:6,razCorriente:1.2,debtEbitda:3.5,cobIntereses:2.5,ccc:10,dso:5, roe:14,cogsPct:22,gastosPct:66,gfinPct:8,
         _fuente:'INEGI Censos Económicos (Servicios deportivos y recreativos)',
         _url:'https://www.inegi.org.mx/programas/ce/2019/',_fecha:'2024'},
-      tecnologia:  {margenEbitda:25,margenNeto:15,razCorriente:2,  debtEbitda:2,  cobIntereses:5,  ccc:40,dso:30,roe:20,cogsPct:25,gastosPct:40,
+      tecnologia:  {margenEbitda:25,margenNeto:15,razCorriente:2,  debtEbitda:2,  cobIntereses:5,  ccc:40,dso:30,roe:20,cogsPct:25,gastosPct:55,gfinPct:5,
         _fuente:'INEGI Censos Económicos (SCIAN 51-54, info y software) · IMEF',
         _url:'https://www.inegi.org.mx/programas/ce/2019/',_fecha:'2024'},
-      manufactura: {margenEbitda:12,margenNeto:7, razCorriente:1.5,debtEbitda:3.5,cobIntereses:3,  ccc:75,dso:45,roe:14,cogsPct:58,gastosPct:15,
+      manufactura: {margenEbitda:12,margenNeto:7, razCorriente:1.5,debtEbitda:3.5,cobIntereses:3,  ccc:75,dso:45,roe:14,cogsPct:58,gastosPct:34,gfinPct:4,
         _fuente:'INEGI EMIM (Encuesta Mensual de Industria Manufacturera) · CANACINTRA',
         _url:'https://www.inegi.org.mx/programas/emim/',_fecha:'2024'},
-      salud:       {margenEbitda:18,margenNeto:10,razCorriente:1.5,debtEbitda:2.5,cobIntereses:4,  ccc:40,dso:30,roe:16,cogsPct:40,gastosPct:22,
+      salud:       {margenEbitda:18,margenNeto:10,razCorriente:1.5,debtEbitda:2.5,cobIntereses:4,  ccc:40,dso:30,roe:16,cogsPct:40,gastosPct:46.5,gfinPct:4.5,
         _fuente:'INEGI Censos Económicos (Servicios de salud y asistencia social)',
         _url:'https://www.inegi.org.mx/programas/ce/2019/',_fecha:'2024'},
-      construccion:{margenEbitda:12,margenNeto:8, razCorriente:1.3,debtEbitda:4,  cobIntereses:2.5,ccc:90,dso:60,roe:12,cogsPct:70,gastosPct:12,
+      construccion:{margenEbitda:12,margenNeto:4, razCorriente:1.3,debtEbitda:4,  cobIntereses:2.5,ccc:90,dso:60,roe:12,cogsPct:70,gastosPct:22.8,gfinPct:4.8,
         _fuente:'INEGI ENEC (Encuesta Nacional de Empresas Constructoras) · CMIC',
         _url:'https://www.inegi.org.mx/programas/enec/',_fecha:'2024'},
-      transporte:  {margenEbitda:11,margenNeto:6, razCorriente:1.3,debtEbitda:3.5,cobIntereses:2.5,ccc:50,dso:30,roe:13,cogsPct:55,gastosPct:25,
+      transporte:  {margenEbitda:11,margenNeto:6, razCorriente:1.3,debtEbitda:3.5,cobIntereses:2.5,ccc:50,dso:30,roe:13,cogsPct:55,gastosPct:38.4,gfinPct:4.4,
         _fuente:'INEGI Censos Económicos (Transporte y logística) · SCT',
         _url:'https://www.inegi.org.mx/programas/ce/2019/',_fecha:'2024'},
-      servicios:   {margenEbitda:15,margenNeto:8, razCorriente:1.4,debtEbitda:3,  cobIntereses:3,  ccc:45,dso:35,roe:15,cogsPct:45,gastosPct:28,
+      servicios:   {margenEbitda:15,margenNeto:8, razCorriente:1.4,debtEbitda:3,  cobIntereses:3,  ccc:45,dso:35,roe:15,cogsPct:45,gastosPct:45,gfinPct:5,
         _fuente:'INEGI Censos Económicos (Servicios profesionales y técnicos) · IMEF',
         _url:'https://www.inegi.org.mx/programas/ce/2019/',_fecha:'2024'},
-      comercio:    {margenEbitda:8, margenNeto:4, razCorriente:1.3,debtEbitda:3.5,cobIntereses:2.5,ccc:55,dso:25,roe:12,cogsPct:68,gastosPct:18,
+      comercio:    {margenEbitda:8, margenNeto:4, razCorriente:1.3,debtEbitda:3.5,cobIntereses:2.5,ccc:55,dso:25,roe:12,cogsPct:68,gastosPct:27.2,gfinPct:3.2,
         _fuente:'INEGI Censos Económicos (Comercio al por mayor y menor) · ANTAD',
         _url:'https://www.inegi.org.mx/programas/ce/2019/',_fecha:'2024'},
-      _default:    {margenEbitda:15,margenNeto:8, razCorriente:1.5,debtEbitda:3,  cobIntereses:3,  ccc:60,dso:45,roe:15,cogsPct:55,gastosPct:25,
+      _default:    {margenEbitda:15,margenNeto:8, razCorriente:1.5,debtEbitda:3,  cobIntereses:3,  ccc:60,dso:45,roe:15,cogsPct:55,gastosPct:35,gfinPct:5,
         _fuente:'INEGI Censos Económicos 2019 · BANXICO SIE · IMEF',
         _url:'https://www.inegi.org.mx/programas/ce/2019/',_fecha:'2024'},
     },
     ES:{
-      restaurantes:{margenEbitda:10,margenNeto:5,razCorriente:1.2,debtEbitda:3.5,cobIntereses:2.5,ccc:25,dso:15,roe:12,cogsPct:38,gastosPct:25,
+      restaurantes:{margenEbitda:10,margenNeto:5,razCorriente:1.2,debtEbitda:3.5,cobIntereses:2.5,ccc:25,dso:15,roe:12,cogsPct:38,gastosPct:56,gfinPct:4,
         _fuente:'INE EEE Servicios (hostelería) · Banco de España RSE',
         _url:'https://www.bde.es/wbe/es/areas-actuacion/central-balances/estadisticas/',_fecha:'2024'},
-      gimnasios:   {margenEbitda:20,margenNeto:6,razCorriente:1.2,debtEbitda:3.5,cobIntereses:2.5,ccc:10,dso:5, roe:14,cogsPct:22,gastosPct:50,
+      gimnasios:   {margenEbitda:20,margenNeto:6,razCorriente:1.2,debtEbitda:3.5,cobIntereses:2.5,ccc:10,dso:5, roe:14,cogsPct:22,gastosPct:66,gfinPct:8,
         _fuente:'INE EEE Servicios (actividades deportivas) · Banco de España RSE',
         _url:'https://www.bde.es/wbe/es/areas-actuacion/central-balances/estadisticas/',_fecha:'2024'},
-      tecnologia:  {margenEbitda:25,margenNeto:15,razCorriente:2,  debtEbitda:2,  cobIntereses:5,  ccc:40,dso:30,roe:20,cogsPct:25,gastosPct:40,
+      tecnologia:  {margenEbitda:25,margenNeto:15,razCorriente:2,  debtEbitda:2,  cobIntereses:5,  ccc:40,dso:30,roe:20,cogsPct:25,gastosPct:55,gfinPct:5,
         _fuente:'INE EEE Servicios (información y comunicaciones) · Banco de España RSE',
         _url:'https://www.bde.es/wbe/es/areas-actuacion/central-balances/estadisticas/',_fecha:'2024'},
-      manufactura: {margenEbitda:12,margenNeto:7, razCorriente:1.5,debtEbitda:3.5,cobIntereses:3,  ccc:75,dso:45,roe:14,cogsPct:58,gastosPct:15,
+      manufactura: {margenEbitda:12,margenNeto:7, razCorriente:1.5,debtEbitda:3.5,cobIntereses:3,  ccc:75,dso:45,roe:14,cogsPct:58,gastosPct:34,gfinPct:4,
         _fuente:'INE EEE Industrial · Banco de España RSE',
         _url:'https://www.bde.es/wbe/es/areas-actuacion/central-balances/estadisticas/',_fecha:'2024'},
-      salud:       {margenEbitda:18,margenNeto:10,razCorriente:1.5,debtEbitda:2.5,cobIntereses:4,  ccc:40,dso:30,roe:16,cogsPct:40,gastosPct:22,
+      salud:       {margenEbitda:18,margenNeto:10,razCorriente:1.5,debtEbitda:2.5,cobIntereses:4,  ccc:40,dso:30,roe:16,cogsPct:40,gastosPct:46.5,gfinPct:4.5,
         _fuente:'INE EEE Servicios (sanitarias y sociales) · Banco de España RSE',
         _url:'https://www.bde.es/wbe/es/areas-actuacion/central-balances/estadisticas/',_fecha:'2024'},
-      construccion:{margenEbitda:12,margenNeto:8, razCorriente:1.3,debtEbitda:4,  cobIntereses:2.5,ccc:90,dso:60,roe:12,cogsPct:70,gastosPct:12,
+      construccion:{margenEbitda:12,margenNeto:4, razCorriente:1.3,debtEbitda:4,  cobIntereses:2.5,ccc:90,dso:60,roe:12,cogsPct:70,gastosPct:22.8,gfinPct:4.8,
         _fuente:'INE EEE + AEAT (construcción) · Banco de España RSE',
         _url:'https://www.bde.es/wbe/es/areas-actuacion/central-balances/estadisticas/',_fecha:'2024'},
-      transporte:  {margenEbitda:11,margenNeto:6, razCorriente:1.3,debtEbitda:3.5,cobIntereses:2.5,ccc:50,dso:30,roe:13,cogsPct:55,gastosPct:25,
+      transporte:  {margenEbitda:11,margenNeto:6, razCorriente:1.3,debtEbitda:3.5,cobIntereses:2.5,ccc:50,dso:30,roe:13,cogsPct:55,gastosPct:38.4,gfinPct:4.4,
         _fuente:'INE EEE Servicios (transporte y almacenamiento) · Banco de España RSE',
         _url:'https://www.bde.es/wbe/es/areas-actuacion/central-balances/estadisticas/',_fecha:'2024'},
-      _default:    {margenEbitda:15,margenNeto:8, razCorriente:1.5,debtEbitda:3,  cobIntereses:3,  ccc:60,dso:45,roe:15,cogsPct:55,gastosPct:25,
+      _default:    {margenEbitda:15,margenNeto:8, razCorriente:1.5,debtEbitda:3,  cobIntereses:3,  ccc:60,dso:45,roe:15,cogsPct:55,gastosPct:35,gfinPct:5,
         _fuente:'Banco de España · Central de Balances RSE (total sectores)',
         _url:'https://www.bde.es/wbe/es/areas-actuacion/central-balances/estadisticas/',_fecha:'2024'},
     },
@@ -7136,6 +7222,39 @@ async function downloadTemplate(){
     const table = OBBIO_BENCHMARKS[p] || OBBIO_BENCHMARKS.MX;
     return table[_obbmSectorKey(giro)] || table._default;
   }
+
+  /* Guardia de coherencia de OBBIO_BENCHMARKS.
+     Las tres cifras que se muestran juntas en la vista Costos/Gastos (cogsPct, gastosPct,
+     margenEbitda) tienen que cerrar contra 100, o el usuario ve "COGS en el referente" +
+     "Gastos en el referente" + "EBITDA sobresaliente" al mismo tiempo, que es imposible.
+     Devuelve la lista de entradas rotas; vacía = todo coherente. */
+  function checkBenchmarks(tol){
+    const t = (typeof tol==='number') ? tol : 0.15;
+    const fallas = [];
+    ['MX','ES'].forEach(p=>{
+      const tabla = OBBIO_BENCHMARKS[p] || {};
+      Object.keys(tabla).forEach(giro=>{
+        if(giro.charAt(0)==='_') return;
+        const b = tabla[giro];
+        if(!b || typeof b.margenEbitda!=='number') return;
+        const gfinEsp = b.margenEbitda / b.cobIntereses;
+        const gastEsp = (100 - b.cogsPct - b.margenEbitda) + gfinEsp;
+        if(Math.abs((b.gfinPct??NaN) - gfinEsp) > t)
+          fallas.push(`${p}.${giro}: gfinPct=${b.gfinPct} pero margenEbitda/cobIntereses=${gfinEsp.toFixed(2)}`);
+        if(Math.abs((b.gastosPct??NaN) - gastEsp) > t)
+          fallas.push(`${p}.${giro}: gastosPct=${b.gastosPct} pero (100-cogsPct-margenEbitda)+gfinPct=${gastEsp.toFixed(2)}`);
+        // Techo duro del margen neto: ni con depreciación 0 ni con impuesto 0 puede superar
+        // EBITDA menos intereses. Sin parámetros libres — si falla, la cifra es imposible.
+        const techoNeto = b.margenEbitda - gfinEsp;
+        if(b.margenNeto > techoNeto + t)
+          fallas.push(`${p}.${giro}: margenNeto=${b.margenNeto} supera el techo margenEbitda-gfinPct=${techoNeto.toFixed(2)} (imposible)`);
+      });
+    });
+    if(fallas.length) console.error('[Obbio] OBBIO_BENCHMARKS incoherente:\n  '+fallas.join('\n  '));
+    return fallas;
+  }
+  window.checkBenchmarks = checkBenchmarks;
+  checkBenchmarks(); // corre al cargar: si alguien edita un referente sin re-derivar, sale en consola
 
   /* ---------- DIAGNÓSTICO ---------- */
   function generarDiagnostico(r){
@@ -7803,10 +7922,11 @@ async function downloadTemplate(){
       {label:'  (-) G. Administracion',  val:-(r.gadmin||0),  style:'normal'},
       {label:'  (-) G. Ventas/Marketing',val:-(r.gventas||0), style:'normal'},
     ];
+    plItems.push({label:'EBITDA',                val:r.ebitda,        style:'total'});
     if(r.dep) plItems.push({label:'  (-) Depreciacion',val:-(r.dep||0),style:'normal'});
     plItems.push(
-      {label:'  (-) Gastos Financieros', val:-(r.gfin||0),    style:'normal'},
-      {label:'Ganancia Operativa',       val:r.ebitda,        style:'total'},
+      {label:'Ganancia Operativa (EBIT)', val:r.ebit,          style:'total'},
+      {label:'  (-) Gastos Financieros',  val:-(r.gfin||0),    style:'normal'},
     );
     if(r.isr) plItems.push({label:'  (-) ISR / Impuesto Renta',val:-r.isr,style:'normal'});
     plItems.push({label:'Ganancia Final',val:r.utilNeta,style:'total'});
@@ -8518,7 +8638,7 @@ async function downloadTemplate(){
       ['?Que columnas necesita mi Excel?','Las columnas minimas son: Ventas (o Ingresos) y Costo de Ventas. Obbio detecta automaticamente variantes de nombre (sales, revenue, ventas, ingresos, etc.). Para analisis completo agrega: Gastos Admin, Gastos Ventas, Gastos Financieros, Caja, CxC, Inventario, Activo Fijo, Pasivos.'],
       ['?Puedo cargar varios anos?','Si. Agrega pestanas con el nombre del ano (2022, 2023, 2024) en el mismo Excel. Obbio los integra automaticamente para la vista de Comparativos y el calculo de YoY.'],
       ['?Mis datos estan seguros?','Los datos financieros se procesan en tu navegador y se almacenan en tu cuenta de Supabase con cifrado. No se comparten con terceros. Las consultas al CFO se envian a la IA solo con el contexto de tu sesion.'],
-      ['?Por que el EBITDA y la Utilidad Neta no cuadran?','El Estado de Resultados de Obbio sigue la formula estandar: Ventas - COGS - Gastos Operativos = EBIT; EBIT - Gastos Financieros = UAI; UAI - ISR = Utilidad Neta. El EBITDA (EBIT + Depreciacion) se muestra como linea informativa adicional.'],
+      ['?Por que el EBITDA y la Utilidad Neta no cuadran?','El Estado de Resultados de Obbio sigue la formula estandar: Ventas - COGS - Gastos Operativos = EBITDA; EBITDA - Depreciacion = EBIT; EBIT - Gastos Financieros = UAI; UAI - ISR = Utilidad Neta. La depreciacion no reduce la caja, por eso el EBITDA es mayor que la utilidad neta.'],
       ['?Que idioma entiende el CFO?','Espanol principalmente, pero puedes escribirle en ingles. Responde siempre en el idioma en que le preguntas.'],
       ['?Puedo exportar a Excel?','Por ahora la exportacion es a PDF. La exportacion a Excel esta en la hoja de ruta.'],
     ];
@@ -8753,7 +8873,7 @@ function renderDiagEjecutivo(r){
   if(Array.isArray(_tlH)&&_tlH.length>=2){
     const cur=_tlH[_tlH.length-1], prev=_tlH[_tlH.length-2];
     const mb=h=>h.ventas>0?(h.ventas-h.cogs)/h.ventas*100:null;
-    const me=h=>h.ventas>0?(h.ventas-h.cogs-h.gadmin-h.gventas+h.dep)/h.ventas*100:null;
+    const me=h=>h.ventas>0?(h.ventas-h.cogs-h.gadmin-h.gventas)/h.ventas*100:null;
     const rc=h=>{const pc=(h.pasivo_cp||0)+(h.cxp||0); return pc>0?(h.caja+h.cxc+h.inventario)/pc:null;};
     const mb0=mb(prev),mb1=mb(cur); if(mb0!=null&&mb1!=null&&Math.abs(mb1-mb0)>=0.5)
       hallazgos.push({t:mb1>=mb0?'pos':'warn',txt:`📊 Margen bruto: ${mb0.toFixed(1)}% → ${mb1.toFixed(1)}% vs período anterior (${mb1>=mb0?'+':''}${(mb1-mb0).toFixed(1)}pp)`});
@@ -9595,7 +9715,8 @@ function renderGastosView(r){
   const gastoTotal=(r.gadmin||0)+(r.gventas||0)+(r.gfin||0);
   const pct=r.ventas>0?gastoTotal/r.ventas*100:null;
   // Sector gastos% benchmark — referente único, ver OBBIO_BENCHMARKS
-  const _gastRef=((window.getBM&&window.getBM(r.giro, r.pais))||{gastosPct:25}).gastosPct;
+  // Fallback alineado con OBBIO_BENCHMARKS._default (35 = 30 opex + 5 gfin), no un valor suelto.
+  const _gastRef=((window.getBM&&window.getBM(r.giro, r.pais))||{gastosPct:35}).gastosPct;
   const COLORS=['#F59E0B','#8B5CF6','#22C55E','#06B6D4','#EF4444','#EC4899','#F97316'];
   const k1=document.getElementById('gv-kpi-total'); if(k1) k1.innerHTML=_m(gastoTotal);
   const _gapG=pct!=null?+(pct-_gastRef).toFixed(1):null;
@@ -9657,13 +9778,14 @@ function renderGastosView(r){
     {label:'G. Ventas',value:r.gventas?_m(r.gventas):null},
     {label:'Margen Operativo',value:r.margenOp!=null?_pp(r.margenOp):null},
   ],'resumen-costosGastosView');
-  // Desglose de gastos clasificados (r.gastosRows viene del parser — T3a)
+  // Desglose de gastos clasificados (el parser lo deja en window._gastosRows — T3a)
   (function(){
     const card=document.getElementById('gv-desglose-card');
     const body=document.getElementById('gv-desglose-body');
     const badge=document.getElementById('gv-desglose-badge');
     if(!card||!body) return;
-    const rows=(r&&Array.isArray(r.gastosRows))?r.gastosRows:[];
+    const _gr=(r&&Array.isArray(r.gastosRows))?r.gastosRows:window._gastosRows;
+    const rows=Array.isArray(_gr)?_gr:[];
     if(!rows.length){ card.style.display='none'; return; }
     card.style.display='';
     const meta={adm:{n:'Administración',c:'#F59E0B'},vta:{n:'Ventas',c:'#8B5CF6'},fin:{n:'Financieros',c:'#06B6D4'},dep:{n:'Depreciación',c:'#64748B'}};
@@ -10335,12 +10457,14 @@ function renderFinancialCenterView(r){
           <tr style="border-bottom:1px solid var(--border2);background:rgba(34,197,94,.04);"><td style="padding:10px 14px;font-weight:700;">= Utilidad Bruta</td><td style="padding:10px 14px;text-align:right;font-weight:800;color:var(--success);">${_m(r.utilBruta)}</td><td style="padding:10px 14px;text-align:right;font-weight:700;">${_pp(r.margenBruto)}</td></tr>
           <tr style="border-bottom:1px solid var(--border2);"><td style="padding:10px 14px;color:var(--muted);">(−) G. Administración</td><td style="padding:10px 14px;text-align:right;font-weight:700;color:var(--danger);">(${_m(r.gadmin)})</td><td style="padding:10px 14px;text-align:right;">${_pp(r.gadmin/r.ventas*100)}</td></tr>
           <tr style="border-bottom:1px solid var(--border2);"><td style="padding:10px 14px;color:var(--muted);">(−) G. Ventas</td><td style="padding:10px 14px;text-align:right;font-weight:700;color:var(--danger);">(${_m(r.gventas)})</td><td style="padding:10px 14px;text-align:right;">${_pp(r.gventas/r.ventas*100)}</td></tr>
+          <tr style="border-bottom:1px solid var(--border2);background:rgba(34,197,94,.06);"><td style="padding:10px 14px;font-weight:800;">= EBITDA</td><td style="padding:10px 14px;text-align:right;font-weight:800;color:var(--primary);">${_m(r.ebitda)}</td><td style="padding:10px 14px;text-align:right;font-weight:700;color:var(--primary);">${_pp(r.margenEbitda)}</td></tr>
+          <tr style="border-bottom:1px solid var(--border2);"><td style="padding:10px 14px;color:var(--muted);">(−) Depreciación${r.depCapturado===false?' <span style="font-size:10px;opacity:.7;">(estimada)</span>':''}</td><td style="padding:10px 14px;text-align:right;font-weight:700;color:var(--danger);">(${_m(r.dep)})</td><td style="padding:10px 14px;text-align:right;">${_pp(r.dep/r.ventas*100)}</td></tr>
           <tr style="border-bottom:1px solid var(--border2);background:rgba(34,197,94,.06);"><td style="padding:10px 14px;font-weight:800;">= EBIT</td><td style="padding:10px 14px;text-align:right;font-weight:800;">${_m(r.ebit)}</td><td style="padding:10px 14px;text-align:right;font-weight:700;">${_pp(r.margenOp)}</td></tr>
           <tr style="border-bottom:1px solid var(--border2);"><td style="padding:10px 14px;color:var(--muted);">(−) G. Financieros</td><td style="padding:10px 14px;text-align:right;font-weight:700;color:var(--danger);">(${_m(r.gfin)})</td><td style="padding:10px 14px;text-align:right;">${_pp(r.gfin/r.ventas*100)}</td></tr>
           <tr style="border-bottom:1px solid var(--border2);"><td style="padding:10px 14px;color:var(--muted);">= UAI</td><td style="padding:10px 14px;text-align:right;font-weight:700;">${_m(r.uai)}</td><td style="padding:10px 14px;text-align:right;">${_pp(r.uai/r.ventas*100)}</td></tr>
           <tr style="border-bottom:1px solid var(--border2);"><td style="padding:10px 14px;color:var(--muted);">(−) ${r.fiscal?.etiquetaImpuesto||'ISR'}</td><td style="padding:10px 14px;text-align:right;font-weight:700;color:var(--warning);">(${_m(r.isr)})</td><td style="padding:10px 14px;text-align:right;">${_pp(r.isr/r.ventas*100)}</td></tr>
           <tr style="background:rgba(34,211,160,.06);"><td style="padding:11px 14px;font-weight:800;font-size:14px;">= UTILIDAD NETA</td><td style="padding:11px 14px;text-align:right;font-weight:800;font-size:15px;color:${r.utilNeta>=0?'var(--success)':'var(--danger)'};">${_m(r.utilNeta)}</td><td style="padding:11px 14px;text-align:right;font-weight:800;">${_pp(r.margenNeto)}</td></tr>
-          <tr style="border-top:2px dashed var(--border2);opacity:.7;"><td style="padding:8px 14px;color:var(--muted);font-style:italic;">EBITDA (informativo)</td><td style="padding:8px 14px;text-align:right;font-weight:700;color:var(--primary);">${_m(r.ebitda)}</td><td style="padding:8px 14px;text-align:right;color:var(--primary);">${_pp(r.margenEbitda)}</td></tr>
+          <tr style="border-top:2px dashed var(--border2);opacity:.7;"><td style="padding:8px 14px;color:var(--muted);font-style:italic;">Utilidad operativa (EBIT) sobre ventas</td><td style="padding:8px 14px;text-align:right;font-weight:700;color:var(--primary);">${_m(r.ebit)}</td><td style="padding:8px 14px;text-align:right;color:var(--primary);">${_pp(r.margenOp)}</td></tr>
         </tbody>
       </table>
     </div>
@@ -10354,9 +10478,9 @@ function renderFinancialCenterView(r){
           <tr style="border-bottom:1px solid var(--border2);background:rgba(34,197,94,.04);"><td style="padding:10px 14px;font-weight:700;">Activo Circulante</td><td style="padding:10px 14px;text-align:right;font-weight:800;">${_m(r.activoCirc)}</td></tr>
           <tr style="border-bottom:1px solid var(--border2);"><td style="padding:10px 14px;color:var(--muted);">Activo Fijo (neto)</td><td style="padding:10px 14px;text-align:right;font-weight:700;">${_m(r.activoFijo)}</td></tr>
           <tr style="border-bottom:1px solid var(--border2);background:rgba(34,197,94,.08);"><td style="padding:10px 14px;font-weight:800;color:var(--primary);">TOTAL ACTIVOS</td><td style="padding:10px 14px;text-align:right;font-weight:800;color:var(--primary);">${_m(r.totalActivos)}</td></tr>
-          <tr style="border-bottom:1px solid var(--border2);"><td style="padding:10px 14px;color:var(--muted);">Pasivo Circulante</td><td style="padding:10px 14px;text-align:right;font-weight:700;color:var(--danger);">${_m(r.pasivoCp)}</td></tr>
+          <tr style="border-bottom:1px solid var(--border2);"><td style="padding:10px 14px;color:var(--muted);">Deuda Corto Plazo</td><td style="padding:10px 14px;text-align:right;font-weight:700;color:var(--danger);">${_m(r.pasivoCp)}</td></tr>
+          <tr style="border-bottom:1px solid var(--border2);"><td style="padding:10px 14px;color:var(--muted);">Cuentas por Pagar</td><td style="padding:10px 14px;text-align:right;font-weight:700;color:var(--danger);">${_m(r.cxp)}</td></tr>
           <tr style="border-bottom:1px solid var(--border2);"><td style="padding:10px 14px;color:var(--muted);">Pasivo Largo Plazo</td><td style="padding:10px 14px;text-align:right;font-weight:700;color:var(--warning);">${_m(r.pasivoLp)}</td></tr>
-          <tr style="border-bottom:1px solid var(--border2);"><td style="padding:10px 14px;color:var(--muted);">Cuentas por Pagar</td><td style="padding:10px 14px;text-align:right;font-weight:700;color:var(--warning);">${_m(r.cxp)}</td></tr>
           <tr style="border-bottom:1px solid var(--border2);background:rgba(244,92,92,.04);"><td style="padding:10px 14px;font-weight:700;">TOTAL PASIVOS</td><td style="padding:10px 14px;text-align:right;font-weight:800;color:var(--danger);">${_m(r.totalPasivosConCxp)}</td></tr>
           <tr style="background:rgba(34,211,160,.06);"><td style="padding:11px 14px;font-weight:800;font-size:14px;">CAPITAL CONTABLE</td><td style="padding:11px 14px;text-align:right;font-weight:800;font-size:15px;color:${r.capital>=0?'var(--success)':'var(--danger)'};">${_m(r.capital)}</td></tr>
         </tbody>
@@ -11468,6 +11592,9 @@ async function limpiarSistema(){
   window._pendingExcelData  = null;
   window._obbioClienteMap = null;
   window._obbioRegionMap  = null;
+  window._gastosRows           = null;
+  window._obbioCogsBreakdown   = null;
+  window._obbioGastosBreakdown = null;
   window._prodData          = null;
   // sessionStorage / localStorage
   try{ sessionStorage.removeItem('obbio_calc_v1'); }catch(e){}
@@ -12329,9 +12456,9 @@ let _compMode='tendencia', _compYA=null, _compYB=null;
 
 function compKPIs(h){
   const v=h.ventas||0,cg=h.cogs||0,ga=h.gadmin||0,gv=h.gventas||0,dep=h.dep||0,gf=h.gfin||0;
-  const ub=v-cg, ebit=ub-ga-gv-dep, ebitda=ebit+dep, uai=ebit-gf;
+  const ub=v-cg, ebitda=ub-ga-gv, ebit=ebitda-dep, uai=ebit-gf;
   const isr=Math.max(0,uai*0.3), un=uai-isr;
-  const pcp=(h.pasivo_cp||0)+(h.cxp||0), plp=h.pasivo_lp||0, dt=pcp+plp;
+  const pcp=(h.pasivo_cp||0)+(h.cxp||0), plp=h.pasivo_lp||0, dt=(h.pasivo_cp||0)+plp;
   const ac=(h.caja||0)+(h.cxc||0)+(h.inventario||0);
   return {anio:h.anio,ventas:v,utilBruta:ub,ebitda,utilNeta:un,
     margenBruto:v?ub/v*100:0,margenEbitda:v?ebitda/v*100:0,margenNeto:v?un/v*100:0,
@@ -12571,6 +12698,12 @@ function sbInit(){
   // de onAuthStateChange justo tras un reload. Trade-off aceptado: se pierde la
   // sincronización del lock de sesión entre pestañas del mismo navegador — aceptable
   // para esta SPA, donde cada pestaña ya maneja su propio estado de UI.
+  // Detectar contexto de invitación/recuperación ANTES de que supabase-js consuma el hash.
+  // Flujo implícito (default de supabase-js v2, no hay flowType configurado): los tokens
+  // y type=invite|recovery llegan en el fragmento de la URL.
+  const _h = window.location.hash || '';
+  window._sbAuthFlow = /type=invite/.test(_h) ? 'invite' : /type=recovery/.test(_h) ? 'recovery' : null;
+
   const _sbMemLock = async (_name, _acquireTimeout, fn) => fn();
   _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     realtime: { params: { eventsPerSecond: 10 } },
@@ -12584,6 +12717,14 @@ function sbInit(){
     // sbAfterLogin()→sbLoadUserEmpresa() llamaba a _sb.from(...) desde dentro del
     // propio callback de auth, compitiendo por el mismo lock de sesión. Se difiere
     // con setTimeout(...,0) para que corra DESPUÉS de que este callback termine.
+    // Invite/recovery: fijar contraseña ANTES de entrar a la app. sbShowSetPassword()
+    // solo toca el DOM — no llama a Supabase ni hace await, así que respeta la regla
+    // del lock de arriba. La bandera se limpia hasta que la contraseña se guarda bien.
+    if(session && (window._sbAuthFlow || event==='PASSWORD_RECOVERY')){
+      _sbUser = session.user; window._sbUser = _sbUser;
+      sbShowSetPassword();
+      return;
+    }
     if(session){
       _sbUser = session.user;
       window._sbUser = _sbUser;
@@ -13091,6 +13232,45 @@ window.sbLimpiarDatos = async function(){
   }catch(e){ console.error('[Obbio] limpiar Supabase:', e); }
 };
 
+/* ── Set-password (invite/recovery) ───────────────────────────── */
+// Idempotente: updateUser() dispara USER_UPDATED, que vuelve a entrar al guard de
+// onAuthStateChange mientras la bandera sigue puesta. Sin este early-return el overlay
+// se re-mostraría y robaría el foco a media escritura.
+function sbShowSetPassword(){
+  const sp=document.getElementById('sbSetPwOverlay');
+  if(sp && sp.style.display==='flex') return;
+  const lo=document.getElementById('sbLoginOverlay');
+  const ap=document.querySelector('.app');
+  if(lo) lo.style.display='none';
+  if(ap) ap.style.visibility='hidden';
+  if(sp){ sp.style.display='flex'; setTimeout(()=>document.getElementById('sbNewPw')?.focus(),50); }
+}
+function sbSetPwErr(msg){
+  const el=document.getElementById('sbSetPwError');
+  if(el){ el.textContent=msg; el.style.display='block'; }
+}
+async function sbDoSetPassword(){
+  const p1=document.getElementById('sbNewPw')?.value||'';
+  const p2=document.getElementById('sbNewPw2')?.value||'';
+  const btn=document.getElementById('sbSetPwBtn');
+  if(p1.length<8){ sbSetPwErr('La contraseña debe tener al menos 8 caracteres.'); return; }
+  if(p1!==p2){ sbSetPwErr('Las contraseñas no coinciden.'); return; }
+  if(btn){ btn.disabled=true; btn.textContent='Activando...'; }
+  const {error}=await _sb.auth.updateUser({ password:p1 });
+  if(error){
+    // La bandera NO se limpia: si falla, el usuario sigue retenido en esta pantalla.
+    sbSetPwErr(error.message||'No se pudo guardar la contraseña.');
+    if(btn){ btn.disabled=false; btn.textContent='Activar cuenta'; }
+    return;
+  }
+  window._sbAuthFlow=null;
+  try{ history.replaceState(null,'',window.location.pathname); }catch(e){}
+  const sp=document.getElementById('sbSetPwOverlay');
+  if(sp) sp.style.display='none';
+  _sbIsAdmin = (_sbUser?.user_metadata?.role==='admin');
+  await sbAfterLogin();
+}
+window.sbDoSetPassword = sbDoSetPassword;
 document.addEventListener('DOMContentLoaded', sbInit);
 
 /* ── Sidebar móvil ─────────────────────────────────────────── */
@@ -13202,15 +13382,24 @@ function _obOnboardingDemo(){
   // Poblar campos del wizard con datos demo
   const set=(id,v)=>{ const el=document.getElementById(id); if(el) el.value=v; };
   set('ii_anio',2024); set('ii_ventas',48500000); set('ii_cogs',28200000);
-  set('ii_gadmin',4200000); set('ii_gventas',3100000); set('ii_dep',1450000); set('ii_gfin',980000);
+  set('ii_gadmin',4200000); set('ii_gventas',3100000); set('ii_depreciacion',1450000); set('ii_gfin',980000);
   set('ii_caja',3800000); set('ii_cxc',7200000); set('ii_inventario',5600000);
   set('ii_activo_fijo',18500000); set('ii_pasivo_cp',6800000); set('ii_pasivo_lp',9200000); set('ii_cxp',4100000);
+  set('ii_capital',15000000); set('ii_clientes',34); set('ii_concentracion',3);
   set('ii_empresa','Manufactura Metálica del Norte SA de CV'); set('ii_pais','MX');
-  // Historico demo
+  set('ii_giro','manufactura'); set('ii_moneda','MXN'); set('ii_periodo_tipo','anual');
+  // Histórico demo — P&L y balance completos: compKPIs recalcula desde estos componentes,
+  // no lee h.ebitda, así que las filas parciales daban EBITDA = ventas.
   window._obbioHistorico=[
-    {anio:2021,ventas:31000000,ebitda:5400000,utilNeta:2800000,caja:2100000},
-    {anio:2022,ventas:36500000,ebitda:6800000,utilNeta:3500000,caja:2600000},
-    {anio:2023,ventas:42000000,ebitda:8200000,utilNeta:4100000,caja:3200000},
+    {anio:2021,ventas:31000000,cogs:18000000,gadmin:2700000,gventas:2000000,dep:1050000,gfin:1150000,
+     caja:2100000,cxc:4600000,inventario:3600000,activo_fijo:14200000,
+     pasivo_cp:5200000,pasivo_lp:11000000,cxp:2700000,capital:5600000},
+    {anio:2022,ventas:36500000,cogs:21200000,gadmin:3150000,gventas:2350000,dep:1180000,gfin:1090000,
+     caja:2600000,cxc:5400000,inventario:4200000,activo_fijo:15600000,
+     pasivo_cp:5700000,pasivo_lp:10400000,cxp:3100000,capital:8600000},
+    {anio:2023,ventas:42000000,cogs:24400000,gadmin:3650000,gventas:2700000,dep:1310000,gfin:1030000,
+     caja:3200000,cxc:6300000,inventario:4900000,activo_fijo:17000000,
+     pasivo_cp:6300000,pasivo_lp:9800000,cxp:3600000,capital:11700000},
   ];
   // Calcular y renderizar
   if(typeof calcFinanciero==='function'){
@@ -13687,11 +13876,11 @@ window.mostrarDeteccion=function(){
     {n:'G. Ventas',        ...input(r.gventas,  'Hoja de gastos, concepto "vta" o "ventas"')},
     {n:'Depreciación',     ...input(r.dep!=null&&r.dep>0?r.dep:null, 'Columna "dep" o "depreciación" en tu Excel')},
     {n:'ISR / Impuestos',  ...input(r.isr!=null&&r.isr!==0?r.isr:null, 'Columna "isr" o "impuesto sobre la renta" en tu Excel')},
-    {n:'EBITDA',           ...calc(r.ebitda,    'Ventas − Costo − Gastos Oper. + Depreciación')},
+    {n:'EBITDA',           ...calc(r.ebitda,    'Ventas − Costo − Gastos Operativos')},
     {n:'Utilidad neta',    ...calc(r.utilNeta,  'EBIT − Gastos financieros − ISR')},
     {n:'Flujo operativo',  ...calc(r.flujoOp,   'EBITDA − variación de capital de trabajo')},
-    {n:'Activos totales',  ...input(r.activos>0?r.activos:null,  'Hoja de balance, fila "total activos"')},
-    {n:'Pasivos totales',  ...input(r.pasivos>0?r.pasivos:null,  'Hoja de balance, fila "total pasivos"')},
+    {n:'Activos totales',  ...input(r.totalActivos>0?r.totalActivos:null,  'Hoja de balance, fila "total activos"')},
+    {n:'Pasivos totales',  ...input(r.totalPasivosConCxp>0?r.totalPasivosConCxp:null,  'Hoja de balance, fila "total pasivos"')},
   ];
   const maxVal=Math.max(...filas.map(f=>Math.abs(f.v||0)),1);
   const makeRow=f=>{
@@ -13710,7 +13899,8 @@ window.mostrarDeteccion=function(){
   };
   const idn=[
     {label:'Utilidad Bruta = Ventas − Costo',  ok:Math.abs((r.utilBruta)-(r.ventas-r.cogs))<1,             causa:'Puede faltar costo de ventas completo en el Excel del cliente'},
-    {label:'EBIT = Util. Bruta − Gastos Op',   ok:Math.abs((r.ebit)-((r.ventas-r.cogs)-(r.gadmin+r.gventas)))<1, causa:'Pueden existir otros gastos operativos no incluidos en el Excel'},
+    {label:'EBITDA = Util. Bruta − Gastos Op', ok:Math.abs((r.ebitda)-((r.ventas-r.cogs)-(r.gadmin+r.gventas)))<1, causa:'Pueden existir otros gastos operativos no incluidos en el Excel'},
+    {label:'EBIT = EBITDA − Depreciación',     ok:Math.abs((r.ebit)-((r.ebitda||0)-(r.dep||0)))<1,          causa:'La depreciación se estimó a partir del activo fijo'},
     {label:'Utilidad Neta = UAI − ISR',         ok:Math.abs((r.utilNeta)-((r.uai||0)-(r.isr||0)))<1,        causa:'El cliente no proporcionó ISR o impuestos — Obbio los estimó'},
     {label:'Activos = Pasivos + Capital',        ok:!r.balanceDesbalanceado,                                  causa:'El balance del cliente está incompleto o tiene partidas no clasificadas'},
   ];
