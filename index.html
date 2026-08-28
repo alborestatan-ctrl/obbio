@@ -5810,6 +5810,45 @@ function parseExcelWorkbook(wb){
       if(hit!==undefined&&row[hit]!=='') return String(row[hit]).trim();
     } return '';
   };
+  /* ── Filas de EJEMPLO de la plantilla ──────────────────────────────────────
+     La plantilla trae filas de ejemplo ("ACME Corp", "Factura ACME"…) rotuladas
+     "Bórralas y captura tus datos". En las hojas OPCIONALES es fácil dejarlas: nadie
+     las siente obligatorias. Si además un campo primario no se pudo leer del Estado
+     de Resultados o del Balance (celda vacía, texto donde iba un número), el respaldo
+     de la hoja opcional lo rellenaba con esos importes de ejemplo, sin aviso y sin
+     forma de distinguirlos de un dato real en la UI.
+     La lista NO se escribe a mano: se deriva de _OBT_SHEETS, la misma definición con
+     la que se genera el Excel, para que plantilla y filtro no puedan desincronizarse.
+     Se comparan todas las columnas salvo la fecha (Excel la devuelve como Date o como
+     serial, no como el texto de la plantilla). Una fila real tendría que coincidir en
+     cliente, producto, región, sucursal E importe exacto para caer aquí. */
+  const _plantillaEjemplos=hoja=>{
+    try{
+      if(typeof _OBT_SHEETS==='undefined') return null;
+      const d=_OBT_SHEETS.find(s=>norm(s.name)===norm(hoja));
+      if(!d||!Array.isArray(d.rows)||!d.rows.length||!Array.isArray(d.header)) return null;
+      const cols=d.header.map((h,i)=>({
+        k:norm(String(h)),
+        num:d.rows.every(r=>typeof r[i]==='number'),
+        fecha:d.rows.some(r=>r[i] instanceof Date||/^\d{4}-\d{2}-\d{2}$/.test(String(r[i])))
+      })).filter(c=>c.k&&!c.fecha);
+      if(!cols.length) return null;
+      const sig=o=>cols.map(c=>c.num?c.k+'#'+toNum(o[c.k]):c.k+'@'+norm(String(o[c.k]??''))).join('|');
+      const filas=new Set(d.rows.map(r=>{
+        const o={}; d.header.forEach((h,i)=>{ o[norm(String(h))]=r[i]??''; }); return sig(o);
+      }));
+      return {cols,sig,filas};
+    }catch(e){ return null; }
+  };
+  // Descarta de una hoja las filas que son textualmente las de ejemplo de la plantilla.
+  const sinEjemplos=(rows,hoja)=>{
+    const ej=_plantillaEjemplos(hoja);
+    if(!ej||!Array.isArray(rows)) return rows;
+    // Si el encabezado no es el de la plantilla, el usuario armó su propio archivo:
+    // no hay filas de ejemplo que quitar y comparar sería adivinar.
+    if(!rows.length||!ej.cols.every(c=>c.k in rows[0])) return rows;
+    return rows.filter(r=>!ej.filas.has(ej.sig(r)));
+  };
   // Importe de una fila de ventas: usa columna de importe directa; si no hay, deriva precio×cantidad.
   const rowImporte=row=>{
     let v=col(row,'importe','monto','venta','ingreso','ventas','subtotal');
@@ -5985,7 +6024,7 @@ function parseExcelWorkbook(wb){
     });
 
     // Optional Ventas sheet — client count + monthly series only (no Costos column)
-    const rV=parseRows(getSheet('ventas'),['ventas','fecha','cliente']);
+    const rV=sinEjemplos(parseRows(getSheet('ventas'),['ventas','fecha','cliente']),'Ventas');
     const mV=new Array(12).fill(0); const clSet=new Set(); let sumV=0;
     const clienteMapV={}, regionMapV={};
     rV.forEach(r=>{
@@ -6012,7 +6051,7 @@ function parseExcelWorkbook(wb){
     if(rV.length) data._ventasRows=rV.map(r=>({fecha:colStr(r,'fecha','date','periodo','mes'),producto:colStr(r,'producto','product','item','articulo','descripcion','nombre','concepto','servicio','sku')||'(sin nombre)',cantidad:1,precio:rowImporte(r),sucursal:colStr(r,'sucursal','branch','tienda','sede','local','centro','establecimiento'),fuente:'Ventas (Opcional)'})).filter(r=>r.producto!=='(sin nombre)'&&r.precio>0);
 
     // Optional Deuda sheet
-    const rD=parseRows(getSheet('deuda'),['saldo','credito','fecha']);
+    const rD=sinEjemplos(parseRows(getSheet('deuda'),['saldo','credito','fecha']),'Deuda');
     const deudaMap={}; let sumInteresDeuda=0;
     rD.forEach(r=>{
       const cred=colStr(r,'credito','credit','concepto','prestamo');
@@ -6026,7 +6065,7 @@ function parseExcelWorkbook(wb){
     if(sumInteresDeuda>0&&!data.gfin) data.gfin=String(Math.round(sumInteresDeuda));
 
     // Optional Fiscal sheet — IVA only (no ISR)
-    const rF=parseRows(getSheet('fiscal'),['iva','trasladado','acreditable','fecha']);
+    const rF=sinEjemplos(parseRows(getSheet('fiscal'),['iva','trasladado','acreditable','fecha']),'Fiscal');
     let sumIvaTras=0,sumIvaAcred=0;
     rF.forEach(r=>{
       sumIvaTras+=col(r,'trasladado');
@@ -6035,7 +6074,7 @@ function parseExcelWorkbook(wb){
     if(sumIvaTras>0) data._iva_neto=String(Math.round(sumIvaTras-sumIvaAcred));
 
     // Optional Bancos sheet
-    const rB=parseRows(getSheet('bancos'),['entrada','salida','fecha']);
+    const rB=sinEjemplos(parseRows(getSheet('bancos'),['entrada','salida','fecha']),'Bancos');
     let sumEnt=0,sumSal=0;
     rB.forEach(r=>{
       sumEnt+=col(r,'entrada','deposito','cobro','abono');
@@ -6044,7 +6083,7 @@ function parseExcelWorkbook(wb){
     if((sumEnt-sumSal)>0&&!data.caja) data.caja=String(Math.round(sumEnt-sumSal));
 
     // Optional Histórico sheet — fallback row-per-year (P&L + Balance)
-    const rH=parseRows(getSheet('hist')||getSheet('año')||getSheet('historico'),['año','ventas','anio']);
+    const rH=sinEjemplos(parseRows(getSheet('hist')||getSheet('año')||getSheet('historico'),['año','ventas','anio']),'Histórico');
     rH.forEach(r=>{
       const anio=parseInt(colStr(r,'año','anio','year','periodo'))||0;
       const v=col(r,'ventas','venta','ingreso'); if(anio<=1990) return;
@@ -6083,7 +6122,7 @@ function parseExcelWorkbook(wb){
 
   } else if(isTransactional){
     // ── TRANSACTIONAL FORMAT (legacy: Ventas+Gastos+Bancos sheets) ──
-    const rV=parseRows(getSheet('ventas'),['ventas','fecha','cliente']);
+    const rV=sinEjemplos(parseRows(getSheet('ventas'),['ventas','fecha','cliente']),'Ventas');
     let sumV=0,sumC=0; const mV=new Array(12).fill(0),mC=new Array(12).fill(0); const clSet=new Set();
     const clienteMapT={}, regionMapT={};
     const _trxYrs=new Set(); rV.forEach(r=>{const yr=yearOf(colStr(r,'fecha','date'));if(yr>0)_trxYrs.add(yr);});
@@ -6111,7 +6150,7 @@ function parseExcelWorkbook(wb){
     if(Object.keys(regionMapT).length>0) data.regionMap=regionMapT;
     if(rV.length) data._ventasRows=rV.map(r=>({fecha:colStr(r,'fecha','date'),producto:colStr(r,'producto','product','item','articulo','descripcion','nombre','concepto')||'(sin nombre)',cantidad:col(r,'cantidad','qty','units')||1,precio:col(r,'ventas','venta','ingreso','importe','monto'),fuente:'Ventas'})).filter(r=>r.producto!=='(sin nombre)'||r.precio>0);
 
-    const rG=parseRows(getSheet('gastos'),['categ','fecha','monto']);
+    const rG=sinEjemplos(parseRows(getSheet('gastos'),['categ','fecha','monto']),'Gastos');
     let gAdmin=0,gVta=0,gFin=0,gDep=0;
     const mA=new Array(12).fill(0),mGv=new Array(12).fill(0),mGf=new Array(12).fill(0);
     const ADM=['admin','operac','renta','nomina','sueldo','rrhh','recursos','general','oficin'];
@@ -6137,7 +6176,7 @@ function parseExcelWorkbook(wb){
     if(gFin>0){   data.gfin=String(Math.round(gFin));     if(mGf.some(x=>x>0)) data.m_gfin=mGf.map(Math.round).join(','); }
     if(gDep>0)    data.depreciacion=String(Math.round(gDep));
 
-    const rB=parseRows(getSheet('bancos'),['entrada','salida','fecha']);
+    const rB=sinEjemplos(parseRows(getSheet('bancos'),['entrada','salida','fecha']),'Bancos');
     let sumEnt=0,sumSal=0;
     rB.forEach(r=>{
       sumEnt+=col(r,'entrada','deposito','cobro','abono');
@@ -6146,13 +6185,13 @@ function parseExcelWorkbook(wb){
     if(sumEnt-sumSal>0) data.caja=String(Math.round(sumEnt-sumSal));
     if(rB.length) data._bancosRows=rB.map(x=>({concepto:colStr(x,'concepto','descripcion','detalle')||'Movimiento',entrada:col(x,'entrada','deposito','cobro','abono'),salida:col(x,'salida','pago','retiro','cargo'),fecha:colStr(x,'fecha','date')}));
 
-    const rF=parseRows(getSheet('fiscal'),['iva','trasladado','fecha']);
+    const rF=sinEjemplos(parseRows(getSheet('fiscal'),['iva','trasladado','fecha']),'Fiscal');
     let sumIvaTras=0,sumIvaAcred=0;
     rF.forEach(r=>{ sumIvaTras+=col(r,'trasladado'); sumIvaAcred+=col(r,'acreditable'); });
     if(sumIvaTras>0) data._iva_neto=String(Math.round(sumIvaTras-sumIvaAcred));
     if(rF.length) data._fiscalRows=rF.map(x=>({concepto:colStr(x,'concepto','descripcion')||'IVA',trasladado:col(x,'trasladado'),acreditable:col(x,'acreditable')}));
 
-    const rD=parseRows(getSheet('deuda'),['saldo','credito','fecha']);
+    const rD=sinEjemplos(parseRows(getSheet('deuda'),['saldo','credito','fecha']),'Deuda');
     const deudaMap={}; let sumInteresDeuda=0;
     rD.forEach(r=>{
       const cred=colStr(r,'credito','credit','concepto','prestamo');
@@ -7503,11 +7542,13 @@ async function downloadTemplate(){
     const ns=window.jspdf||window.jsPDF;const JsPDF=ns&&(ns.jsPDF||ns);
     if(!JsPDF){if(typeof showNotif==='function') showNotif('Libreria PDF no disponible','error');return;}
 
-    // Sanitiza unicode que helvetica no soporta
+    // Sanitiza unicode que la fuente embebida no soporta. El € (U+20AC) queda fuera
+    // del recorte a Latin-1 porque el subset ArialPDF sí lo trae; sin esta excepción
+    // toda cifra en euros salía como "?" en el reporte de clientes de España.
     const _t=s=>String(s==null?'N/D':s)
       .replace(/−/g,'-').replace(/—|–/g,'-')
       .replace(/‘|’/g,"'").replace(/“|”/g,'"')
-      .replace(/…/g,'...')                     .replace(/[^\x00-\xFF]/g,'?');
+      .replace(/…/g,'...')                     .replace(/[^\x00-\xFF€]/g,'?');
     const _mv=v=>(v==null||isNaN(v))?'N/D':_t(_m(v));
     const _pv=v=>(v==null||isNaN(v))?'N/D':_t(_pp(v));
 
