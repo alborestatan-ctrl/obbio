@@ -816,25 +816,57 @@ th[data-tip]{cursor:default;}
     <div style="text-align:center;margin-bottom:24px;">
       <div style="font-size:32px;margin-bottom:12px;">👤</div>
       <h2 style="font-size:20px;font-weight:800;color:var(--text);margin-bottom:8px;">Nuevo Cliente</h2>
-      <p style="font-size:13px;color:var(--muted);line-height:1.5;">El cliente recibirá estas credenciales para acceder a su dashboard.</p>
+      <p style="font-size:13px;color:var(--muted);line-height:1.5;">Se genera un link de activación para que el cliente ponga su propia contraseña.</p>
     </div>
-    <input id="sbClienteEmail" type="email" placeholder="correo@empresa.com"
-      style="width:100%;padding:13px 16px;background:var(--card2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;outline:none;margin-bottom:10px;transition:border .2s;"
-      onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'"
-      onkeydown="if(event.key==='Enter')document.getElementById('sbClientePass').focus()">
-    <input id="sbClientePass" type="password" placeholder="Contraseña (mín. 6 caracteres)"
-      style="width:100%;padding:13px 16px;background:var(--card2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;outline:none;margin-bottom:8px;transition:border .2s;"
-      onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'"
-      onkeydown="if(event.key==='Enter')sbCrearCliente()">
-    <div id="sbClienteError" style="display:none;font-size:12px;color:var(--danger);margin-bottom:8px;padding:0 4px;"></div>
-    <div id="sbClienteOk" style="display:none;font-size:12px;color:#4ade80;margin-bottom:8px;padding:0 4px;text-align:center;font-weight:700;"></div>
-    <button id="sbClienteBtn" onclick="sbCrearCliente()"
-      style="width:100%;padding:13px;background:var(--primary);border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;margin-top:4px;">
-      Crear cliente
-    </button>
+    <div id="sbClienteForm">
+      <input id="sbClienteEmail" type="email" placeholder="correo@empresa.com"
+        style="width:100%;padding:13px 16px;background:var(--card2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;outline:none;margin-bottom:10px;transition:border .2s;"
+        onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'"
+        onkeydown="if(event.key==='Enter')sbCrearCliente()">
+      <div id="sbClientePassWrap" style="display:none;">
+        <input id="sbClientePass" type="password" placeholder="Contraseña (mín. 6 caracteres)"
+          style="width:100%;padding:13px 16px;background:var(--card2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;outline:none;margin-bottom:8px;transition:border .2s;"
+          onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'"
+          onkeydown="if(event.key==='Enter')sbCrearCliente()">
+        <p style="font-size:11px;color:var(--muted2);margin:0 4px 8px;line-height:1.45;">Se la tendrás que dictar tú. El link de activación es más seguro.</p>
+      </div>
+      <div id="sbClienteError" style="display:none;font-size:12px;color:var(--danger);margin-bottom:8px;padding:0 4px;"></div>
+      <button id="sbClienteBtn" onclick="sbCrearCliente()"
+        style="width:100%;padding:13px;background:var(--primary);border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;margin-top:4px;">
+        Crear y generar acceso
+      </button>
+      <button id="sbClienteModoBtn" onclick="sbToggleModoPass()"
+        style="width:100%;padding:9px;background:transparent;border:none;color:var(--muted2);font-size:12px;cursor:pointer;margin-top:6px;text-decoration:underline;">
+        o asignar una contraseña yo mismo
+      </button>
+    </div>
+
+    <!-- Resultado: link listo para enviar -->
+    <div id="sbClienteRes" style="display:none;">
+      <div id="sbClienteOk" style="font-size:13px;color:#4ade80;margin-bottom:14px;text-align:center;font-weight:700;"></div>
+      <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px;">Link de activación</label>
+      <input id="sbClienteLink" type="text" readonly onclick="this.select()"
+        style="width:100%;padding:11px 13px;background:var(--card2);border:1px solid var(--border);border-radius:9px;color:var(--text);font-size:11px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;outline:none;margin-bottom:6px;">
+      <p id="sbClienteNota" style="font-size:11px;color:var(--muted2);margin:0 4px 12px;line-height:1.45;"></p>
+      <div style="display:flex;gap:8px;">
+        <button onclick="sbCopiarLink(this)"
+          style="flex:1;padding:12px;background:var(--card2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;font-weight:700;cursor:pointer;">
+          📋 Copiar
+        </button>
+        <button onclick="sbEnviarWhatsApp()"
+          style="flex:1;padding:12px;background:#25D366;border:none;border-radius:10px;color:#07130B;font-size:13px;font-weight:800;cursor:pointer;">
+          💬 WhatsApp
+        </button>
+      </div>
+      <button onclick="sbResetClienteModal()"
+        style="width:100%;padding:11px;background:transparent;border:1px solid var(--border);border-radius:10px;color:var(--muted);font-size:13px;cursor:pointer;margin-top:10px;">
+        Dar de alta otro
+      </button>
+    </div>
+
     <button onclick="document.getElementById('sbClienteModal').style.display='none'"
       style="width:100%;padding:10px;background:transparent;border:1px solid var(--border);border-radius:10px;color:var(--muted);font-size:13px;cursor:pointer;margin-top:8px;">
-      Cancelar
+      Cerrar
     </button>
   </div>
 </div>
@@ -13002,55 +13034,123 @@ async function sbRenderAdminSelector(){
 }
 
 /* ── Admin: gestión de clientes ───────────────────────────────── */
+// Vuelve el modal al formulario vacío, escondiendo el panel de resultado.
+function sbResetClienteModal(){
+  const g=id=>document.getElementById(id);
+  ['sbClienteEmail','sbClientePass','sbClienteLink'].forEach(id=>{ const el=g(id); if(el) el.value=''; });
+  const err=g('sbClienteError'); if(err) err.style.display='none';
+  const res=g('sbClienteRes');   if(res) res.style.display='none';
+  const form=g('sbClienteForm'); if(form) form.style.display='';
+  const pw=g('sbClientePassWrap'); if(pw) pw.style.display='none';
+  const modo=g('sbClienteModoBtn');
+  if(modo){ modo.textContent='o asignar una contraseña yo mismo'; modo.style.display=''; }
+  const btn=g('sbClienteBtn');
+  if(btn){ btn.textContent='Crear y generar acceso'; btn.disabled=false; }
+  setTimeout(()=>g('sbClienteEmail')?.focus(),100);
+}
+window.sbResetClienteModal=sbResetClienteModal;
+
+// Alterna entre el link de activación (recomendado) y asignar la contraseña a mano.
+function sbToggleModoPass(){
+  const pw=document.getElementById('sbClientePassWrap');
+  const btn=document.getElementById('sbClienteBtn');
+  const modo=document.getElementById('sbClienteModoBtn');
+  if(!pw) return;
+  const manual = pw.style.display==='none';
+  pw.style.display = manual ? '' : 'none';
+  if(btn)  btn.textContent = manual ? 'Crear con esa contraseña' : 'Crear y generar acceso';
+  if(modo) modo.textContent = manual ? '← mejor generar un link de activación' : 'o asignar una contraseña yo mismo';
+  if(manual) setTimeout(()=>document.getElementById('sbClientePass')?.focus(),50);
+  else { const el=document.getElementById('sbClientePass'); if(el) el.value=''; }
+}
+window.sbToggleModoPass=sbToggleModoPass;
+
 function sbAbrirCrearCliente(){
   const m=document.getElementById('sbClienteModal');
   if(!m) return;
-  document.getElementById('sbClienteEmail').value='';
-  document.getElementById('sbClientePass').value='';
-  document.getElementById('sbClienteError').style.display='none';
-  document.getElementById('sbClienteOk').style.display='none';
-  const btn=document.getElementById('sbClienteBtn');
-  if(btn){btn.textContent='Crear cliente';btn.disabled=false;}
+  sbResetClienteModal();
   m.style.display='flex';
-  setTimeout(()=>document.getElementById('sbClienteEmail')?.focus(),100);
 }
 
 async function sbCrearCliente(){
-  const email=(document.getElementById('sbClienteEmail')?.value||'').trim();
-  const password=(document.getElementById('sbClientePass')?.value||'').trim();
-  const errEl=document.getElementById('sbClienteError');
-  const okEl=document.getElementById('sbClienteOk');
-  const btn=document.getElementById('sbClienteBtn');
-  errEl.style.display='none'; okEl.style.display='none';
-  if(!email||!password){
-    errEl.textContent='Completa email y contraseña.'; errEl.style.display='block'; return;
-  }
+  const g=id=>document.getElementById(id);
+  const email=(g('sbClienteEmail')?.value||'').trim();
+  const manual=g('sbClientePassWrap')?.style.display!=='none';
+  const password=manual?(g('sbClientePass')?.value||'').trim():'';
+  const errEl=g('sbClienteError');
+  const btn=g('sbClienteBtn');
+  errEl.style.display='none';
+  if(!email){ errEl.textContent='Escribe el correo del cliente.'; errEl.style.display='block'; return; }
+  if(manual&&password.length<6){ errEl.textContent='La contraseña debe tener al menos 6 caracteres.'; errEl.style.display='block'; return; }
+  const _txt=btn.textContent;
   btn.textContent='Creando…'; btn.disabled=true;
   try{
     const session=await _sb.auth.getSession();
     const token=session.data.session?.access_token;
-    const FN_URL=window.location.origin+'/api/create-user';
-    const res=await fetch(FN_URL,{
+    const res=await fetch(window.location.origin+'/api/create-user',{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-      body:JSON.stringify({email,password}),
+      // Sin contraseña => el backend genera el link de activación.
+      body:JSON.stringify(password?{email,password}:{email}),
     });
     const json=await res.json();
-    if(!res.ok){ errEl.textContent=json.error||'Error al crear.'; errEl.style.display='block'; btn.textContent='Crear cliente'; btn.disabled=false; return; }
-    okEl.textContent='✅ Cliente creado: '+json.email;
-    okEl.style.display='block';
-    btn.textContent='Crear otro';
-    btn.disabled=false;
-    document.getElementById('sbClienteEmail').value='';
-    document.getElementById('sbClientePass').value='';
-    // Refrescar selector
+    if(!res.ok){ errEl.textContent=json.error||'Error al crear.'; errEl.style.display='block'; btn.textContent=_txt; btn.disabled=false; return; }
+
     await sbRenderAdminSelector();
+
+    if(json.action_link){
+      // Panel de envío: el link ya está listo, solo falta hacérselo llegar.
+      g('sbClienteForm').style.display='none';
+      g('sbClienteOk').textContent = json.tipo==='recovery'
+        ? '✅ '+email+' ya existía · link para restablecer su acceso'
+        : '✅ Cliente creado: '+email;
+      g('sbClienteLink').value=json.action_link;
+      g('sbClienteNota').textContent = json.tipo==='recovery'
+        ? 'Con este link vuelve a poner su contraseña. Un solo uso.'
+        : 'Un solo uso. Si expira, vuelve a darlo de alta con el mismo correo y se genera uno nuevo.';
+      window._sbUltimoLink={link:json.action_link,email};
+      g('sbClienteRes').style.display='';
+    } else {
+      // Modo contraseña manual: no hay link que enviar.
+      g('sbClienteForm').style.display='none';
+      g('sbClienteOk').textContent='✅ Cliente creado: '+(json.email||email);
+      g('sbClienteLink').value=window.location.origin;
+      g('sbClienteNota').textContent='Entra con ese correo y la contraseña que le asignaste.';
+      window._sbUltimoLink={link:window.location.origin,email};
+      g('sbClienteRes').style.display='';
+    }
   }catch(e){
     errEl.textContent='Error de red. Verifica que el deploy esté actualizado.';
     errEl.style.display='block';
-    btn.textContent='Crear cliente'; btn.disabled=false;
+    btn.textContent=_txt; btn.disabled=false;
   }
 }
+
+async function sbCopiarLink(btn){
+  const el=document.getElementById('sbClienteLink');
+  if(!el) return;
+  const _txt=btn.textContent;
+  try{
+    await navigator.clipboard.writeText(el.value);
+  }catch(e){
+    // navigator.clipboard exige contexto seguro; en local por http no existe.
+    el.select(); try{ document.execCommand('copy'); }catch(_){ }
+  }
+  btn.textContent='✅ Copiado';
+  setTimeout(()=>{ btn.textContent=_txt; },1600);
+}
+window.sbCopiarLink=sbCopiarLink;
+
+// Abre WhatsApp con el mensaje ya redactado; el admin elige el contacto.
+function sbEnviarWhatsApp(){
+  const u=window._sbUltimoLink;
+  if(!u) return;
+  const msg='Hola, ya está listo tu acceso a Obbio.\n\n'
+    +'Entra con este link y define tu contraseña:\n'+u.link+'\n\n'
+    +'Tu usuario es: '+u.email;
+  window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank','noopener');
+}
+window.sbEnviarWhatsApp=sbEnviarWhatsApp;
 
 async function sbEliminarCliente(){
   const sel=document.getElementById('sbEmpresaSelect');
