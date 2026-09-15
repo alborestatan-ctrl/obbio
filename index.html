@@ -8884,14 +8884,26 @@ async function _obbioResumen(moduleId,lines,containerId){
   el.style.display='';
   const sysPrompt='Eres un analista financiero. Se te dan cifras reales de un módulo de dashboard.\nEscribe EXACTAMENTE 2-3 viñetas breves con los hallazgos más importantes.\nREGLAS: solo usa cifras que te proporcionan explícitamente. Nunca inventes números ni porcentajes. Sin introducción ni cierre. Solo viñetas con • al inicio. Máximo 20 palabras por viñeta. Añade interpretación, no solo repitas los datos.';
   const question=`Módulo "${moduleId}" — datos reales:\n${valid.map(l=>`${l.label}: ${l.value}`).join('\n')}\n\n¿Cuáles son los 2-3 hallazgos más importantes?`;
+  // El motivo real se distingue por status: si no, un modelo dado de baja en el
+  // proveedor se veía igual que un problema de red y no había forma de saberlo.
+  const _fallo=msg=>{
+    el.innerHTML='<div class="obbio-resumen-hdr">🤖 Resumen Obbio</div><div class="obbio-resumen-body" style="color:var(--muted);font-size:12px;">'+msg+'</div>';
+    el.style.display='';
+  };
   try{
     const r=await fetch('/api/chat',{method:'POST',headers:await window._authHeaders(),body:JSON.stringify({question,financialContext:sysPrompt,history:[]})});
-    const j=await r.json();
-    const t=j.text||'No se pudo generar el resumen.';
-    window._obbioResumenCache[ck]=t;
-    _obbioResumenRender(el,t);
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok||!j.text){
+      if(r.status===401){ _fallo('Tu sesión expiró. Vuelve a entrar para ver el resumen.'); return; }
+      console.error('[Obbio] Resumen IA:', r.status, j.detail||j.error||'');
+      _fallo('El servicio de IA no respondió. Vuelve a intentar en un momento.');
+      return;
+    }
+    window._obbioResumenCache[ck]=j.text;
+    _obbioResumenRender(el,j.text);
   }catch(e){
-    el.innerHTML='<div class="obbio-resumen-hdr">🤖 Resumen Obbio</div><div class="obbio-resumen-body" style="color:var(--muted);font-size:12px;">No disponible — verifica la conexión.</div>';
+    console.error('[Obbio] Resumen IA:', e);
+    _fallo('No se pudo conectar. Revisa tu conexión a internet.');
   }
 }
 
