@@ -908,7 +908,57 @@ th[data-tip]{cursor:default;}
       onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">
       Ingresar
     </button>
-    <p style="text-align:center;margin-top:18px;font-size:11px;color:var(--muted2);">Obbio · Acceso seguro</p>
+    <p id="sbIrRegistro" style="text-align:center;margin-top:20px;font-size:13px;color:var(--muted);">
+      ¿No tienes cuenta?
+      <a href="#registro" onclick="sbMostrarRegistro();return false;"
+         style="color:var(--primary);font-weight:700;text-decoration:none;">Crear cuenta</a>
+    </p>
+    <p style="text-align:center;margin-top:14px;font-size:11px;color:var(--muted2);">Obbio · Acceso seguro</p>
+  </div>
+</div>
+
+<!-- ==================== REGISTRO (alta con pago) ==================== -->
+<div id="sbRegistroOverlay" style="position:fixed;inset:0;background:var(--bg);display:none;align-items:center;justify-content:center;z-index:9999;overflow-y:auto;">
+  <div style="width:100%;max-width:400px;margin:auto;padding:48px 40px;background:var(--card);border:1px solid var(--border);border-radius:20px;box-shadow:0 40px 80px rgba(0,0,0,.65);">
+    <div style="text-align:center;margin-bottom:28px;">
+      <img class="obbio-logo" width="64" height="64" alt="Obbio" style="display:block;margin:0 auto 16px;">
+      <h2 style="font-size:22px;font-weight:800;color:var(--text);margin-bottom:6px;">Crea tu cuenta</h2>
+      <p style="font-size:13px;color:var(--muted);line-height:1.5;">Inteligencia financiera para tu empresa, al mes y sin contrato.</p>
+    </div>
+
+    <ul style="list-style:none;padding:0;margin:0 0 26px;display:grid;gap:9px;">
+      <li style="display:flex;gap:9px;font-size:13px;color:var(--muted);"><span style="color:var(--primary);font-weight:800;">✓</span>Subes tu Excel y Obbio lo lee solo</li>
+      <li style="display:flex;gap:9px;font-size:13px;color:var(--muted);"><span style="color:var(--primary);font-weight:800;">✓</span>Más de 20 vistas: márgenes, liquidez, deuda, impuestos</li>
+      <li style="display:flex;gap:9px;font-size:13px;color:var(--muted);"><span style="color:var(--primary);font-weight:800;">✓</span>Comparación contra tu sector</li>
+      <li style="display:flex;gap:9px;font-size:13px;color:var(--muted);"><span style="color:var(--primary);font-weight:800;">✓</span>Cancelas cuando quieras</li>
+    </ul>
+
+    <div id="sbRegError" style="display:none;padding:10px 14px;background:rgba(244,92,92,.09);border:1px solid rgba(244,92,92,.3);border-radius:9px;color:var(--danger);font-size:12px;margin-bottom:16px;"></div>
+
+    <div style="margin-bottom:18px;">
+      <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px;">Tu correo</label>
+      <input id="sbRegEmail" type="email" autocomplete="email" placeholder="correo@empresa.com"
+        style="width:100%;padding:11px 14px;background:var(--card2);border:1px solid var(--border);border-radius:9px;color:var(--text);font-size:13px;outline:none;transition:border .2s;"
+        onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'"
+        onkeydown="if(event.key==='Enter')sbIrAPagar()">
+    </div>
+
+    <button id="sbRegBtn" onclick="sbIrAPagar()"
+      style="width:100%;padding:13px;background:var(--primary);border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:.3px;transition:opacity .15s;"
+      onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">
+      Continuar al pago
+    </button>
+
+    <p style="text-align:center;margin-top:14px;font-size:11px;color:var(--muted2);line-height:1.5;">
+      El cobro lo procesa Stripe. Obbio no guarda los datos de tu tarjeta.<br>
+      Al terminar defines tu contraseña y entras.
+    </p>
+
+    <p style="text-align:center;margin-top:20px;font-size:13px;color:var(--muted);">
+      ¿Ya tienes cuenta?
+      <a href="#" onclick="sbMostrarLogin();return false;"
+         style="color:var(--primary);font-weight:700;text-decoration:none;">Inicia sesión</a>
+    </p>
   </div>
 </div>
 
@@ -13357,16 +13407,81 @@ function sbApplyEmpresaData(d, opts){
 }
 
 function sbShowOverlay(){
+  // Quien llega por /#registro (o volvió de un pago cancelado) ve el alta, no el login.
+  if(typeof sbRutaRegistro==='function' && sbRutaRegistro()){ sbMostrarRegistro(); return; }
   const ov=document.getElementById('sbLoginOverlay');
+  const rg=document.getElementById('sbRegistroOverlay');
   const ap=document.querySelector('.app');
+  if(rg) rg.style.display='none';
   if(ov) ov.style.display='flex';
   if(ap) ap.style.visibility='hidden';
 }
 function sbHideOverlay(){
   const ov=document.getElementById('sbLoginOverlay');
+  const rg=document.getElementById('sbRegistroOverlay');
   const ap=document.querySelector('.app');
   if(ov) ov.style.display='none';
+  if(rg) rg.style.display='none';
   if(ap) ap.style.visibility='visible';
+}
+
+/* ── Registro con pago (auto-servicio) ─────────────────────────── */
+function sbMostrarRegistro(){
+  const lo=document.getElementById('sbLoginOverlay');
+  const rg=document.getElementById('sbRegistroOverlay');
+  const ap=document.querySelector('.app');
+  if(lo) lo.style.display='none';
+  if(rg) rg.style.display='flex';
+  if(ap) ap.style.visibility='hidden';
+  try{ if(location.hash!=='#registro') history.replaceState(null,'','#registro'); }catch(e){}
+  setTimeout(()=>document.getElementById('sbRegEmail')?.focus(),80);
+}
+window.sbMostrarRegistro=sbMostrarRegistro;
+
+function sbMostrarLogin(){
+  const lo=document.getElementById('sbLoginOverlay');
+  const rg=document.getElementById('sbRegistroOverlay');
+  if(rg) rg.style.display='none';
+  if(lo) lo.style.display='flex';
+  try{ history.replaceState(null,'',location.pathname); }catch(e){}
+  setTimeout(()=>document.getElementById('sbEmail')?.focus(),80);
+}
+window.sbMostrarLogin=sbMostrarLogin;
+
+async function sbIrAPagar(){
+  const email=(document.getElementById('sbRegEmail')?.value||'').trim();
+  const err=document.getElementById('sbRegError');
+  const btn=document.getElementById('sbRegBtn');
+  if(err) err.style.display='none';
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)){
+    if(err){ err.textContent='Escribe un correo válido.'; err.style.display='block'; }
+    return;
+  }
+  const _txt=btn.textContent;
+  btn.textContent='Abriendo el pago…'; btn.disabled=true;
+  try{
+    const r=await fetch('/api/stripe-checkout',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({email}),
+    });
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok||!j.url){
+      if(err){ err.textContent=j.error||'No se pudo abrir el pago. Intenta de nuevo.'; err.style.display='block'; }
+      btn.textContent=_txt; btn.disabled=false; return;
+    }
+    // A Stripe. Vuelve solo a /api/activar, que crea la cuenta si el pago entró.
+    window.location.href=j.url;
+  }catch(e){
+    if(err){ err.textContent='No se pudo conectar. Revisa tu conexión.'; err.style.display='block'; }
+    btn.textContent=_txt; btn.disabled=false;
+  }
+}
+window.sbIrAPagar=sbIrAPagar;
+
+// Entrar directo al registro por URL: obbio.vercel.app/#registro o /registro
+// (el rewrite de vercel.json sirve index.html en cualquier ruta).
+function sbRutaRegistro(){
+  return location.hash==='#registro' || /^\/registro\/?$/i.test(location.pathname);
 }
 function sbShowErr(msg){
   const el=document.getElementById('sbLoginError');
