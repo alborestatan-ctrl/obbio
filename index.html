@@ -919,19 +919,16 @@ th[data-tip]{cursor:default;}
 
 <!-- ==================== REGISTRO (alta con pago) ==================== -->
 <div id="sbRegistroOverlay" style="position:fixed;inset:0;background:var(--bg);display:none;align-items:center;justify-content:center;z-index:9999;overflow-y:auto;">
-  <div style="width:100%;max-width:400px;margin:auto;padding:48px 40px;background:var(--card);border:1px solid var(--border);border-radius:20px;box-shadow:0 40px 80px rgba(0,0,0,.65);">
-    <div style="text-align:center;margin-bottom:28px;">
+  <div style="width:100%;max-width:430px;margin:auto;padding:44px 36px;background:var(--card);border:1px solid var(--border);border-radius:20px;box-shadow:0 40px 80px rgba(0,0,0,.65);">
+    <div style="text-align:center;margin-bottom:26px;">
       <img class="obbio-logo" width="64" height="64" alt="Obbio" style="display:block;margin:0 auto 16px;">
       <h2 style="font-size:22px;font-weight:800;color:var(--text);margin-bottom:6px;">Crea tu cuenta</h2>
-      <p style="font-size:13px;color:var(--muted);line-height:1.5;">Inteligencia financiera para tu empresa, al mes y sin contrato.</p>
+      <p style="font-size:13px;color:var(--muted);line-height:1.5;">Elige tu plan. Cancelas cuando quieras.</p>
     </div>
 
-    <ul style="list-style:none;padding:0;margin:0 0 26px;display:grid;gap:9px;">
-      <li style="display:flex;gap:9px;font-size:13px;color:var(--muted);"><span style="color:var(--primary);font-weight:800;">✓</span>Subes tu Excel y Obbio lo lee solo</li>
-      <li style="display:flex;gap:9px;font-size:13px;color:var(--muted);"><span style="color:var(--primary);font-weight:800;">✓</span>Más de 20 vistas: márgenes, liquidez, deuda, impuestos</li>
-      <li style="display:flex;gap:9px;font-size:13px;color:var(--muted);"><span style="color:var(--primary);font-weight:800;">✓</span>Comparación contra tu sector</li>
-      <li style="display:flex;gap:9px;font-size:13px;color:var(--muted);"><span style="color:var(--primary);font-weight:800;">✓</span>Cancelas cuando quieras</li>
-    </ul>
+    <div id="sbPlanes" style="display:grid;gap:10px;margin-bottom:22px;">
+      <p style="font-size:12px;color:var(--muted2);text-align:center;margin:0;padding:14px 0;">Cargando planes…</p>
+    </div>
 
     <div id="sbRegError" style="display:none;padding:10px 14px;background:rgba(244,92,92,.09);border:1px solid rgba(244,92,92,.3);border-radius:9px;color:var(--danger);font-size:12px;margin-bottom:16px;"></div>
 
@@ -13434,9 +13431,64 @@ function sbMostrarRegistro(){
   if(rg) rg.style.display='flex';
   if(ap) ap.style.visibility='hidden';
   try{ if(location.hash!=='#registro') history.replaceState(null,'','#registro'); }catch(e){}
+  sbCargarPlanes();
   setTimeout(()=>document.getElementById('sbRegEmail')?.focus(),80);
 }
 window.sbMostrarRegistro=sbMostrarRegistro;
+
+/* Los planes vienen de /api/planes, que los lee de Stripe en vivo. No se
+   escriben aquí: si el precio se edita en el dashboard, esta pantalla lo
+   refleja sola y nunca muestra un importe distinto al que se va a cobrar. */
+window._sbPlanSel=null;
+let _sbPlanesCargados=false;
+
+function sbPintarPlanes(planes){
+  const cont=document.getElementById('sbPlanes');
+  if(!cont) return;
+  if(!planes||!planes.length){
+    cont.innerHTML='<p style="font-size:12px;color:var(--muted2);text-align:center;margin:0;padding:14px 0;line-height:1.6;">'
+      +'Los planes no están disponibles en este momento.<br>Escríbenos y te damos acceso.</p>';
+    return;
+  }
+  cont.innerHTML=planes.map((p,i)=>`
+    <button type="button" data-plan="${p.clave}" onclick="sbElegirPlan('${p.clave}')"
+      style="width:100%;text-align:left;padding:14px 16px;border-radius:12px;cursor:pointer;
+             background:var(--card2);border:1.5px solid var(--border);transition:border .15s,background .15s;">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;">
+        <span style="font-size:14px;font-weight:700;color:var(--text);">${p.nombre}</span>
+        <span style="font-size:14px;font-weight:800;color:var(--primary);white-space:nowrap;">${p.monto||''} <span style="font-size:11px;font-weight:600;color:var(--muted);">${p.periodo||''}</span></span>
+      </div>
+      ${p.descripcion?`<p style="margin:6px 0 0;font-size:12px;color:var(--muted);line-height:1.5;">${p.descripcion}</p>`:''}
+      ${p.beneficios&&p.beneficios.length?`<ul style="list-style:none;padding:0;margin:8px 0 0;display:grid;gap:4px;">${
+        p.beneficios.map(b=>`<li style="display:flex;gap:7px;font-size:12px;color:var(--muted);"><span style="color:var(--primary);">✓</span>${b}</li>`).join('')
+      }</ul>`:''}
+    </button>`).join('');
+  // Preseleccionar el primero para que nadie se atore sin saber que hay que elegir.
+  sbElegirPlan(planes[0].clave);
+}
+
+function sbElegirPlan(clave){
+  window._sbPlanSel=clave;
+  document.querySelectorAll('#sbPlanes button[data-plan]').forEach(b=>{
+    const sel=b.getAttribute('data-plan')===clave;
+    b.style.borderColor = sel?'var(--primary)':'var(--border)';
+    b.style.background  = sel?'var(--primary-dim)':'var(--card2)';
+  });
+}
+window.sbElegirPlan=sbElegirPlan;
+
+async function sbCargarPlanes(){
+  if(_sbPlanesCargados) return;
+  _sbPlanesCargados=true;
+  try{
+    const r=await fetch('/api/planes');
+    const j=await r.json().catch(()=>({}));
+    sbPintarPlanes(j.planes||[]);
+  }catch(e){
+    _sbPlanesCargados=false; // que un fallo de red se pueda reintentar
+    sbPintarPlanes([]);
+  }
+}
 
 function sbMostrarLogin(){
   const lo=document.getElementById('sbLoginOverlay');
@@ -13462,7 +13514,7 @@ async function sbIrAPagar(){
   try{
     const r=await fetch('/api/stripe-checkout',{
       method:'POST', headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({email}),
+      body:JSON.stringify({email,plan:window._sbPlanSel||'starter'}),
     });
     const j=await r.json().catch(()=>({}));
     if(!r.ok||!j.url){

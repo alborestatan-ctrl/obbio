@@ -43,7 +43,7 @@ async function precrearEmpresa(userId, srk, stripeInfo) {
     nombre: 'Sin nombre',
     data: {
       config: {
-        plan: 'basico',
+        plan: stripeInfo?.plan || 'basico',
         modulosVisibles: null,
         moneda: null,
         ivaTasa: null,
@@ -105,6 +105,7 @@ module.exports = async (req, res) => {
   const stripeInfo = {
     customer_id: ses.customer || null,
     subscription_id: ses.subscription || null,
+    plan: ses.metadata?.plan || null,
     estado: 'activa',
     desde: new Date().toISOString(),
   };

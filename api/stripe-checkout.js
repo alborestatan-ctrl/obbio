@@ -41,6 +41,15 @@ function stripeReq(path, method, params, key) {
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
+// Los price_id NO son secretos — son números de catálogo. Se pueden sobreescribir
+// desde Vercel sin tocar código. La clave que manda el front se valida contra esta
+// lista: así nadie puede inyectar un precio arbitrario en el checkout.
+const PLANES = {
+  starter:    process.env.STRIPE_PRICE_STARTER    || 'price_1U8oFnIqAU0fOm3NrcXA1hRo',
+  prefounder: process.env.STRIPE_PRICE_PREFOUNDER || 'price_1UIZJDIqAU0fOm3NvuSJacLY',
+  cfo:        process.env.STRIPE_PRICE_CFO        || 'price_1UIZWEIqAU0fOm3Nh5l5AiRH',
+};
+
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -50,16 +59,21 @@ module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Método no permitido' });
 
   const key = process.env.STRIPE_SECRET_KEY;
-  const price = process.env.STRIPE_PRICE_ID;
-  if (!key || !price)
+  if (!key)
     return res.status(500).json({ error: 'El cobro aún no está configurado. Escríbenos y te damos acceso.' });
 
   let body = req.body;
   if (typeof body === 'string') { try { body = JSON.parse(body); } catch { body = {}; } }
   const email = String((body || {}).email || '').trim().toLowerCase();
+  const plan  = String((body || {}).plan || 'starter').trim().toLowerCase();
 
   if (!EMAIL_RE.test(email) || email.length > 320)
     return res.status(400).json({ error: 'Escribe un correo válido.' });
+
+  // Solo se cobra un precio de la lista. Nunca uno que venga en la petición.
+  const price = Object.prototype.hasOwnProperty.call(PLANES, plan) ? PLANES[plan] : null;
+  if (!price)
+    return res.status(400).json({ error: 'Elige un plan para continuar.' });
 
   const appUrl = process.env.APP_URL
     || (req.headers.host ? 'https://' + req.headers.host : '');
@@ -73,8 +87,8 @@ module.exports = async (req, res) => {
     locale: 'es',
     success_url: `${appUrl}/api/activar?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${appUrl}/#registro`,
-    subscription_data: { metadata: { app: 'obbio', email } },
-    metadata: { app: 'obbio', email },
+    subscription_data: { metadata: { app: 'obbio', email, plan } },
+    metadata: { app: 'obbio', email, plan },
   }, key);
 
   if (sesion.status !== 200 || !sesion.body?.url) {
