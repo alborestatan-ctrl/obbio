@@ -36,19 +36,32 @@ function stripeGet(path, key) {
   });
 }
 
-// Stripe entrega los importes en la unidad mínima (centavos) salvo en monedas
-// sin decimales, como el yen. Se formatea en es-MX, que es el público de Obbio.
+// Stripe entrega los importes en la unidad mínima (céntimos) salvo en monedas
+// sin decimales, como el yen.
 const SIN_DECIMALES = new Set(['bif','clp','djf','gnf','jpy','kmf','krw','mga','pyg','rwf','ugx','vnd','vuv','xaf','xof','xpf']);
+
+// Cada moneda se escribe distinto: en España "59 €", en México "$1,200".
+// Formatear euros con locale mexicano produce "EUR 59", que parece un código
+// contable y no un precio. Se elige el locale por la moneda del precio.
+const LOCALE_POR_MONEDA = { eur: 'es-ES', usd: 'en-US', gbp: 'en-GB' };
 
 function montoLegible(unitAmount, currency) {
   if (unitAmount == null) return null;
   const cur = String(currency || 'mxn').toLowerCase();
   const valor = SIN_DECIMALES.has(cur) ? unitAmount : unitAmount / 100;
+  const locale = LOCALE_POR_MONEDA[cur] || 'es-MX';
+  // Céntimos solo cuando los hay: 59 € se lee mejor que 59,00 €, pero 59,90 €
+  // no se puede redondear a 60 sin mentir sobre lo que se va a cobrar.
+  const decimales = Number.isInteger(valor) ? 0 : 2;
   try {
-    return new Intl.NumberFormat('es-MX', {
-      style: 'currency', currency: cur.toUpperCase(), maximumFractionDigits: 0,
+    return new Intl.NumberFormat(locale, {
+      style: 'currency', currency: cur.toUpperCase(),
+      minimumFractionDigits: decimales, maximumFractionDigits: decimales,
     }).format(valor);
-  } catch { return `$${Math.round(valor).toLocaleString('es-MX')}`; }
+  } catch {
+    return `${valor.toLocaleString(locale, { minimumFractionDigits: decimales,
+      maximumFractionDigits: decimales })} ${cur.toUpperCase()}`;
+  }
 }
 
 function periodoLegible(rec) {
